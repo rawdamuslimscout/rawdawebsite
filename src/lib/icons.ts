@@ -1,0 +1,32 @@
+import {
+  Sprout,
+  Tent,
+  Compass,
+  Flag,
+  Mountain,
+  Shield,
+  Map,
+  Dumbbell,
+  HandHeart,
+  Trophy,
+  GraduationCap,
+  MoonStar,
+  Flame,
+  type LucideIcon,
+} from "lucide-react";
+
+export const iconMap: Record<string, LucideIcon> = {
+  sprout: Sprout,
+  tent: Tent,
+  compass: Compass,
+  flag: Flag,
+  mountain: Mountain,
+  shield: Shield,
+  map: Map,
+  dumbbell: Dumbbell,
+  handHeart: HandHeart,
+  trophy: Trophy,
+  graduationCap: GraduationCap,
+  moonStar: MoonStar,
+  flame: Flame,
+};
