@@ -1,8 +1,9 @@
 import SectionHeading from "@/components/ui/SectionHeading";
 import NewsCard from "@/components/ui/NewsCard";
-import { news } from "@/data/content";
+import { getNews } from "@/lib/data";
 
-export default function News() {
+export default async function News() {
+  const news = await getNews();
   return (
     <section id="news" className="bg-white py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">

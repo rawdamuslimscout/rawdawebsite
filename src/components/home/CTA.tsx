@@ -1,7 +1,8 @@
 import { Instagram } from "lucide-react";
-import { siteInfo } from "@/data/content";
+import { getSiteSettings } from "@/lib/data";
 
-export default function CTA() {
+export default async function CTA() {
+  const siteInfo = await getSiteSettings();
   return (
     <section className="relative overflow-hidden bg-brand-purple py-20">
       <div className="texture-canvas absolute inset-0 opacity-30" />

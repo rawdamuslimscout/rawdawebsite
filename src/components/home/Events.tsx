@@ -1,8 +1,9 @@
 import SectionHeading from "@/components/ui/SectionHeading";
 import EventCard from "@/components/ui/EventCard";
-import { events } from "@/data/content";
+import { getEvents } from "@/lib/data";
 
-export default function Events() {
+export default async function Events() {
+  const events = await getEvents();
   return (
     <section className="bg-brand-cream py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">

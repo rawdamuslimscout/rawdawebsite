@@ -1,8 +1,9 @@
 import SectionHeading from "@/components/ui/SectionHeading";
 import ActivityCard from "@/components/ui/ActivityCard";
-import { activities } from "@/data/content";
+import { getActivities } from "@/lib/data";
 
-export default function Activities() {
+export default async function Activities() {
+  const activities = await getActivities();
   return (
     <section id="activities" className="relative overflow-hidden bg-brand-purple py-24">
       <div className="texture-canvas absolute inset-0 opacity-30" />

@@ -1,8 +1,9 @@
 import { Tent, Flame, TreePine } from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { camps } from "@/data/content";
+import { getCamps } from "@/lib/data";
 
-export default function Camps() {
+export default async function Camps() {
+  const camps = await getCamps();
   return (
     <section id="camps" className="relative overflow-hidden bg-brand-purple-dark py-24">
       <div className="texture-canvas absolute inset-0 opacity-30" />

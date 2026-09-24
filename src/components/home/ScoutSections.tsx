@@ -1,8 +1,9 @@
 import SectionHeading from "@/components/ui/SectionHeading";
 import ScoutCard from "@/components/ui/ScoutCard";
-import { scoutStages } from "@/data/content";
+import { getScoutStages } from "@/lib/data";
 
-export default function ScoutSections() {
+export default async function ScoutSections() {
+  const scoutStages = await getScoutStages();
   return (
     <section id="sections" className="bg-white py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">

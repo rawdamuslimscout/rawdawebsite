@@ -1,7 +1,8 @@
 import SectionHeading from "@/components/ui/SectionHeading";
-import { values } from "@/data/content";
+import { getValues } from "@/lib/data";
 
-export default function Values() {
+export default async function Values() {
+  const values = await getValues();
   return (
     <section className="bg-brand-purple-tint py-24">
       <div className="mx-auto max-w-6xl px-5 sm:px-8">

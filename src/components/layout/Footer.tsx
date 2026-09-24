@@ -1,8 +1,10 @@
 import { Instagram, Facebook, MapPin, Phone } from "lucide-react";
 import Logo from "@/components/ui/Logo";
-import { navLinks, siteInfo } from "@/data/content";
+import { navLinks, siteInfo as staticSiteInfo } from "@/data/content";
+import { getSiteSettings } from "@/lib/data";
 
-export default function Footer() {
+export default async function Footer() {
+  const siteInfo = await getSiteSettings();
   return (
     <footer id="contact" className="bg-brand-purple-dark text-white">
       <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8">
@@ -71,7 +73,7 @@ export default function Footer() {
               </a>
             </div>
             <p className="mt-4 text-sm text-white/60" dir="ltr">
-              {siteInfo.instagram}
+              {staticSiteInfo.instagram}
             </p>
           </div>
         </div>

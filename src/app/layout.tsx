@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { El_Messiri, Cairo } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
+import { getSiteSettings } from "@/lib/data";
 
 const elMessiri = El_Messiri({
   subsets: ["arabic", "latin"],
@@ -34,13 +37,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const siteInfo = await getSiteSettings();
   return (
     <html lang="ar" dir="rtl" className={`${elMessiri.variable} ${cairo.variable}`}>
       <body className="font-sans antialiased bg-brand-cream text-brand-ink">
-        {children}
+        <Navbar siteName={siteInfo.name} />
+        <main>{children}</main>
+        <Footer />
       </body>
     </html>
   );

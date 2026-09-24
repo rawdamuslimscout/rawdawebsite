@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import Logo from "@/components/ui/Logo";
-import { navLinks, siteInfo } from "@/data/content";
+import { navLinks } from "@/data/content";
 
-export default function Navbar() {
+export default function Navbar({ siteName }: { siteName: string }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -39,7 +39,7 @@ export default function Navbar() {
         <a href="#home" className="flex items-center gap-3">
           <Logo size={scrolled ? 38 : 44} dark />
           <span className="font-display text-base font-semibold text-white sm:text-lg">
-            {siteInfo.name}
+            {siteName}
           </span>
         </a>
 
@@ -57,7 +57,7 @@ export default function Navbar() {
 
         <div className="hidden lg:block">
           <a
-            href="#contact"
+            href="/join"
             className="rounded-full bg-brand-yellow px-5 py-2.5 text-sm font-bold text-brand-purple-dark transition-colors hover:bg-white"
           >
             انضم إلينا
@@ -93,7 +93,7 @@ export default function Navbar() {
               </a>
             ))}
             <a
-              href="#contact"
+              href="/join"
               onClick={() => setOpen(false)}
               className="mt-2 rounded-full bg-brand-yellow px-5 py-3 text-center text-sm font-bold text-brand-purple-dark"
             >

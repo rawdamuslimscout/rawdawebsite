@@ -1,0 +1,168 @@
+// Prisma schema for فوج روضة الفيحاء
+//
+// Target: Supabase Postgres. This file only defines the schema —
+// connect it yourself by setting DATABASE_URL / DIRECT_URL in .env
+// (see .env.example) and running `npx prisma migrate dev` then
+// `npx prisma db seed`. Nothing here performs a connection.
+//
+// Supabase note: pooled connections (pgbouncer, port 6543) don't
+// support Prisma's advisory locks used during migrations, so this
+// schema follows Supabase's documented pattern of a pooled
+// DATABASE_URL for the app + a direct DIRECT_URL for migrations.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------------------------------------------------------
+// Auth — single/small set of admin users who can edit site content.
+// ---------------------------------------------------------------
+model Admin {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+// ---------------------------------------------------------------
+// Homepage content
+// ---------------------------------------------------------------
+model SiteSettings {
+  id              String @id @default("singleton")
+  name            String
+  tagline         String
+  parentOrg       String
+  instagramUrl    String
+  contactPhone    String
+  contactLocation String
+  joinIntro       String @db.Text
+}
+
+model SiteStat {
+  id    String @id @default(cuid())
+  value String
+  label String
+  order Int    @default(0)
+}
+
+model ScoutStage {
+  id          String @id @default(cuid())
+  slug        String @unique
+  title       String
+  ageRange    String
+  description String @db.Text
+  icon        String
+  order       Int    @default(0)
+}
+
+model Activity {
+  id          String @id @default(cuid())
+  slug        String @unique
+  title       String
+  description String @db.Text
+  icon        String
+  order       Int    @default(0)
+}
+
+model EventItem {
+  id          String @id @default(cuid())
+  title       String
+  date        String
+  location    String
+  groupName   String
+  description String @db.Text
+  order       Int    @default(0)
+}
+
+model Camp {
+  id       String @id @default(cuid())
+  title    String
+  year     String
+  location String
+  summary  String @db.Text
+  order    Int    @default(0)
+}
+
+model Milestone {
+  id          String @id @default(cuid())
+  year        String
+  title       String
+  description String @db.Text
+  order       Int    @default(0)
+}
+
+model ValueItem {
+  id    String @id @default(cuid())
+  slug  String @unique
+  title String
+  order Int    @default(0)
+}
+
+model NewsItem {
+  id       String @id @default(cuid())
+  title    String
+  category String
+  date     String
+  excerpt  String @db.Text
+  order    Int    @default(0)
+}
+
+model GalleryItem {
+  id       String @id @default(cuid())
+  title    String
+  category String // camps | activities | trips | training | events
+  size     String // large | medium | small
+  order    Int    @default(0)
+}
+
+model BlogPost {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  category  String
+  date      String
+  author    String
+  excerpt   String   @db.Text
+  content   String   @db.Text // paragraphs separated by blank lines
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LibraryResource {
+  id          String @id @default(cuid())
+  title       String
+  category    String // guides | badges | forms | songs
+  description String @db.Text
+  fileType    String // PDF | DOCX
+  fileUrl     String
+  order       Int    @default(0)
+}
+
+// ---------------------------------------------------------------
+// "Join Us" page — pricing + weekly schedule per stage/group
+// ---------------------------------------------------------------
+model JoinPricing {
+  id          String @id @default(cuid())
+  title       String
+  price       String
+  period      String
+  description String @db.Text
+  order       Int    @default(0)
+}
+
+model JoinSchedule {
+  id       String @id @default(cuid())
+  stage    String // e.g. "البراعم"
+  ageRange String
+  day      String // e.g. "السبت"
+  time     String // e.g. "٣:٠٠ – ٥:٠٠ م"
+  location String
+  leaders  Int    @default(1)
+  order    Int    @default(0)
+}

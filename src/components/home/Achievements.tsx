@@ -1,7 +1,8 @@
 import SectionHeading from "@/components/ui/SectionHeading";
-import { milestones } from "@/data/content";
+import { getMilestones } from "@/lib/data";
 
-export default function Achievements() {
+export default async function Achievements() {
+  const milestones = await getMilestones();
   return (
     <section className="bg-white py-24">
       <div className="mx-auto max-w-4xl px-5 sm:px-8">

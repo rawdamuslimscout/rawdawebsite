@@ -1,7 +1,8 @@
 import { Compass } from "lucide-react";
-import { siteInfo } from "@/data/content";
+import { getSiteSettings } from "@/lib/data";
 
-export default function Hero() {
+export default async function Hero() {
+  const siteInfo = await getSiteSettings();
   return (
     <section
       id="home"

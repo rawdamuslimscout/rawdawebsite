@@ -1,8 +1,9 @@
 import SectionHeading from "@/components/ui/SectionHeading";
 import Logo from "@/components/ui/Logo";
-import { stats, siteInfo } from "@/data/content";
+import { getSiteSettings, getSiteStats } from "@/lib/data";
 
-export default function About() {
+export default async function About() {
+  const [stats, siteInfo] = await Promise.all([getSiteStats(), getSiteSettings()]);
   return (
     <section id="about" className="bg-brand-cream py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">

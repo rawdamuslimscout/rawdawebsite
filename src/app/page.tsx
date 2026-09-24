@@ -1,5 +1,3 @@
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import Hero from "@/components/home/Hero";
 import About from "@/components/home/About";
 import ScoutSections from "@/components/home/ScoutSections";
@@ -15,21 +13,17 @@ import CTA from "@/components/home/CTA";
 export default function Home() {
   return (
     <>
-      <Navbar />
-      <main>
-        <Hero />
-        <About />
-        <ScoutSections />
-        <Activities />
-        <Events />
-        <Camps />
-        <Achievements />
-        <Values />
-        <News />
-        <Gallery />
-        <CTA />
-      </main>
-      <Footer />
+      <Hero />
+      <About />
+      <ScoutSections />
+      <Activities />
+      <Events />
+      <Camps />
+      <Achievements />
+      <Values />
+      <News />
+      <Gallery />
+      <CTA />
     </>
   );
 }
