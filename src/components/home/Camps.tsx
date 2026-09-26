@@ -1,11 +1,21 @@
 import { Tent, Flame, TreePine } from "lucide-react";
+
 import SectionHeading from "@/components/ui/SectionHeading";
 import { getCamps } from "@/lib/data";
 
 export default async function Camps() {
   const camps = await getCamps();
+
+  // Don't render the section if there are no camps
+  if (!camps || camps.length === 0) {
+    return null;
+  }
+
   return (
-    <section id="camps" className="relative overflow-hidden bg-brand-purple-dark py-24">
+    <section
+      id="camps"
+      className="relative overflow-hidden bg-brand-purple-dark py-24"
+    >
       <div className="texture-canvas absolute inset-0 opacity-30" />
 
       {/* decorative tent silhouettes */}
@@ -32,18 +42,22 @@ export default async function Camps() {
           {camps.map((camp, idx) => {
             const icons = [Tent, Flame, TreePine, Tent];
             const Icon = icons[idx % icons.length];
+
             return (
               <div
                 key={camp.id}
                 className="rounded-2xl border border-white/10 bg-white/[0.05] p-6 backdrop-blur-sm transition-colors hover:bg-white/[0.09]"
               >
                 <Icon className="h-8 w-8 text-brand-yellow" strokeWidth={1.5} />
+
                 <p className="mt-4 text-xs font-semibold text-brand-turquoise">
                   {camp.year} · {camp.location}
                 </p>
+
                 <h3 className="mt-2 font-display text-lg font-semibold text-white">
                   {camp.title}
                 </h3>
+
                 <p className="mt-2 text-sm leading-relaxed text-white/65">
                   {camp.summary}
                 </p>

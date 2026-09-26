@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
-export type FieldType = "text" | "textarea" | "number" | "select";
+export type FieldType = "text" | "textarea" | "number" | "select" | "file";
 
 export type FieldConfig = {
   name: string;
@@ -8,6 +8,8 @@ export type FieldConfig = {
   type: FieldType;
   options?: { value: string; label: string }[];
   help?: string;
+  uploadTo?: string;
+  accept?: string;
 };
 
 export type ResourceConfig = {
@@ -60,7 +62,54 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
       { name: "title", label: "العنوان", type: "text" },
       { name: "ageRange", label: "الفئة العمرية", type: "text" },
       { name: "description", label: "الوصف", type: "textarea" },
-      { name: "icon", label: "الأيقونة", type: "select", options: scoutIconOptions },
+      {
+        name: "icon",
+        label: "الأيقونة",
+        type: "select",
+        options: scoutIconOptions,
+      },
+      {
+        name: "imageUpload",
+        label: "الصورة",
+        type: "file",
+        uploadTo: "imageUrl",
+        accept: "image/*",
+        help: "اختياري. اختر صورة واضحة للمرحلة، وسيتم رفعها تلقائيًا.",
+      },
+      { name: "order", label: "الترتيب", type: "number" },
+      {
+        name: "fileUpload",
+        label: "الملف",
+        type: "file",
+        uploadTo: "fileUrl",
+        accept: ".pdf,.doc,.docx",
+        help: "اختياري. ارفع ملف المنهج أو المطالب بصيغة PDF أو Word.",
+      },
+    ],
+  },
+  "scout-leaders": {
+    key: "scout-leaders",
+    label: "قادة المراحل الكشفية",
+    titleField: "name",
+    orderBy: { order: "asc" },
+    fields: [
+      {
+        name: "stageId",
+        label: "معرّف المرحلة",
+        type: "text",
+        help: "انسخ معرّف المرحلة من رابط/بيانات المرحلة في قاعدة البيانات.",
+      },
+      { name: "name", label: "اسم القائد/ة", type: "text" },
+      { name: "rank", label: "الرتبة الكشفية", type: "text" },
+      { name: "role", label: "الدور في المجموعة", type: "text" },
+      { name: "bio", label: "معلومات سريعة", type: "textarea" },
+      {
+        name: "photoUpload",
+        label: "الصورة الشخصية",
+        type: "file",
+        uploadTo: "photoUrl",
+        help: "اختياري. تُرفع إلى Supabase Storage.",
+      },
       { name: "order", label: "الترتيب", type: "number" },
     ],
   },
@@ -73,7 +122,12 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
       { name: "slug", label: "المعرّف (بالإنكليزية، فريد)", type: "text" },
       { name: "title", label: "العنوان", type: "text" },
       { name: "description", label: "الوصف", type: "textarea" },
-      { name: "icon", label: "الأيقونة", type: "select", options: activityIconOptions },
+      {
+        name: "icon",
+        label: "الأيقونة",
+        type: "select",
+        options: activityIconOptions,
+      },
       { name: "order", label: "الترتيب", type: "number" },
     ],
   },
@@ -137,6 +191,14 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
       { name: "category", label: "التصنيف", type: "text" },
       { name: "date", label: "التاريخ", type: "text" },
       { name: "excerpt", label: "المقتطف", type: "textarea" },
+      {
+        name: "imageUpload",
+        label: "صورة الخبر",
+        type: "file",
+        uploadTo: "imageUrl",
+        accept: "image/*",
+        help: "اختياري. تظهر الصورة داخل بطاقة الخبر وتفاصيله.",
+      },
       { name: "order", label: "الترتيب", type: "number" },
     ],
   },
@@ -168,6 +230,14 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
           { value: "medium", label: "متوسط" },
           { value: "small", label: "صغير" },
         ],
+      },
+      {
+        name: "imageUpload",
+        label: "رفع صورة",
+        type: "file",
+        uploadTo: "imageUrl",
+        accept: "image/*",
+        help: "اختر صورة من جهازك. لا تحتاج إلى نسخ أي رابط.",
       },
       { name: "order", label: "الترتيب", type: "number" },
     ],
@@ -220,7 +290,20 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
           { value: "DOCX", label: "DOCX" },
         ],
       },
-      { name: "fileUrl", label: "رابط الملف", type: "text", help: "مثال: /library/file.pdf" },
+      {
+        name: "fileUrl",
+        label: "رابط الملف الحالي",
+        type: "text",
+        help: "يمكن تركه فارغًا عند رفع ملف جديد أدناه.",
+      },
+      {
+        name: "fileUpload",
+        label: "رفع ملف جديد",
+        type: "file",
+        uploadTo: "fileUrl",
+        accept: ".pdf,.doc,.docx",
+        help: "اختر PDF أو Word من جهازك وسيظهر للزوار في المكتبة.",
+      },
       { name: "order", label: "الترتيب", type: "number" },
     ],
   },
@@ -269,6 +352,8 @@ export function getDelegate(resource: string): GenericDelegate | null {
       return prisma.siteStat;
     case "scout-stages":
       return prisma.scoutStage;
+    case "scout-leaders":
+      return prisma.scoutLeader;
     case "activities":
       return prisma.activity;
     case "events":
@@ -299,10 +384,11 @@ export function getDelegate(resource: string): GenericDelegate | null {
 /** Coerces raw form-data strings into the right JS types per field config. */
 export function coerceFormData(
   config: ResourceConfig,
-  formData: FormData
+  formData: FormData,
 ): Record<string, string | number> {
   const data: Record<string, string | number> = {};
   for (const field of config.fields) {
+    if (field.type === "file") continue;
     const raw = formData.get(field.name);
     if (raw === null) continue;
     data[field.name] = field.type === "number" ? Number(raw) || 0 : String(raw);

@@ -25,15 +25,6 @@ export default function EventCard({ event }: { event: EventItem }) {
           <dd>{event.group}</dd>
         </div>
       </dl>
-
-      <div className="mt-6 flex gap-3">
-        <button className="flex-1 rounded-full bg-brand-purple px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-purple-dark">
-          التفاصيل
-        </button>
-        <button className="flex-1 rounded-full border border-brand-purple/20 px-4 py-2.5 text-sm font-semibold text-brand-purple transition-colors hover:bg-brand-purple-tint">
-          سجّل الآن
-        </button>
-      </div>
     </article>
   );
 }

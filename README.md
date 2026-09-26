@@ -24,13 +24,21 @@ That means you can preview and tweak the whole site before ever touching Supabas
    - `DIRECT_URL` — the **direct** connection (port 5432) — used only by `prisma migrate` / `prisma db seed`.
    - `SESSION_SECRET` — a random string (`openssl rand -hex 32`) that signs the admin login cookie.
    - `SEED_ADMIN_USERNAME` / `SEED_ADMIN_PASSWORD` — the admin login the seed script will create.
-3. Create the tables and seed initial content (the same content already on the site,
+
+- `NEXT_PUBLIC_SUPABASE_URL` — the Supabase project URL.
+- `SUPABASE_SERVICE_ROLE_KEY` — the server-only service-role key; never expose it to the browser.
+- `SUPABASE_STORAGE_BUCKET` — optional bucket name, defaulting to `uploads`.
+
+3. In Supabase Storage, create a public bucket named `uploads` (or use the value of
+   `SUPABASE_STORAGE_BUCKET`). Admin uploads are stored under resource folders and
+   their public URLs are saved in the database.
+4. Create the tables and seed initial content (the same content already on the site,
    plus one admin login):
    ```bash
    npm run db:migrate   # prisma migrate dev
    npm run db:seed      # prisma db seed
    ```
-4. Restart `npm run dev`. The site now reads from Supabase, and anything you edit
+5. Restart `npm run dev`. The site now reads from Supabase, and anything you edit
    in `/admin` shows up on the live site immediately.
 
 `npm install` also runs `prisma generate` automatically (via `postinstall`) — this
@@ -40,8 +48,8 @@ needs internet access to download Prisma's query-engine binary the first time.
 
 Go to **`/admin`** and log in with the `SEED_ADMIN_USERNAME` / `SEED_ADMIN_PASSWORD`
 from your `.env`. From there you can edit every piece of content on the site:
-scout stages, activities, events, camps, milestones, values, news, gallery
-captions, blog posts, library resources, join-us pricing/schedule, and the
+scout stages and their leaders, activities, events, camps, milestones, values, news, gallery
+captions/photos, blog posts, library resources/files, join-us pricing/schedule, and the
 site's general settings (name, tagline, contact info). Changes save straight
 to Supabase and appear on the site right away — no redeploy needed.
 
@@ -61,9 +69,8 @@ the purple linework stays legible on dark sections (navbar, footer).
 
 ## Adding library files
 
-`LibraryResource.fileUrl` (edit via `/admin/library`) should point to a real file.
-Drop PDFs/DOCX files under `public/library/` and reference them as
-`/library/your-file.pdf`.
+Upload library files and gallery images directly from their admin forms. They are
+stored in Supabase Storage and the resulting public URL is saved automatically.
 
 ## Where content lives
 

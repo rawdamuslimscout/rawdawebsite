@@ -58,7 +58,22 @@ model ScoutStage {
   ageRange    String
   description String @db.Text
   icon        String
+  imageUrl    String @default("")
+  fileUrl     String @default("")
   order       Int    @default(0)
+  leaders     ScoutLeader[]
+}
+
+model ScoutLeader {
+  id        String     @id @default(cuid())
+  stageId   String
+  stage     ScoutStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  name      String
+  rank      String
+  role      String
+  bio       String     @db.Text
+  photoUrl  String     @default("")
+  order     Int        @default(0)
 }
 
 model Activity {
@@ -110,6 +125,7 @@ model NewsItem {
   category String
   date     String
   excerpt  String @db.Text
+  imageUrl String @default("")
   order    Int    @default(0)
 }
 
@@ -118,6 +134,7 @@ model GalleryItem {
   title    String
   category String // camps | activities | trips | training | events
   size     String // large | medium | small
+  imageUrl String @default("")
   order    Int    @default(0)
 }
 

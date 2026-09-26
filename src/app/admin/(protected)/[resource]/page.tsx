@@ -1,5 +1,9 @@
 import { notFound } from "next/navigation";
-import { getDelegate, getResourceConfig, type FieldConfig } from "@/lib/admin-resources";
+import {
+  getDelegate,
+  getResourceConfig,
+  type FieldConfig,
+} from "@/lib/admin-resources";
 import { saveItem, deleteItem } from "./actions";
 
 function FieldInput({
@@ -23,9 +27,24 @@ function FieldInput({
     );
   }
 
+  if (field.type === "file") {
+    return (
+      <input
+        name={field.name}
+        type="file"
+        accept={field.accept}
+        className={`${baseClass} file:mr-3 file:rounded-full file:border-0 file:bg-brand-purple-tint file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-purple`}
+      />
+    );
+  }
+
   if (field.type === "select") {
     return (
-      <select name={field.name} defaultValue={defaultValue as string} className={baseClass}>
+      <select
+        name={field.name}
+        defaultValue={defaultValue as string}
+        className={baseClass}
+      >
         {field.options?.map((opt) => (
           <option key={opt.value} value={opt.value}>
             {opt.label}
@@ -68,23 +87,40 @@ export default async function ResourceAdminPage({
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-bold text-brand-ink">{config.label}</h1>
+      <h1 className="font-display text-2xl font-bold text-brand-ink">
+        {config.label}
+      </h1>
 
       {dbError ? (
-        <p className="mt-4 rounded-lg bg-red-50 p-4 text-sm text-red-700">{dbError}</p>
+        <p className="mt-4 rounded-lg bg-red-50 p-4 text-sm text-red-700">
+          {dbError}
+        </p>
       ) : (
         <>
           <section className="mt-8 rounded-2xl border border-brand-purple/10 bg-white p-6 shadow-sm">
-            <h2 className="font-display text-lg font-semibold text-brand-ink">إضافة عنصر جديد</h2>
-            <form action={saveItem} className="mt-4 grid gap-4 sm:grid-cols-2">
+            <h2 className="font-display text-lg font-semibold text-brand-ink">
+              إضافة عنصر جديد
+            </h2>
+            <form
+              action={saveItem}
+              encType="multipart/form-data"
+              className="mt-4 grid gap-4 sm:grid-cols-2"
+            >
               <input type="hidden" name="_resource" value={config.key} />
               {config.fields.map((field) => (
-                <div key={field.name} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
+                <div
+                  key={field.name}
+                  className={field.type === "textarea" ? "sm:col-span-2" : ""}
+                >
                   <label className="mb-1.5 block text-sm font-medium text-brand-ink/75">
                     {field.label}
                   </label>
                   <FieldInput field={field} />
-                  {field.help && <p className="mt-1 text-xs text-brand-ink/45">{field.help}</p>}
+                  {field.help && (
+                    <p className="mt-1 text-xs text-brand-ink/45">
+                      {field.help}
+                    </p>
+                  )}
                 </div>
               ))}
               <div className="sm:col-span-2">
@@ -111,17 +147,25 @@ export default async function ResourceAdminPage({
                   <span className="font-medium text-brand-ink">
                     {String(row[config.titleField] ?? row.id)}
                   </span>
-                  <span className="text-xs text-brand-ink/40 group-open:hidden">تعديل ↓</span>
+                  <span className="text-xs text-brand-ink/40 group-open:hidden">
+                    تعديل ↓
+                  </span>
                 </summary>
 
                 <div className="border-t border-brand-purple/10 p-5">
-                  <form action={saveItem} className="grid gap-4 sm:grid-cols-2">
+                  <form
+                    action={saveItem}
+                    encType="multipart/form-data"
+                    className="grid gap-4 sm:grid-cols-2"
+                  >
                     <input type="hidden" name="_resource" value={config.key} />
                     <input type="hidden" name="_id" value={String(row.id)} />
                     {config.fields.map((field) => (
                       <div
                         key={field.name}
-                        className={field.type === "textarea" ? "sm:col-span-2" : ""}
+                        className={
+                          field.type === "textarea" ? "sm:col-span-2" : ""
+                        }
                       >
                         <label className="mb-1.5 block text-sm font-medium text-brand-ink/75">
                           {field.label}
@@ -130,8 +174,21 @@ export default async function ResourceAdminPage({
                           field={field}
                           defaultValue={row[field.name] as string | number}
                         />
+                        {field.type === "file" &&
+                        row[field.uploadTo || field.name] ? (
+                          <a
+                            href={String(row[field.uploadTo || field.name])}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-1 block text-xs text-brand-purple underline"
+                          >
+                            فتح الملف الحالي
+                          </a>
+                        ) : null}
                         {field.help && (
-                          <p className="mt-1 text-xs text-brand-ink/45">{field.help}</p>
+                          <p className="mt-1 text-xs text-brand-ink/45">
+                            {field.help}
+                          </p>
                         )}
                       </div>
                     ))}

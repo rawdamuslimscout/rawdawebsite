@@ -1,0 +1,45 @@
+// src/lib/badgeIcons.tsx
+// Small, separate icon map for badge chips (distinct from the per-stage
+// iconMap in @/lib/icons). Keeps the badge data file framework-agnostic.
+import {
+  Palette,
+  Shield,
+  Search,
+  HeartPulse,
+  BookOpen,
+  Mic,
+  Leaf,
+  ChefHat,
+  NotebookPen,
+  Mountain,
+  Radio,
+  Tent,
+  Monitor,
+  Link2,
+  Hammer,
+  Users,
+  Footprints,
+  Flame,
+  type LucideIcon,
+} from "lucide-react";
+
+export const badgeIconMap: Record<string, LucideIcon> = {
+  palette: Palette,
+  shield: Shield,
+  search: Search,
+  "heart-pulse": HeartPulse,
+  "book-open": BookOpen,
+  mic: Mic,
+  leaf: Leaf,
+  "chef-hat": ChefHat,
+  notebook: NotebookPen,
+  mountain: Mountain,
+  radio: Radio,
+  tent: Tent,
+  monitor: Monitor,
+  link: Link2,
+  hammer: Hammer,
+  users: Users,
+  footprints: Footprints,
+  flame: Flame,
+};

@@ -35,7 +35,7 @@ async function main() {
   if (!password) {
     console.warn(
       "SEED_ADMIN_PASSWORD not set — skipping admin user creation. " +
-        "Set it in .env and re-run the seed to create the admin login."
+        "Set it in .env and re-run the seed to create the admin login.",
     );
   } else {
     await prisma.admin.upsert({
@@ -73,11 +73,39 @@ async function main() {
   }
 
   // --- Scout stages ------------------------------------------------
+  await prisma.scoutStage.deleteMany({
+    where: {
+      slug: {
+        in: [
+          "baraem",
+          "ashbal",
+          "kashbal",
+          "kashafa",
+          "mutaqadem",
+          "jawwala",
+          "qiyada",
+        ],
+      },
+    },
+  });
   for (const [i, s] of scoutStages.entries()) {
     await prisma.scoutStage.upsert({
       where: { slug: s.id },
-      update: { title: s.title, ageRange: s.ageRange, description: s.description, icon: s.icon, order: i },
-      create: { slug: s.id, title: s.title, ageRange: s.ageRange, description: s.description, icon: s.icon, order: i },
+      update: {
+        title: s.title,
+        ageRange: s.ageRange,
+        description: s.description,
+        icon: s.icon,
+        order: i,
+      },
+      create: {
+        slug: s.id,
+        title: s.title,
+        ageRange: s.ageRange,
+        description: s.description,
+        icon: s.icon,
+        order: i,
+      },
     });
   }
 
@@ -85,8 +113,19 @@ async function main() {
   for (const [i, a] of activities.entries()) {
     await prisma.activity.upsert({
       where: { slug: a.id },
-      update: { title: a.title, description: a.description, icon: a.icon, order: i },
-      create: { slug: a.id, title: a.title, description: a.description, icon: a.icon, order: i },
+      update: {
+        title: a.title,
+        description: a.description,
+        icon: a.icon,
+        order: i,
+      },
+      create: {
+        slug: a.id,
+        title: a.title,
+        description: a.description,
+        icon: a.icon,
+        order: i,
+      },
     });
   }
 
@@ -94,8 +133,23 @@ async function main() {
   for (const [i, e] of events.entries()) {
     await prisma.eventItem.upsert({
       where: { id: e.id },
-      update: { title: e.title, date: e.date, location: e.location, groupName: e.group, description: e.description, order: i },
-      create: { id: e.id, title: e.title, date: e.date, location: e.location, groupName: e.group, description: e.description, order: i },
+      update: {
+        title: e.title,
+        date: e.date,
+        location: e.location,
+        groupName: e.group,
+        description: e.description,
+        order: i,
+      },
+      create: {
+        id: e.id,
+        title: e.title,
+        date: e.date,
+        location: e.location,
+        groupName: e.group,
+        description: e.description,
+        order: i,
+      },
     });
   }
 
@@ -103,8 +157,21 @@ async function main() {
   for (const [i, c] of camps.entries()) {
     await prisma.camp.upsert({
       where: { id: c.id },
-      update: { title: c.title, year: c.year, location: c.location, summary: c.summary, order: i },
-      create: { id: c.id, title: c.title, year: c.year, location: c.location, summary: c.summary, order: i },
+      update: {
+        title: c.title,
+        year: c.year,
+        location: c.location,
+        summary: c.summary,
+        order: i,
+      },
+      create: {
+        id: c.id,
+        title: c.title,
+        year: c.year,
+        location: c.location,
+        summary: c.summary,
+        order: i,
+      },
     });
   }
 
@@ -113,8 +180,19 @@ async function main() {
     const id = `milestone-${i}`;
     await prisma.milestone.upsert({
       where: { id },
-      update: { year: m.year, title: m.title, description: m.description, order: i },
-      create: { id, year: m.year, title: m.title, description: m.description, order: i },
+      update: {
+        year: m.year,
+        title: m.title,
+        description: m.description,
+        order: i,
+      },
+      create: {
+        id,
+        year: m.year,
+        title: m.title,
+        description: m.description,
+        order: i,
+      },
     });
   }
 
@@ -131,8 +209,21 @@ async function main() {
   for (const [i, n] of news.entries()) {
     await prisma.newsItem.upsert({
       where: { id: n.id },
-      update: { title: n.title, category: n.category, date: n.date, excerpt: n.excerpt, order: i },
-      create: { id: n.id, title: n.title, category: n.category, date: n.date, excerpt: n.excerpt, order: i },
+      update: {
+        title: n.title,
+        category: n.category,
+        date: n.date,
+        excerpt: n.excerpt,
+        order: i,
+      },
+      create: {
+        id: n.id,
+        title: n.title,
+        category: n.category,
+        date: n.date,
+        excerpt: n.excerpt,
+        order: i,
+      },
     });
   }
 
@@ -141,7 +232,13 @@ async function main() {
     await prisma.galleryItem.upsert({
       where: { id: g.id },
       update: { title: g.title, category: g.category, size: g.size, order: i },
-      create: { id: g.id, title: g.title, category: g.category, size: g.size, order: i },
+      create: {
+        id: g.id,
+        title: g.title,
+        category: g.category,
+        size: g.size,
+        order: i,
+      },
     });
   }
 
@@ -197,8 +294,21 @@ async function main() {
   for (const [i, p] of joinPricing.entries()) {
     await prisma.joinPricing.upsert({
       where: { id: p.id },
-      update: { title: p.title, price: p.price, period: p.period, description: p.description, order: i },
-      create: { id: p.id, title: p.title, price: p.price, period: p.period, description: p.description, order: i },
+      update: {
+        title: p.title,
+        price: p.price,
+        period: p.period,
+        description: p.description,
+        order: i,
+      },
+      create: {
+        id: p.id,
+        title: p.title,
+        price: p.price,
+        period: p.period,
+        description: p.description,
+        order: i,
+      },
     });
   }
 
