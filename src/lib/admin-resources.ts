@@ -1,6 +1,12 @@
 import { prisma } from "@/lib/prisma";
 
-export type FieldType = "text" | "textarea" | "number" | "select" | "file";
+export type FieldType =
+  | "text"
+  | "textarea"
+  | "number"
+  | "select"
+  | "file"
+  | "file-multiple";
 
 export type FieldConfig = {
   name: string;
@@ -192,12 +198,12 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
       { name: "date", label: "التاريخ", type: "text" },
       { name: "excerpt", label: "المقتطف", type: "textarea" },
       {
-        name: "imageUpload",
-        label: "صورة الخبر",
-        type: "file",
-        uploadTo: "imageUrl",
+        name: "imageUploads",
+        label: "صور الخبر",
+        type: "file-multiple",
+        uploadTo: "imageUrls",
         accept: "image/*",
-        help: "اختياري. تظهر الصورة داخل بطاقة الخبر وتفاصيله.",
+        help: "اختياري. يمكنك اختيار أكثر من صورة، وستظهر في معرض داخل تفاصيل الخبر.",
       },
       { name: "order", label: "الترتيب", type: "number" },
     ],
@@ -388,7 +394,7 @@ export function coerceFormData(
 ): Record<string, string | number> {
   const data: Record<string, string | number> = {};
   for (const field of config.fields) {
-    if (field.type === "file") continue;
+    if (field.type === "file" || field.type === "file-multiple") continue;
     const raw = formData.get(field.name);
     if (raw === null) continue;
     data[field.name] = field.type === "number" ? Number(raw) || 0 : String(raw);

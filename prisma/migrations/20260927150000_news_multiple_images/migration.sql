@@ -1,0 +1,1 @@
+ALTER TABLE "NewsItem" ADD COLUMN "imageUrls" TEXT NOT NULL DEFAULT '[]';

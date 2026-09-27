@@ -126,6 +126,7 @@ model NewsItem {
   date     String
   excerpt  String @db.Text
   imageUrl String @default("")
+  imageUrls String @default("[]")
   order    Int    @default(0)
 }
 

@@ -21,10 +21,41 @@ export async function saveItem(formData: FormData) {
 
   const data = coerceFormData(config, formData);
   for (const field of config.fields) {
-    if (field.type !== "file" || !field.uploadTo) continue;
-    const value = formData.get(field.name);
-    if (value instanceof File && value.size > 0) {
-      data[field.uploadTo] = (await uploadToStorage(value, resource)) || "";
+    if (
+      (field.type !== "file" && field.type !== "file-multiple") ||
+      !field.uploadTo
+    )
+      continue;
+    const values =
+      field.type === "file-multiple"
+        ? formData.getAll(field.name)
+        : [formData.get(field.name)];
+    const uploaded: string[] = [];
+    for (const value of values) {
+      if (value instanceof File && value.size > 0) {
+        const url = await uploadToStorage(value, resource);
+        if (url) uploaded.push(url);
+      }
+    }
+    if (field.type === "file-multiple") {
+      const existing = id
+        ? await delegate.findUnique({
+            where: { id },
+            select: { [field.uploadTo]: true },
+          })
+        : null;
+      let oldUrls: string[] = [];
+      try {
+        const parsed = existing?.[field.uploadTo]
+          ? JSON.parse(String(existing[field.uploadTo]))
+          : [];
+        oldUrls = Array.isArray(parsed)
+          ? parsed.filter((url): url is string => typeof url === "string")
+          : [];
+      } catch {}
+      data[field.uploadTo] = JSON.stringify([...oldUrls, ...uploaded]);
+    } else if (uploaded[0]) {
+      data[field.uploadTo] = uploaded[0];
     }
   }
 

@@ -1,8 +1,11 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+/* eslint-disable @next/next/no-img-element */
+
+import { useCallback, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, ChevronRight, ChevronLeft } from "lucide-react";
+
 import type { GalleryItem } from "@/data/content";
 
 export default function GalleryLightbox({
@@ -16,31 +19,47 @@ export default function GalleryLightbox({
   onClose: () => void;
   onNavigate: (index: number) => void;
 }) {
-  const open = index !== null;
-  const item = open ? items[index] : null;
+  const open = index !== null && index >= 0 && index < items.length;
+  const item = open && index !== null ? items[index] : null;
+  const touchStartX = useRef<number | null>(null);
 
-  // Visually "right" in RTL is the previous item, "left" is next.
   const goPrev = useCallback(() => {
-    if (index === null) return;
+    if (index === null || items.length <= 1) return;
+
     onNavigate((index - 1 + items.length) % items.length);
   }, [index, items.length, onNavigate]);
 
   const goNext = useCallback(() => {
-    if (index === null) return;
+    if (index === null || items.length <= 1) return;
+
     onNavigate((index + 1) % items.length);
   }, [index, items.length, onNavigate]);
 
   useEffect(() => {
     if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+
     document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowRight") goPrev();
-      if (e.key === "ArrowLeft") goNext();
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+
+      if (event.key === "ArrowRight") {
+        goPrev();
+      }
+
+      if (event.key === "ArrowLeft") {
+        goNext();
+      }
     };
+
     window.addEventListener("keydown", onKey);
+
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKey);
     };
   }, [open, onClose, goPrev, goNext]);
@@ -52,69 +71,280 @@ export default function GalleryLightbox({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-brand-ink/90 backdrop-blur-sm"
-          onClick={onClose}
+          transition={{ duration: 0.2 }}
+          className="
+            fixed
+            inset-0
+            z-[100]
+            flex
+            items-center
+            justify-center
+            bg-brand-ink/95
+            px-3
+            backdrop-blur-xl
+            sm:px-6
+          "
           role="dialog"
           aria-modal="true"
+          aria-label="عرض الصورة"
+          onClick={onClose}
+          onTouchStart={(event) => {
+            touchStartX.current = event.touches[0]?.clientX ?? null;
+          }}
+          onTouchEnd={(event) => {
+            const startX = touchStartX.current;
+            const endX = event.changedTouches[0]?.clientX;
+            touchStartX.current = null;
+            if (
+              startX === null ||
+              endX === undefined ||
+              Math.abs(endX - startX) < 50
+            )
+              return;
+            if (endX > startX) goPrev();
+            else goNext();
+          }}
         >
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="إغلاق"
-            className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 sm:left-6 sm:top-6"
+          {/* =========================
+              TOP BAR
+          ========================== */}
+          <div
+            className="
+              absolute
+              inset-x-0
+              top-0
+              z-10
+              flex
+              items-center
+              justify-between
+              px-4
+              py-4
+              sm:px-6
+              sm:py-5
+            "
           >
-            <X className="h-5 w-5" />
-          </button>
+            {/* Counter */}
+            <div
+              onClick={(event) => event.stopPropagation()}
+              className="
+                rounded-full
+                bg-white/10
+                px-3
+                py-1.5
+                text-xs
+                font-semibold
+                text-white/70
+                backdrop-blur-md
+              "
+            >
+              {index + 1} / {items.length}
+            </div>
 
-          <span className="absolute left-1/2 top-4 -translate-x-1/2 text-sm font-bold text-white/60 sm:top-6">
-            {index !== null ? index + 1 : 0} / {items.length}
-          </span>
+            {/* Close */}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="إغلاق"
+              className="
+                flex
+                h-10
+                w-10
+                items-center
+                justify-center
+                rounded-full
+                bg-white/10
+                text-white
+                backdrop-blur-md
+                transition-all
+                hover:scale-105
+                hover:bg-white/20
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-white/50
+              "
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
+          {/* =========================
+              NAVIGATION
+          ========================== */}
           {items.length > 1 && (
             <>
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
+                onClick={(event) => {
+                  event.stopPropagation();
                   goPrev();
                 }}
-                aria-label="السابقة"
-                className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 sm:right-6"
+                aria-label="الصورة السابقة"
+                className="
+                  absolute
+                  right-3
+                  top-1/2
+                  z-20
+                  flex
+                  h-11
+                  w-11
+                  -translate-y-1/2
+                  items-center
+                  justify-center
+                  rounded-full
+                  bg-white/10
+                  text-white
+                  backdrop-blur-md
+                  transition-all
+                  hover:scale-105
+                  hover:bg-white/20
+                  focus-visible:outline-none
+                  focus-visible:ring-2
+                  focus-visible:ring-white/50
+                  sm:right-6
+                  sm:h-12
+                  sm:w-12
+                "
               >
                 <ChevronRight className="h-6 w-6" />
               </button>
+
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
+                onClick={(event) => {
+                  event.stopPropagation();
                   goNext();
                 }}
-                aria-label="التالية"
-                className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 sm:left-6"
+                aria-label="الصورة التالية"
+                className="
+                  absolute
+                  left-3
+                  top-1/2
+                  z-20
+                  flex
+                  h-11
+                  w-11
+                  -translate-y-1/2
+                  items-center
+                  justify-center
+                  rounded-full
+                  bg-white/10
+                  text-white
+                  backdrop-blur-md
+                  transition-all
+                  hover:scale-105
+                  hover:bg-white/20
+                  focus-visible:outline-none
+                  focus-visible:ring-2
+                  focus-visible:ring-white/50
+                  sm:left-6
+                  sm:h-12
+                  sm:w-12
+                "
               >
                 <ChevronLeft className="h-6 w-6" />
               </button>
             </>
           )}
 
+          {/* =========================
+              IMAGE
+          ========================== */}
           <motion.div
             key={item.id}
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.96 }}
-            transition={{ duration: 0.2 }}
-            onClick={(e) => e.stopPropagation()}
-            className="mx-4 flex max-h-[85vh] max-w-3xl flex-col items-center"
+            initial={{
+              opacity: 0,
+              scale: 0.96,
+              y: 8,
+            }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              y: 0,
+            }}
+            exit={{
+              opacity: 0,
+              scale: 0.96,
+            }}
+            transition={{
+              duration: 0.25,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            onClick={(event) => event.stopPropagation()}
+            className="
+              relative
+              flex
+              max-h-[88vh]
+              max-w-[calc(100vw-5rem)]
+              flex-col
+              items-center
+              sm:max-w-[calc(100vw-10rem)]
+            "
           >
             <img
               src={item.imageUrl}
               alt={item.title}
-              className="max-h-[72vh] w-auto rounded-2xl object-contain shadow-2xl"
+              draggable={false}
+              className="
+                  max-h-[76vh]
+                  w-auto
+                  max-w-full
+                  rounded-2xl
+                  object-contain
+                  shadow-2xl
+                  select-none
+                  sm:max-h-[78vh]
+                  sm:rounded-3xl
+              "
             />
-            <p className="mt-4 text-center font-display text-lg font-bold text-white">
-              {item.title}
-            </p>
+
+            {/* Caption */}
+            {item.title && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="
+                  mt-4
+                  max-w-[90vw]
+                  rounded-full
+                  bg-white/10
+                  px-4
+                  py-2
+                  text-center
+                  text-sm
+                  font-semibold
+                  text-white/90
+                  backdrop-blur-md
+                  sm:px-5
+                "
+              >
+                {item.title}
+              </motion.div>
+            )}
           </motion.div>
+
+          {/* Bottom keyboard hint */}
+          {items.length > 1 && (
+            <div
+              className="
+                absolute
+                bottom-5
+                hidden
+                items-center
+                gap-2
+                rounded-full
+                bg-white/5
+                px-4
+                py-2
+                text-[11px]
+                font-medium
+                text-white/40
+                sm:flex
+              "
+            >
+              استخدم ← → للتنقل · ESC للإغلاق
+            </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

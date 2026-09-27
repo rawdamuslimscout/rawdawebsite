@@ -275,6 +275,7 @@ export type NewsItem = {
   date: string;
   excerpt: string;
   imageUrl?: string;
+  imageUrls?: string[];
 };
 
 // Sample news — clearly replaceable placeholder content.

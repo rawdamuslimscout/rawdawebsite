@@ -23,6 +23,14 @@ export default function Navbar({ siteName }: { siteName: string }) {
     };
   }, [open]);
 
+  const handleNavigation = (href: string) => {
+    setOpen(false);
+    if (href.startsWith("/#") && window.location.pathname === "/") {
+      const target = document.querySelector(href.slice(1));
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
@@ -36,7 +44,11 @@ export default function Navbar({ siteName }: { siteName: string }) {
           scrolled ? "py-2.5" : "py-4"
         }`}
       >
-        <a href="#home" className="flex items-center gap-3">
+        <a
+          href="/#home"
+          onClick={() => handleNavigation("/#home")}
+          className="flex items-center gap-3"
+        >
           <Logo size={scrolled ? 38 : 44} dark />
           <span className="font-display text-base font-semibold text-white sm:text-lg">
             {siteName}
@@ -48,6 +60,7 @@ export default function Navbar({ siteName }: { siteName: string }) {
             <a
               key={link.href}
               href={link.href}
+              onClick={() => handleNavigation(link.href)}
               className="text-sm font-medium text-white/85 transition-colors hover:text-brand-yellow"
             >
               {link.label}
@@ -86,7 +99,7 @@ export default function Navbar({ siteName }: { siteName: string }) {
               <a
                 key={link.href}
                 href={link.href}
-                onClick={() => setOpen(false)}
+                onClick={() => handleNavigation(link.href)}
                 className="rounded-lg px-3 py-3 text-base font-medium text-white/90 transition-colors hover:bg-white/10"
               >
                 {link.label}

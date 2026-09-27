@@ -1,7 +1,14 @@
-import { Instagram, Facebook, MapPin, Phone } from "lucide-react";
+import {
+  Instagram,
+  Facebook,
+  MapPin,
+  Phone,
+  MessageCircle,
+} from "lucide-react";
 import Logo from "@/components/ui/Logo";
 import { navLinks, siteInfo as staticSiteInfo } from "@/data/content";
 import { getSiteSettings } from "@/lib/data";
+import DeveloperWatermark from "./DeveloperWatermark";
 
 export default async function Footer() {
   const siteInfo = await getSiteSettings();
@@ -12,10 +19,13 @@ export default async function Footer() {
           <div>
             <div className="flex items-center gap-3">
               <Logo size={46} dark />
-              <span className="font-display text-lg font-semibold">{siteInfo.name}</span>
+              <span className="font-display text-lg font-semibold">
+                {siteInfo.name}
+              </span>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-white/65">
-              {siteInfo.parent}. نعمل على بناء جيل من القادة عبر الكشافة والقيم والخدمة.
+              {siteInfo.parent}. نعمل على بناء جيل من القادة عبر الكشافة والقيم
+              والخدمة.
             </p>
           </div>
 
@@ -26,7 +36,10 @@ export default async function Footer() {
             <ul className="mt-4 space-y-2.5 text-sm text-white/70">
               {navLinks.map((link) => (
                 <li key={link.href}>
-                  <a href={link.href} className="transition-colors hover:text-white">
+                  <a
+                    href={link.href}
+                    className="transition-colors hover:text-white"
+                  >
                     {link.label}
                   </a>
                 </li>
@@ -46,6 +59,17 @@ export default async function Footer() {
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 shrink-0 text-brand-turquoise" />
                 <span dir="ltr">+961 81 348 184</span>
+              </li>
+              <li>
+                <a
+                  href="https://wa.me/96181348184"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-white/75 transition-colors hover:text-brand-yellow"
+                >
+                  <MessageCircle className="h-4 w-4 text-emerald-400" />
+                  تواصل معنا عبر واتساب
+                </a>
               </li>
             </ul>
           </div>
@@ -78,8 +102,11 @@ export default async function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 border-t border-white/10 pt-6 text-center text-xs text-white/50">
-          © {new Date().getFullYear()} {siteInfo.name} — جميع الحقوق محفوظة.
+        <div className="mt-12 flex flex-col-reverse items-center justify-between gap-4 border-t border-white/10 pt-6 text-center text-xs text-white/50 sm:flex-row sm:text-right">
+          <p>
+            © {new Date().getFullYear()} {siteInfo.name} — جميع الحقوق محفوظة.
+          </p>
+          <DeveloperWatermark />
         </div>
       </div>
     </footer>

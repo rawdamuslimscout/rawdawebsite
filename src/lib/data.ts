@@ -151,24 +151,38 @@ export async function getNews(): Promise<NewsItem[]> {
     category: r.category,
     date: r.date,
     excerpt: r.excerpt,
-    imageUrl: (r as { imageUrl?: string }).imageUrl,
+    imageUrl: r.imageUrl,
+    imageUrls: [r.imageUrl, ...parseImageUrls(r.imageUrls)].filter(Boolean),
   }));
+}
+
+function parseImageUrls(value: string): string[] {
+  try {
+    const parsed = JSON.parse(value || "[]");
+    return Array.isArray(parsed)
+      ? parsed.filter((url): url is string => typeof url === "string")
+      : [];
+  } catch {
+    return [];
+  }
 }
 
 export async function getGalleryItems(): Promise<GalleryItem[]> {
   const rows = await prisma.galleryItem.findMany({
     orderBy: { order: "asc" },
   });
-  return rows.map(
-    (r) =>
-      ({
-        id: r.id,
-        title: r.title,
-        category: r.category as GalleryItem["category"],
-        size: r.size as GalleryItem["size"],
-        imageUrl: r.imageUrl,
-      }) as GalleryItem,
-  );
+  return rows
+    .map(
+      (r) =>
+        ({
+          id: r.id,
+          title: r.title,
+          category: r.category as GalleryItem["category"],
+          size: r.size as GalleryItem["size"],
+          imageUrl: r.imageUrl.trim(),
+        }) as GalleryItem,
+    )
+    .filter((item) => Boolean(item.imageUrl));
 }
 
 export async function getBlogPosts(): Promise<BlogPost[]> {

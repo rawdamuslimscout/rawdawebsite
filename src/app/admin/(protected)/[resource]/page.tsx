@@ -38,6 +38,18 @@ function FieldInput({
     );
   }
 
+  if (field.type === "file-multiple") {
+    return (
+      <input
+        name={field.name}
+        type="file"
+        multiple
+        accept={field.accept}
+        className={`${baseClass} file:mr-3 file:rounded-full file:border-0 file:bg-brand-purple-tint file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-purple`}
+      />
+    );
+  }
+
   if (field.type === "select") {
     return (
       <select
@@ -174,10 +186,17 @@ export default async function ResourceAdminPage({
                           field={field}
                           defaultValue={row[field.name] as string | number}
                         />
-                        {field.type === "file" &&
+                        {(field.type === "file" ||
+                          field.type === "file-multiple") &&
                         row[field.uploadTo || field.name] ? (
                           <a
-                            href={String(row[field.uploadTo || field.name])}
+                            href={String(
+                              field.type === "file-multiple"
+                                ? JSON.parse(
+                                    String(row[field.uploadTo || field.name]),
+                                  )[0] || ""
+                                : row[field.uploadTo || field.name],
+                            )}
                             target="_blank"
                             rel="noreferrer"
                             className="mt-1 block text-xs text-brand-purple underline"
