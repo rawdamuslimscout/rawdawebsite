@@ -347,6 +347,11 @@ export function getResourceConfig(key: string): ResourceConfig | undefined {
   return resourceRegistry[key];
 }
 
+/** Whether this resource has a manual numeric "order" field that quick-reorder buttons can use. */
+export function resourceHasOrderField(config: ResourceConfig): boolean {
+  return config.fields.some((f) => f.name === "order" && f.type === "number");
+}
+
 // The generic CRUD layer only needs findMany/create/update/delete with
 // the same shapes across every Prisma model, so a loose structural
 // type is used here deliberately instead of Prisma's per-model types.
