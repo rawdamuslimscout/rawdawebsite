@@ -5,7 +5,7 @@ import { getGalleryItems } from "@/lib/data";
 export default async function Gallery() {
   const galleryItems = await getGalleryItems();
 
-  // Don't render the entire gallery section if there are no images.
+  // Don't render the entire gallery section if there are no images...
   if (!galleryItems?.length) {
     return null;
   }
