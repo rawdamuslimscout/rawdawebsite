@@ -17,7 +17,7 @@ function toArabic(n: number) {
  * final value, so there is no hydration mismatch and no-JS is correct.
  */
 export default function CountUp({ value }: { value: string }) {
-  const match = value.match(/^(.*?)([0-9٠-٩]+)(.*)$/s);
+  const match = value.match(/^(.*?)([0-9٠-٩]+)([\s\S]*)$/);
   const target = match ? parseInt(toLatin(match[2]), 10) : NaN;
   const arabic = match ? /[٠-٩]/.test(match[2]) : false;
   const [shown, setShown] = useState<number>(target);
