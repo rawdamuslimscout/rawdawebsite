@@ -13,40 +13,9 @@ export default async function Gallery() {
   return (
     <section
       id="gallery"
-      className="relative overflow-hidden bg-brand-cream py-20 sm:py-24 lg:py-28"
+      className="section-y relative overflow-hidden bg-brand-cream"
     >
-      {/* Decorative background */}
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none
-          absolute
-          -left-40
-          top-20
-          h-80
-          w-80
-          rounded-full
-          bg-brand-purple/5
-          blur-3xl
-        "
-      />
-
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none
-          absolute
-          -right-40
-          bottom-0
-          h-96
-          w-96
-          rounded-full
-          bg-brand-purple/5
-          blur-3xl
-        "
-      />
-
-      <div className="relative mx-auto max-w-7xl px-5 sm:px-8">
+      <div className="container-x">
         <SectionHeading
           title="معرض الصور"
           subtitle="لحظات من رحلاتنا ومخيماتنا وأنشطتنا الكشفية."

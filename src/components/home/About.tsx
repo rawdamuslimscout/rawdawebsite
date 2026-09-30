@@ -1,117 +1,112 @@
-import Image from "next/image";
+/* eslint-disable @next/next/no-img-element */
+import { Mountain } from "lucide-react";
+
+import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { getSiteSettings, getSiteStats } from "@/lib/data";
+import { getGalleryItems, getSiteSettings } from "@/lib/data";
 
 export default async function About() {
-  const [stats, siteInfo] = await Promise.all([
-    getSiteStats(),
+  const [siteInfo, gallery] = await Promise.all([
     getSiteSettings(),
+    getGalleryItems().catch(() => []),
   ]);
+
+  // Authentic group photography from the gallery (admin-managed), if any.
+  const photos = gallery.filter((g) => g.imageUrl).slice(0, 2);
 
   return (
     <section
       id="about"
-      className="relative overflow-hidden bg-brand-cream py-24 sm:py-28"
+      className="section-y relative overflow-hidden bg-brand-cream"
     >
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="grid items-center gap-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-24">
-          {/* =========================
-              ABOUT CONTENT
-          ========================== */}
-          <div className="order-1 text-right lg:order-1">
+      <div className="container-x">
+        <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
+          {/* ---------- Editorial text (start / right in RTL) ---------- */}
+          <Reveal className="lg:col-span-6 xl:col-span-6">
             <SectionHeading
               title="عن الفوج"
               subtitle={`${siteInfo.parent} — ${siteInfo.name}`}
             />
 
-            <p className="mt-6 max-w-xl text-base leading-[2] text-brand-ink/70 sm:text-lg">
+            <p className="mt-8 max-w-xl text-lg leading-[2.1] text-brand-ink/80 sm:text-xl">
               فوج روضة الفيحاء هو أحد أفواج جمعية الكشاف المسلم في لبنان ضمن
-              مفوضية الشمال. نُقيم ونُنظّم مغامرات وتحديات وأوقاتًا كشفية مميزة
-              للاشبال والزهرات والكشافة والمرشدات، ضمن رحلة تربوية متكاملة تجمع
-              بين القيم الإسلامية وروح القيادة والخدمة.
+              مفوضية الشمال.
+            </p>
+            <p className="mt-4 max-w-xl text-base leading-[2.1] text-brand-ink/70 sm:text-lg">
+              نُقيم ونُنظّم مغامرات وتحديات وأوقاتًا كشفية مميزة للاشبال
+              والزهرات والكشافة والمرشدات، ضمن رحلة تربوية متكاملة تجمع بين
+              القيم الإسلامية وروح القيادة والخدمة.
             </p>
 
-            {/* Statistics */}
-            <dl className="mt-10 grid max-w-xl grid-cols-3 gap-4 border-t border-brand-purple/10 pt-8">
-              {stats.map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <dt className="sr-only">{stat.label}</dt>
+            <a
+              href="#sections"
+              className="link-underline mt-8 inline-block pb-1 text-base font-bold text-brand-purple"
+            >
+              تعرّف على مراحلنا الكشفية
+            </a>
+          </Reveal>
 
-                  <dd className="font-display text-2xl font-bold text-brand-purple sm:text-3xl">
-                    {stat.value}
-                  </dd>
-
-                  <p className="mt-1 text-xs text-brand-ink/60 sm:text-sm">
-                    {stat.label}
-                  </p>
+          {/* ---------- Visual composition ---------- */}
+          <Reveal delay={120} className="lg:col-span-6">
+            {photos.length > 0 ? (
+              <div className="relative mx-auto grid max-w-xl grid-cols-12 gap-3 sm:gap-4">
+                <div className="col-span-7 aspect-[4/5] overflow-hidden rounded-2xl shadow-soft">
+                  <img
+                    src={photos[0].imageUrl}
+                    alt={photos[0].title}
+                    width={640}
+                    height={800}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-cover"
+                  />
                 </div>
-              ))}
-            </dl>
-          </div>
-
-          {/* =========================
-              CREST
-          ========================== */}
-          <div className="order-2 lg:order-2">
-            <div className="relative mx-auto flex h-[380px] w-full max-w-[430px] items-center justify-center sm:h-[440px]">
-              {/* Large soft background shape */}
-              <div
-                className="
-                  absolute
-                  h-[70%]
-                  w-[70%]
-                  rounded-full
-                  bg-brand-purple-tint/70
-                  blur-3xl
-                "
-              />
-
-              {/* Very subtle vertical glow */}
-              <div
-                className="
-                  absolute
-                  h-[85%]
-                  w-[35%]
-                  rounded-full
-                  bg-brand-purple/[0.035]
-                  blur-2xl
-                "
-              />
-
-              {/* Crest */}
-              <div
-                className="
-                  relative
-                  z-10
-                  w-[52%]
-                  max-w-[245px]
-                  sm:w-[54%]
-                  sm:max-w-[260px]
-                "
-              >
-                <Image
-                  src="/images/logo-about.png"
-                  alt="شعار فوج روضة الفيحاء"
-                  width={376}
-                  height={629}
-                  priority
-                  className="
-                    h-auto
-                    w-full
-                    object-contain
-                    drop-shadow-[0_20px_30px_rgba(67,40,110,0.13)]
-                  "
-                />
+                <div className="col-span-5 flex flex-col gap-3 pt-10 sm:gap-4 sm:pt-14">
+                  {photos[1] ? (
+                    <div className="aspect-[4/5] overflow-hidden rounded-2xl shadow-soft">
+                      <img
+                        src={photos[1].imageUrl}
+                        alt={photos[1].title}
+                        width={480}
+                        height={600}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  ) : null}
+                  <div className="rounded-2xl bg-brand-purple p-5 text-white shadow-soft">
+                    <Mountain
+                      className="h-6 w-6 text-brand-yellow"
+                      aria-hidden="true"
+                    />
+                    <p className="mt-3 font-display text-lg font-semibold leading-relaxed">
+                      {siteInfo.tagline}
+                    </p>
+                  </div>
+                </div>
               </div>
-
-              {/* Minimal decorative line */}
-              <div className="absolute bottom-[7%] left-1/2 flex -translate-x-1/2 items-center gap-3">
-                <span className="h-px w-8 bg-brand-purple/15" />
-                <span className="h-1.5 w-1.5 rounded-full bg-brand-purple/30" />
-                <span className="h-px w-8 bg-brand-purple/15" />
+            ) : (
+              <div className="relative mx-auto max-w-xl overflow-hidden rounded-2xl bg-brand-purple-dark p-8 shadow-soft sm:p-12">
+                <div className="texture-canvas absolute inset-0 opacity-40" />
+                <svg
+                  className="absolute inset-x-0 bottom-0 h-1/2 w-full text-brand-purple/70"
+                  viewBox="0 0 400 200"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M0 200 L0 130 L90 50 L170 130 L250 20 L330 120 L400 70 L400 200Z"
+                    fill="currentColor"
+                  />
+                </svg>
+                <p className="relative font-display text-2xl font-bold leading-relaxed text-brand-yellow sm:text-3xl">
+                  {siteInfo.tagline}
+                </p>
+                <div className="relative h-40 sm:h-48" />
               </div>
-            </div>
-          </div>
+            )}
+          </Reveal>
         </div>
       </div>
     </section>

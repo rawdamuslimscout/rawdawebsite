@@ -49,6 +49,7 @@ export default function StageDetailModal({
 }) {
   const [tab, setTab] = useState<Tab>("overview");
   const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
   const Icon = iconMap[stage.icon];
   const details = stageDetails[stage.id] || { label: "رحلة كشفية", points: [] };
   const badgeData = stageBadges[stage.id];
@@ -59,15 +60,16 @@ export default function StageDetailModal({
     if (open) setTab("overview");
   }, [open, stage.id]);
 
-  // Escape to close + basic focus handling.
+  // Escape to close and keep the page from scrolling behind the dialog.
   useEffect(() => {
     if (!open) return;
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
-    dialogRef.current?.focus();
+    closeRef.current?.focus();
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKey);
     };
   }, [open, onClose]);
@@ -91,7 +93,7 @@ export default function StageDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-brand-ink/50 backdrop-blur-sm sm:items-center sm:p-6"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-brand-ink/60 p-0 backdrop-blur-sm sm:items-center sm:p-6"
       onClick={onClose}
       role="presentation"
     >
@@ -102,26 +104,27 @@ export default function StageDetailModal({
         aria-modal="true"
         aria-labelledby={`stage-modal-title-${stage.id}`}
         onClick={(e) => e.stopPropagation()}
-        className="relative flex max-h-[88vh] w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-[0_30px_60px_-15px_rgba(43,23,80,0.35)] outline-none animate-in slide-in-from-bottom duration-300 sm:max-w-lg sm:rounded-3xl sm:duration-200"
+        className="relative flex max-h-[92dvh] min-h-0 w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-[0_30px_60px_-15px_rgba(43,23,80,0.35)] outline-none animate-in slide-in-from-bottom duration-300 sm:max-w-2xl sm:rounded-3xl sm:duration-200"
       >
         {/* Header */}
-        <div className="relative shrink-0 bg-gradient-to-l from-brand-purple to-brand-purple-dark px-6 pb-5 pt-6 text-white">
+        <div className="relative shrink-0 bg-gradient-to-l from-brand-purple to-brand-purple-dark px-4 pb-0 pt-5 text-white sm:px-7 sm:pt-6">
           <button
+            ref={closeRef}
             type="button"
             onClick={onClose}
             aria-label="إغلاق"
-            className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/15 transition hover:bg-white/25"
+            className="absolute left-3 top-3 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 transition hover:bg-white/25 sm:left-4 sm:top-4"
           >
             <X className="h-4 w-4" />
           </button>
-          <div className="flex items-center gap-4">
-            <div className="badge-shield flex h-14 w-14 shrink-0 items-center justify-center bg-white/15">
-              <Icon className="h-6 w-6" strokeWidth={2} />
+          <div className="flex items-center gap-3 pl-12 sm:gap-4 sm:pl-0">
+            <div className="badge-shield flex h-12 w-12 shrink-0 items-center justify-center bg-white/15 sm:h-14 sm:w-14">
+              <Icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2} />
             </div>
             <div className="min-w-0">
               <h3
                 id={`stage-modal-title-${stage.id}`}
-                className="truncate font-display text-xl font-bold"
+                className="font-display text-lg font-bold leading-tight sm:text-xl"
               >
                 {stage.title}
               </h3>
@@ -130,13 +133,13 @@ export default function StageDetailModal({
           </div>
 
           {/* Tabs */}
-          <div className="mt-5 flex gap-1 border-b border-white/15">
+          <div className="no-scrollbar -mx-4 mt-5 flex gap-1 overflow-x-auto border-b border-white/15 px-4 sm:-mx-7 sm:px-7">
             {tabs.map((t) => (
               <button
                 key={t.id}
                 type="button"
                 onClick={() => setTab(t.id)}
-                className={`relative px-3 pb-3 text-sm font-bold transition-colors ${
+                className={`relative min-h-11 shrink-0 whitespace-nowrap px-3 pb-3 text-sm font-bold transition-colors ${
                   tab === t.id
                     ? "text-white"
                     : "text-white/55 hover:text-white/80"
@@ -157,7 +160,7 @@ export default function StageDetailModal({
         </div>
 
         {/* Body */}
-        <div className="overflow-y-auto px-6 py-5">
+        <div className="min-h-0 overflow-y-auto overscroll-contain px-4 py-5 [padding-bottom:calc(1.25rem+env(safe-area-inset-bottom))] sm:px-7 sm:py-6">
           {tab === "overview" && (
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-brand-turquoise-dark">

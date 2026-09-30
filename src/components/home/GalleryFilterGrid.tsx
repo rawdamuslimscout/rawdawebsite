@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Check, ChevronDown, SlidersHorizontal } from "lucide-react";
 
 import GalleryCard from "@/components/ui/GalleryCard";
 import GalleryLightbox from "@/components/ui/GalleryLightbox";
@@ -22,6 +23,9 @@ const SPAN_MAP: Record<string, string> = {
 export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
   const [active, setActive] = useState("all");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [open, setOpen] = useState(false);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const filters = useMemo(
     () =>
@@ -61,10 +65,9 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
     return items.filter((item) => item.category === active);
   }, [items, active]);
 
-  /*
-   * If a category disappears because the data changed,
-   * safely return to "all".
-   */
+  const activeFilter =
+    visibleFilters.find((filter) => filter.id === active) ?? visibleFilters[0];
+
   useEffect(() => {
     if (active !== "all" && (counts.get(active) ?? 0) === 0) {
       setActive("all");
@@ -72,12 +75,23 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
     }
   }, [active, counts]);
 
-  /*
-   * Empty gallery.
-   *
-   * This is mainly a safety fallback.
-   * Gallery.tsx already prevents the entire section from rendering.
-   */
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   if (!items.length) {
     return null;
   }
@@ -85,115 +99,263 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
   const changeFilter = (filterId: string) => {
     setActive(filterId);
     setLightboxIndex(null);
+    setOpen(false);
   };
 
   return (
     <>
-      {/* =========================
-          FILTERS
-      ========================== */}
+      {/* =========================================================
+          FILTER DROPDOWN
+      ========================================================== */}
+
       {visibleFilters.length > 1 && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
+          transition={{
+            duration: 0.35,
+            ease: [0.22, 1, 0.36, 1],
+          }}
           className="mt-8 sm:mt-10"
         >
-          <div className="no-scrollbar flex gap-2 overflow-x-auto px-1 pb-2 sm:flex-wrap sm:justify-center sm:overflow-visible sm:pb-0">
-            {visibleFilters.map((filter) => {
-              const isActive = active === filter.id;
-              const count = counts.get(filter.id) ?? 0;
-
-              return (
-                <button
-                  key={filter.id}
-                  type="button"
-                  onClick={() => changeFilter(filter.id)}
-                  aria-pressed={isActive}
-                  className={`
-                    group
-                    relative
+          <div ref={dropdownRef} className="relative mx-auto w-full max-w-xs">
+            {/* Trigger */}
+            <button
+              type="button"
+              onClick={() => setOpen((value) => !value)}
+              aria-expanded={open}
+              aria-haspopup="listbox"
+              className="
+                flex
+                w-full
+                items-center
+                justify-between
+                gap-3
+                rounded-2xl
+                border
+                border-brand-purple/10
+                bg-white
+                px-4
+                py-3
+                text-right
+                shadow-[0_6px_24px_rgba(53,30,88,0.06)]
+                outline-none
+                transition-all
+                duration-200
+                hover:border-brand-purple/20
+                hover:shadow-[0_8px_28px_rgba(53,30,88,0.09)]
+                focus-visible:ring-2
+                focus-visible:ring-brand-purple/20
+              "
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="
                     flex
+                    h-9
+                    w-9
                     shrink-0
                     items-center
-                    gap-2
-                    overflow-hidden
-                    rounded-full
-                    px-3.5
-                    py-2
-                    text-sm
-                    font-semibold
-                    transition-colors
-                    duration-300
-                    focus-visible:outline-none
-                    focus-visible:ring-2
-                    focus-visible:ring-brand-purple/40
-                    focus-visible:ring-offset-2
-                    ${
-                      isActive
-                        ? "text-white"
-                        : "bg-white/70 text-brand-ink/60 ring-1 ring-brand-purple/10 hover:bg-white hover:text-brand-purple"
-                    }
-                  `}
+                    justify-center
+                    rounded-xl
+                    bg-brand-purple/[0.07]
+                    text-brand-purple
+                  "
                 >
-                  {isActive && (
-                    <motion.span
-                      layoutId="gallery-filter-pill"
-                      className="absolute inset-0 rounded-full bg-brand-purple"
-                      transition={{
-                        type: "spring",
-                        stiffness: 420,
-                        damping: 32,
-                      }}
-                    />
-                  )}
+                  <SlidersHorizontal size={17} strokeWidth={2} />
+                </div>
 
-                  <span className="relative">{filter.label}</span>
-
-                  <span
-                    className={`
-                      relative
-                      flex
-                      min-w-5
-                      items-center
-                      justify-center
-                      rounded-full
-                      px-1.5
-                      py-0.5
-                      text-[10px]
-                      font-bold
-                      leading-none
-                      transition-colors
-                      ${
-                        isActive
-                          ? "bg-white/15 text-white/80"
-                          : "bg-brand-purple/5 text-brand-ink/40 group-hover:bg-brand-purple/10 group-hover:text-brand-purple/70"
-                      }
-                    `}
-                  >
-                    {count}
+                <div className="flex flex-col items-start">
+                  <span className="text-[10px] font-medium text-brand-ink/40">
+                    تصنيف الصور
                   </span>
-                </button>
-              );
-            })}
+
+                  <span className="text-sm font-bold text-brand-ink">
+                    {activeFilter?.label}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span
+                  className="
+                    flex
+                    min-w-[24px]
+                    items-center
+                    justify-center
+                    rounded-md
+                    bg-brand-purple/[0.07]
+                    px-1.5
+                    py-1
+                    text-[10px]
+                    font-bold
+                    text-brand-purple
+                  "
+                >
+                  {counts.get(active) ?? 0}
+                </span>
+
+                <motion.div
+                  animate={{
+                    rotate: open ? 180 : 0,
+                  }}
+                  transition={{ duration: 0.2 }}
+                  className="text-brand-ink/40"
+                >
+                  <ChevronDown size={18} />
+                </motion.div>
+              </div>
+            </button>
+
+            {/* Dropdown */}
+            <AnimatePresence>
+              {open && (
+                <motion.div
+                  initial={{
+                    opacity: 0,
+                    y: -5,
+                    scale: 0.98,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    y: 6,
+                    scale: 1,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    y: -5,
+                    scale: 0.98,
+                  }}
+                  transition={{
+                    duration: 0.18,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  className="
+                    absolute
+                    inset-x-0
+                    top-full
+                    z-50
+                    overflow-hidden
+                    rounded-2xl
+                    border
+                    border-brand-purple/10
+                    bg-white
+                    p-1.5
+                    shadow-[0_16px_45px_rgba(53,30,88,0.12)]
+                  "
+                  role="listbox"
+                >
+                  {visibleFilters.map((filter) => {
+                    const isActive = active === filter.id;
+                    const count = counts.get(filter.id) ?? 0;
+
+                    return (
+                      <button
+                        key={filter.id}
+                        type="button"
+                        role="option"
+                        aria-selected={isActive}
+                        onClick={() => changeFilter(filter.id)}
+                        className={`
+                          flex
+                          w-full
+                          items-center
+                          justify-between
+                          rounded-xl
+                          px-3.5
+                          py-3
+                          text-right
+                          transition-colors
+                          duration-150
+                          ${
+                            isActive
+                              ? "bg-brand-purple/[0.07] text-brand-purple"
+                              : "text-brand-ink/65 hover:bg-brand-purple/[0.04] hover:text-brand-ink"
+                          }
+                        `}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`
+                              flex
+                              h-5
+                              w-5
+                              items-center
+                              justify-center
+                              rounded-full
+                              border
+                              transition-all
+                              ${
+                                isActive
+                                  ? "border-brand-purple bg-brand-purple text-white"
+                                  : "border-brand-ink/15 text-transparent"
+                              }
+                            `}
+                          >
+                            <Check size={12} strokeWidth={3} />
+                          </span>
+
+                          <span className="text-sm font-semibold">
+                            {filter.label}
+                          </span>
+                        </div>
+
+                        <span
+                          className={`
+                            min-w-[25px]
+                            rounded-md
+                            px-1.5
+                            py-1
+                            text-center
+                            text-[10px]
+                            font-bold
+                            ${
+                              isActive
+                                ? "bg-brand-purple text-white"
+                                : "bg-brand-purple/[0.06] text-brand-ink/40"
+                            }
+                          `}
+                        >
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </motion.div>
       )}
 
-      {/* =========================
+      {/* =========================================================
           GALLERY
-      ========================== */}
+      ========================================================== */}
+
       <AnimatePresence mode="wait">
         {filtered.length > 0 && (
           <motion.div
             key={active}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
+            initial={{
+              opacity: 0,
+              y: 8,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            exit={{
+              opacity: 0,
+              y: -5,
+            }}
+            transition={{
+              duration: 0.3,
+              ease: [0.22, 1, 0.36, 1],
+            }}
             className="
               mt-8
               grid
+              grid-flow-dense
               auto-rows-[145px]
               grid-cols-2
               gap-3
@@ -211,8 +373,8 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
                   layout
                   initial={{
                     opacity: 0,
-                    y: 20,
-                    scale: 0.97,
+                    y: 18,
+                    scale: 0.98,
                   }}
                   animate={{
                     opacity: 1,
@@ -221,7 +383,7 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
                   }}
                   exit={{
                     opacity: 0,
-                    scale: 0.96,
+                    scale: 0.97,
                   }}
                   transition={{
                     duration: 0.35,
@@ -232,7 +394,6 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
                     min-h-0
                     overflow-hidden
                     rounded-2xl
-                    sm:rounded-3xl
                     ${SPAN_MAP[item.size as string] ?? "col-span-1 row-span-1"}
                   `}
                 >
@@ -247,9 +408,10 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
         )}
       </AnimatePresence>
 
-      {/* =========================
+      {/* =========================================================
           LIGHTBOX
-      ========================== */}
+      ========================================================== */}
+
       <GalleryLightbox
         items={filtered}
         index={lightboxIndex}

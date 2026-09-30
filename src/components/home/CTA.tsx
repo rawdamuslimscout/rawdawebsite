@@ -1,37 +1,47 @@
-import { Instagram } from "lucide-react";
+import { ArrowLeft, Instagram } from "lucide-react";
+import Reveal from "@/components/ui/Reveal";
 import { getSiteSettings } from "@/lib/data";
 
 export default async function CTA() {
   const siteInfo = await getSiteSettings();
   return (
-    <section className="relative overflow-hidden bg-brand-purple py-20">
+    <section className="relative overflow-hidden bg-brand-purple py-20 sm:py-24">
       <div className="texture-canvas absolute inset-0 opacity-30" />
-      <div className="relative mx-auto max-w-2xl px-5 text-center sm:px-8">
-        <h2 className="font-display text-3xl font-bold text-white sm:text-4xl">
+      <svg
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 w-full text-brand-purple-dark/60 sm:h-32"
+        viewBox="0 0 1440 160"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path d="M0 160 L0 110 L220 40 L420 120 L680 20 L900 120 L1120 50 L1300 120 L1440 70 L1440 160Z" fill="currentColor" />
+      </svg>
+      <Reveal className="container-x relative text-center">
+        <h2 className="font-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
           كن جزءًا من الحكاية
         </h2>
-        <p className="mt-4 text-base leading-relaxed text-white/75 sm:text-lg">
+        <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/80 sm:text-lg">
           انضم إلى رحلة كشفية تجمع القيم والمغامرة والأخوة، وابدأ فصلك الخاص
           في مسيرة فوج روضة الفيحاء.
         </p>
-        <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <a
-            href="#contact"
-            className="w-full rounded-full bg-brand-yellow px-8 py-3.5 text-center text-sm font-bold text-brand-purple-dark transition-colors hover:bg-white sm:w-auto"
-          >
+        <div className="mx-auto mt-9 flex max-w-md flex-col items-stretch justify-center gap-3 sm:max-w-none sm:flex-row">
+          <a href="/join" className="btn-gold">
+            انضم إلينا
+            <ArrowLeft className="btn-arrow h-4 w-4" aria-hidden="true" />
+          </a>
+          <a href="#contact" className="btn-outline-light">
             تواصل معنا
           </a>
           <a
             href={siteInfo.instagramUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/30 px-8 py-3.5 text-sm font-bold text-white transition-colors hover:border-white hover:bg-white/10 sm:w-auto"
+            className="btn-outline-light"
           >
-            <Instagram className="h-4 w-4" />
+            <Instagram className="h-4 w-4" aria-hidden="true" />
             تابعنا على Instagram
           </a>
         </div>
-      </div>
+      </Reveal>
     </section>
   );
 }

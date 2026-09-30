@@ -1,87 +1,89 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 // src/components/ui/ScoutCard.tsx
 import { iconMap } from "@/lib/icons";
 import type { ScoutStage } from "@/data/content";
-import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import StageDetailModal from "./StageDetailModal";
 import { stageBadges } from "@/data/stageBadges";
-
-const accents = [
-  "from-brand-turquoise to-brand-turquoise-dark",
-  "from-brand-yellow to-brand-orange",
-  "from-brand-purple-light to-brand-purple",
-];
 
 export default function ScoutCard({
   stage,
   index,
+  onOpen,
 }: {
   stage: ScoutStage;
   index: number;
+  onOpen: (stage: ScoutStage, trigger: HTMLButtonElement) => void;
 }) {
   const Icon = iconMap[stage.icon];
-  const [open, setOpen] = useState(false);
   const stageNumber = ["٠١", "٠٢", "٠٣"][index] || "٠٠";
   const badgeCount = stageBadges[stage.id]?.totalCount;
 
   return (
     <>
-      <article
-        className={`group relative flex flex-col overflow-hidden border border-brand-purple/10 bg-white p-6 shadow-[0_1px_2px_rgba(43,23,80,0.06)] transition-all duration-300 hover:-translate-y-1 hover:z-10 hover:shadow-[0_18px_30px_-12px_rgba(75,42,130,0.25)] lg:rounded-none ${index === 0 ? "lg:rounded-r-3xl" : ""} ${index === 2 ? "lg:rounded-l-3xl" : ""}`}
-      >
-        <div
-          className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-l ${accents[index % accents.length]}`}
-        />
-        {stage.imageUrl && (
-          <div className="-mx-6 -mt-6 mb-6 h-32 overflow-hidden">
+      <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-brand-purple/10 bg-white shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+        {/* Image — same ratio for all three stages */}
+        <div className="relative aspect-[4/3] overflow-hidden bg-brand-purple-dark sm:aspect-[16/10] lg:aspect-[4/3]">
+          {stage.imageUrl ? (
             <img
               src={stage.imageUrl}
-              alt=""
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              alt={stage.title}
+              width={800}
+              height={600}
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
             />
-          </div>
-        )}
-        <div className="flex items-start justify-between gap-4">
-          <div className="badge-shield flex h-14 w-14 shrink-0 items-center justify-center bg-brand-purple text-white transition-transform duration-300 group-hover:scale-105">
-            <Icon className="h-6 w-6" strokeWidth={2} />
-          </div>
-          <span className="font-display text-4xl font-bold leading-none text-brand-purple/10">
-            {stageNumber}
+          ) : (
+            <div className="texture-canvas flex h-full w-full items-center justify-center">
+              <Icon
+                className="h-16 w-16 text-brand-yellow/80"
+                strokeWidth={1.25}
+                aria-hidden="true"
+              />
+            </div>
+          )}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-gradient-to-t from-brand-purple-dark/80 via-brand-purple-dark/10 to-transparent"
+          />
+          <span className="absolute right-4 top-4 rounded-full bg-white px-3 py-1 text-xs font-bold text-brand-purple-dark">
+            {stage.ageRange}
           </span>
         </div>
-        <h3 className="mt-5 font-display text-xl font-semibold text-brand-ink">
-          {stage.title}
-        </h3>
-        <p className="mt-1 text-sm font-medium text-brand-turquoise-dark">
-          {stage.ageRange}
-        </p>
-        <p className="mt-3 text-sm leading-relaxed text-brand-ink/65">
-          {stage.description}
-        </p>
 
-        {typeof badgeCount === "number" && (
-          <p className="mt-4 text-xs font-bold text-brand-ink/45">
-            {badgeCount}+ وسام كفاية وهواية
+        <div className="flex flex-1 flex-col p-6">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-purple text-brand-yellow">
+              <Icon className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
+            </span>
+            <h3 className="font-display text-xl font-bold text-brand-ink">
+              {stage.title}
+            </h3>
+          </div>
+
+          <p className="mt-4 flex-1 text-sm leading-7 text-brand-ink/70 sm:text-[15px]">
+            {stage.description}
           </p>
-        )}
 
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="mt-5 flex items-center gap-1.5 text-sm font-bold text-brand-purple transition-transform group-hover:gap-2.5"
-        >
-          اكتشف ما يتعلمه المنتسب
-          <ArrowLeft className="h-4 w-4" />
-        </button>
+          {typeof badgeCount === "number" && (
+            <p className="mt-4 text-xs font-bold text-brand-ink/55">
+              {badgeCount}+ وسام كفاية وهواية
+            </p>
+          )}
+
+          <button
+            type="button"
+            onClick={(event) => onOpen(stage, event.currentTarget)}
+            className="mt-5 inline-flex min-h-[44px] items-center gap-2 self-start border-t border-brand-purple/10 pt-4 text-sm font-bold text-brand-purple transition-[gap] duration-200 group-hover:gap-3"
+          >
+            اكتشف ما يتعلمه المنتسب
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
       </article>
-
-      <StageDetailModal
-        stage={stage}
-        open={open}
-        onClose={() => setOpen(false)}
-      />
     </>
   );
 }
