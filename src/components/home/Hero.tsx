@@ -19,7 +19,7 @@ export default async function Hero() {
       "
     >
       {/* =========================================================
-          Background texture
+          Background texture.
       ========================================================= */}
       <div className="texture-canvas absolute inset-0 opacity-40" />
 
