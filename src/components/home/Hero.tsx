@@ -34,7 +34,7 @@ export default async function Hero() {
       {/* Mobile background */}
       <div className="absolute inset-0 -z-30 overflow-hidden lg:hidden">
         <Image
-          src="/images/hero-mobile.png"
+          src="/images/hero-mobile-purple.png"
           alt="راية فوج روضة الفيحاء"
           fill
           priority
@@ -56,20 +56,7 @@ export default async function Hero() {
           lg:bg-[#24133e]/45
         "
       />
-
-      {/* Desktop content-side gradient */}
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none absolute inset-0 -z-20
-          hidden lg:block
-          bg-gradient-to-l
-          from-[#24133e]/95
-          via-[#24133e]/65
-          to-[#24133e]/10
-        "
-      />
-
+      {/* 
       {/* Mobile gradient */}
       {/* Mobile gradient */}
       <div
