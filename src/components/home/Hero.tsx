@@ -17,33 +17,31 @@ export default async function Hero() {
         lg:min-h-[760px]
       "
     >
-      {/* Background video */}
-      <div className="absolute inset-0 -z-30 overflow-hidden">
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          aria-hidden="true"
+      {/* Background image */}
+      <div className="absolute inset-0 -z-30">
+        <Image
+          src="/images/scout-camp.jpeg"
+          alt="أفراد فوج روضة الفيحاء في المخيم الكشفي"
+          fill
+          priority
+          sizes="100vw"
           className="
-            h-full w-full
             object-cover
-            object-center
+            object-[center_57%]
+            sm:object-[center_55%]
+            lg:object-[center_52%]
           "
-        >
-          <source src="/videos/hero-video.mp4" type="video/mp4" />
-        </video>
+        />
       </div>
 
-      {/* Overall video overlay */}
+      {/* Overall image overlay */}
       <div
         aria-hidden="true"
         className="
           pointer-events-none absolute inset-0 -z-20
           bg-gradient-to-b
-          from-[#211337]/30
-          via-[#211337]/20
+          from-[#211337]/25
+          via-[#211337]/10
           to-[#211337]/65
         "
       />
@@ -65,7 +63,7 @@ export default async function Hero() {
         aria-hidden="true"
         className="
           pointer-events-none absolute inset-0 -z-10
-          bg-[#24133e]/20
+          bg-[#24133e]/15
           lg:bg-transparent
         "
       />
@@ -220,7 +218,12 @@ export default async function Hero() {
                 lg:justify-start
               "
             >
-              <a href="#about" className="btn-gold justify-center">
+              <a
+                href="#about"
+                className="
+                  btn-gold justify-center
+                "
+              >
                 تعرّف على الفوج
                 <ArrowLeft className="btn-arrow h-4 w-4" aria-hidden="true" />
               </a>
