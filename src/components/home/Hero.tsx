@@ -21,7 +21,7 @@ export default async function Hero() {
       {/* Desktop background */}
       <div className="absolute inset-0 -z-30 hidden lg:block">
         <Image
-          src="/images/hero.png"
+          src="/images/hero-purple.png"
           alt="راية فوج روضة الفيحاء في الطبيعة"
           fill
           priority
