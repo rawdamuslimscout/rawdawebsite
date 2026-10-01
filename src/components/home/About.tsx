@@ -11,8 +11,11 @@ export default async function About() {
     getGalleryItems().catch(() => []),
   ]);
 
-  // Authentic group photography from the gallery (admin-managed), if any.
-  const photos = gallery.filter((g) => g.imageUrl).slice(0, 2);
+  const selectedPhotos = siteInfo.aboutImageIds
+    .map((id) => gallery.find((item) => item.id === id))
+    .filter((item): item is (typeof gallery)[number] => Boolean(item));
+  const photos =
+    selectedPhotos.length > 0 ? selectedPhotos : gallery.slice(0, 2);
 
   return (
     <section
@@ -75,7 +78,7 @@ export default async function About() {
                       />
                     </div>
                   ) : null}
-                  <div className="rounded-2xl bg-brand-purple p-5 text-white shadow-soft">
+                  {/* <div className="rounded-2xl bg-brand-purple p-5 text-white shadow-soft">
                     <Mountain
                       className="h-6 w-6 text-brand-yellow"
                       aria-hidden="true"
@@ -83,7 +86,7 @@ export default async function About() {
                     <p className="mt-3 font-display text-lg font-semibold leading-relaxed">
                       {siteInfo.tagline}
                     </p>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             ) : (

@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
-
 import { getSiteSettings } from "@/lib/data";
 
 export default async function Hero() {
@@ -10,350 +9,148 @@ export default async function Hero() {
     <section
       id="home"
       className="
-        relative overflow-hidden
+        relative isolate flex min-h-[620px]
+        items-center overflow-hidden
         bg-brand-purple-dark
-        pb-32 pt-28
-        sm:pb-36 sm:pt-32
-        lg:pb-40 lg:pt-32
-        xl:pb-44 xl:pt-36
+        pb-14 pt-24
+        sm:min-h-[700px]
+        lg:min-h-[760px]
       "
     >
-      {/* =========================================================
-          Background texture.
-      ========================================================= */}
-      <div className="texture-canvas absolute inset-0 opacity-40" />
+      {/* Background video */}
+      <div className="absolute inset-0 -z-30 overflow-hidden">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          aria-hidden="true"
+          className="
+            h-full w-full
+            object-cover
+            object-center
+          "
+        >
+          <source src="/videos/hero-video.mp4" type="video/mp4" />
+        </video>
+      </div>
 
-      {/* =========================================================
-          Ambient background glow
-      ========================================================= */}
+      {/* Overall video overlay */}
       <div
+        aria-hidden="true"
+        className="
+          pointer-events-none absolute inset-0 -z-20
+          bg-gradient-to-b
+          from-[#211337]/30
+          via-[#211337]/20
+          to-[#211337]/65
+        "
+      />
+
+      {/* Content-side gradient */}
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none absolute inset-0 -z-10
+          bg-gradient-to-l
+          from-[#24133e]/85
+          via-[#24133e]/50
+          to-transparent
+        "
+      />
+
+      {/* Mobile readability overlay */}
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none absolute inset-0 -z-10
+          bg-[#24133e]/20
+          lg:bg-transparent
+        "
+      />
+
+      {/* Subtle ambient glow */}
+      <div
+        aria-hidden="true"
         className="
           pointer-events-none absolute
-          left-[18%] top-[18%]
-          h-[520px] w-[520px]
-          -translate-x-1/2
-          rounded-full
-          bg-brand-purple-light/10
+          -top-40 left-1/3 -z-10
+          h-[400px] w-[500px]
+          rounded-full bg-purple-500/10
           blur-[130px]
         "
-        aria-hidden="true"
       />
 
-      <div
-        className="
-          pointer-events-none absolute
-          right-[8%] top-[20%]
-          h-[420px] w-[420px]
-          rounded-full
-          bg-brand-yellow/[0.035]
-          blur-[120px]
-        "
-        aria-hidden="true"
-      />
-
-      {/* =========================================================
-          Mountain ridge — back layer
-      ========================================================= */}
-      <svg
-        className="
-          pointer-events-none absolute inset-x-0 bottom-0
-          h-40 w-full
-          text-brand-purple/50
-          sm:h-52
-          lg:h-64
-        "
-        viewBox="0 0 1440 260"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M0 260 L0 170 L170 80 L300 170 L470 40 L640 170 L760 110 L900 180 L1120 30 L1300 150 L1440 90 L1440 260 Z"
-          fill="currentColor"
-        />
-      </svg>
-
-      {/* =========================================================
-          Mountain ridge — front layer
-      ========================================================= */}
-      <svg
-        className="
-          pointer-events-none absolute inset-x-0 bottom-0
-          h-24 w-full
-          text-brand-purple/80
-          sm:h-32
-          lg:h-40
-        "
-        viewBox="0 0 1440 160"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M0 160 L0 120 L230 50 L420 130 L660 30 L860 120 L1080 60 L1260 130 L1440 70 L1440 160 Z"
-          fill="currentColor"
-        />
-      </svg>
-
-      {/* =========================================================
-          Main content
-
-          IMPORTANT:
-          dir="ltr" guarantees:
-          LEFT  = logo
-          RIGHT = text
-
-          The Arabic text container below switches back to RTL.
-      ========================================================= */}
-      <div className="container-x relative z-10">
+      {/* Content */}
+      <div className="container-x relative z-10 w-full">
         <div
           dir="ltr"
           className="
-            grid
-            items-center
-            gap-12
-            lg:grid-cols-[1.05fr_0.95fr]
-            lg:gap-14
-            xl:gap-20
+            grid items-center gap-6
+            lg:grid-cols-[0.8fr_1.2fr]
+            lg:gap-10
+            xl:gap-16
           "
         >
-          {/* =====================================================
-              LEFT — CREST
-          ===================================================== */}
+          {/* Scout logo - desktop only */}
           <div
             className="
-              relative
-              hidden
-              min-h-[500px]
+              hidden items-center justify-center
               lg:flex
-              lg:items-center
-              lg:justify-center
             "
           >
-            {/* Main soft glow */}
-            <div
+            <Image
+              src="/images/logo-about-white.png"
+              alt="شعار فوج روضة الفيحاء"
+              width={190}
+              height={320}
+              sizes="155px"
               className="
-                absolute
-                left-1/2
-                top-1/2
-                h-[330px]
-                w-[330px]
-                -translate-x-1/2
-                -translate-y-1/2
-                rounded-full
-                bg-brand-yellow/[0.055]
-                blur-[100px]
+                h-auto w-[140px] object-contain
+                drop-shadow-[0_8px_24px_rgba(0,0,0,0.3)]
+                xl:w-[155px]
               "
-              aria-hidden="true"
             />
-
-            {/* Secondary glow */}
-            <div
-              className="
-                absolute
-                left-1/2
-                top-1/2
-                h-[250px]
-                w-[250px]
-                -translate-x-1/2
-                -translate-y-1/2
-                rounded-full
-                bg-white/[0.025]
-                blur-[70px]
-              "
-              aria-hidden="true"
-            />
-
-            {/* Outer decorative circle */}
-            <div
-              className="
-                absolute
-                left-1/2
-                top-1/2
-                h-[430px]
-                w-[430px]
-                -translate-x-1/2
-                -translate-y-1/2
-                rounded-full
-                border
-                border-white/[0.045]
-              "
-              aria-hidden="true"
-            />
-
-            {/* Yellow accent arc */}
-            <div
-              className="
-                absolute
-                left-1/2
-                top-1/2
-                h-[370px]
-                w-[370px]
-                -translate-x-1/2
-                -translate-y-1/2
-                rotate-[25deg]
-                rounded-full
-                border
-                border-transparent
-                border-r-brand-yellow/10
-                border-t-brand-yellow/20
-              "
-              aria-hidden="true"
-            />
-
-            {/* Inner subtle arc */}
-            <div
-              className="
-                absolute
-                left-1/2
-                top-1/2
-                h-[315px]
-                w-[315px]
-                -translate-x-1/2
-                -translate-y-1/2
-                -rotate-[20deg]
-                rounded-full
-                border
-                border-transparent
-                border-b-white/[0.08]
-                border-l-white/[0.04]
-              "
-              aria-hidden="true"
-            />
-
-            {/* Decorative yellow dot */}
-            <span
-              className="
-                absolute
-                left-[15%]
-                top-[25%]
-                h-2
-                w-2
-                rounded-full
-                bg-brand-yellow/60
-                shadow-[0_0_18px_rgba(255,193,7,0.45)]
-              "
-              aria-hidden="true"
-            />
-
-            {/* Decorative white dot */}
-            <span
-              className="
-                absolute
-                right-[14%]
-                top-[30%]
-                h-1.5
-                w-1.5
-                rounded-full
-                bg-white/30
-              "
-              aria-hidden="true"
-            />
-
-            {/* Decorative white dot */}
-            <span
-              className="
-                absolute
-                bottom-[22%]
-                left-[22%]
-                h-1.5
-                w-1.5
-                rounded-full
-                bg-white/20
-              "
-              aria-hidden="true"
-            />
-
-            {/* Decorative yellow dot */}
-            <span
-              className="
-                absolute
-                bottom-[27%]
-                right-[18%]
-                h-1
-                w-1
-                rounded-full
-                bg-brand-yellow/40
-              "
-              aria-hidden="true"
-            />
-
-            {/* =================================================
-                White transparent-background crest
-            ================================================= */}
-            <div
-              className="
-                relative
-                z-10
-                w-[245px]
-                xl:w-[275px]
-              "
-            >
-              <Image
-                src="/images/logo-about-white.png"
-                alt="شعار فوج روضة الفيحاء"
-                width={376}
-                height={629}
-                sizes="275px"
-                priority
-                className="
-                  h-auto
-                  w-full
-                  object-contain
-                  drop-shadow-[0_24px_45px_rgba(0,0,0,0.42)]
-                "
-              />
-            </div>
           </div>
 
-          {/* =====================================================
-              RIGHT — TEXT
-          ===================================================== */}
+          {/* Hero content */}
           <div
             dir="rtl"
             className="
+              mx-auto w-full max-w-2xl
               text-center
-              lg:text-start
+              lg:mx-0 lg:text-start
             "
           >
             {/* Association identity */}
             <div
               className="
-                flex
-                items-center
-                justify-center
-                gap-3
-                lg:justify-start
+                mb-5 flex items-center
+                justify-center gap-3
+                lg:mb-6 lg:justify-start
               "
             >
-              {/* Association logo */}
               <div
                 className="
-                  relative
-                  h-12
-                  w-12
-                  shrink-0
-                  sm:h-14
-                  sm:w-14
+                  relative h-9 w-9 shrink-0
+                  sm:h-11 sm:w-11
                 "
               >
                 <Image
                   src="/images/muslim-scout-emblem-white.png"
-                  alt="جمعية الكشّاف المسلم في لبنان"
+                  alt="شعار جمعية الكشّاف المسلم في لبنان"
                   fill
-                  sizes="56px"
+                  sizes="44px"
                   className="object-contain"
-                  priority
                 />
               </div>
 
-              {/* Association name */}
               <div className="text-start">
                 <p
                   className="
-                    font-display
-                    text-sm
-                    font-bold
-                    text-white
-                    sm:text-base
+                    font-display text-sm font-bold
+                    text-white sm:text-base
                   "
                 >
                   جمعية الكشّاف المسلم في لبنان
@@ -361,11 +158,8 @@ export default async function Hero() {
 
                 <p
                   className="
-                    mt-0.5
-                    text-xs
-                    font-medium
-                    text-brand-yellow
-                    sm:text-sm
+                    mt-0.5 text-xs font-medium
+                    text-brand-yellow sm:text-sm
                   "
                 >
                   مفوضية الشمال
@@ -373,59 +167,43 @@ export default async function Hero() {
               </div>
             </div>
 
-            {/* =================================================
-                Main title
-            ================================================= */}
+            {/* Main title */}
             <h1
               className="
-                mt-8
-                font-display
-                text-4xl
-                font-bold
-                leading-[1.12]
-                tracking-[-0.02em]
-                text-white
+                font-display font-bold
+                text-3xl leading-[1.25]
+                tracking-tight text-white
+                drop-shadow-[0_3px_16px_rgba(0,0,0,0.4)]
                 sm:text-5xl
-                lg:text-[4rem]
-                xl:text-[4rem]
+                lg:text-[3.6rem]
+                xl:text-6xl
               "
             >
               {siteInfo.name}
             </h1>
 
-            {/* =================================================
-                Tagline
-            ================================================= */}
+            {/* Tagline */}
             <p
               className="
-                mx-auto
-                mt-5
-                max-w-2xl
-                font-display
-                text-xl
-                font-semibold
-                leading-relaxed
-                text-brand-yellow
-                sm:text-2xl
-                lg:mx-0
-                lg:max-w-xl
+                mt-3 font-display
+                text-lg font-semibold
+                leading-relaxed text-brand-yellow
+                drop-shadow-md
+                sm:mt-4 sm:text-2xl
+                lg:text-3xl
               "
             >
               {siteInfo.tagline}
             </p>
 
-            {/* =================================================
-                Description
-            ================================================= */}
+            {/* Description */}
             <p
               className="
-                mx-auto
-                mt-5
-                max-w-xl
-                text-base
-                leading-8
-                text-white/70
-                sm:text-lg
+                mx-auto mt-4 max-w-xl
+                text-[15px] leading-7
+                text-white/90
+                drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]
+                sm:text-lg sm:leading-9
                 lg:mx-0
               "
             >
@@ -433,33 +211,48 @@ export default async function Hero() {
               والأخوة، في مخيمات وأنشطة تصنع الذكريات وتنمّي الإنسان.
             </p>
 
-            {/* =================================================
-                CTA buttons
-            ================================================= */}
+            {/* CTA buttons */}
             <div
               className="
-                mt-9
-                flex
-                flex-col
-                items-stretch
-                gap-3
-                sm:flex-row
-                sm:justify-center
+                mt-6 flex flex-col
+                items-stretch gap-2.5
+                sm:mt-8 sm:flex-row sm:justify-center
                 lg:justify-start
               "
             >
-              <a href="#about" className="btn-gold">
+              <a href="#about" className="btn-gold justify-center">
                 تعرّف على الفوج
                 <ArrowLeft className="btn-arrow h-4 w-4" aria-hidden="true" />
               </a>
 
-              <a href="#activities" className="btn-outline-light">
+              <a
+                href="#activities"
+                className="
+                  btn-outline-light justify-center
+                  border-white/35
+                  bg-white/5
+                  backdrop-blur-sm
+                "
+              >
                 استكشف أنشطتنا
               </a>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Bottom transition */}
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none absolute
+          inset-x-0 bottom-0 h-24
+          bg-gradient-to-t
+          from-brand-purple-dark
+          via-brand-purple-dark/35
+          to-transparent
+        "
+      />
     </section>
   );
 }

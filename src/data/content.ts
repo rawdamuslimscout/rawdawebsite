@@ -240,31 +240,32 @@ export type Milestone = {
 // Sample timeline — replace with the group's real history.
 export const milestones: Milestone[] = [
   {
-    year: "٢٠٢٦",
-    title: "توسّع الفرق",
+    year: "١٩٨٥",
+    title: "تأسيس الفوج",
     description:
-      "انطلاق فرق جديدة وازدياد عدد الكشافة والقادة المنتسبين للفوج.",
+      "تأسيس الفوج  في مدرسة روضة الفيحاء فرع المئتين، وانطلاق مسيرته الكشفية.",
   },
   {
-    year: "٢٠٢٥",
-    title: "مخيمات ورحلات متعددة",
-    description: "سلسلة مخيمات ورحلات ميدانية جمعت مختلف المراحل الكشفية.",
+    year: "٢٠١٤",
+    title: "إعادة تأسيس الفوج",
+    description:
+      "إعادة تأسيس الفوج  في مدرسة روضة الفيحاء فرع المعرض، واستئناف مسيرته الكشفية.",
   },
   {
-    year: "٢٠٢٤",
-    title: "مبادرات خدمية",
-    description: "إطلاق مبادرات تطوعية وخدمية لخدمة المجتمع المحلي في طرابلس.",
+    year: "٢٠٢٢",
+    title: "افتتاح فرقة المرشدات",
+    description: "افتتاح فرقة المرشدات ضمن الفوج.",
   },
 ];
 
 export const values = [
+  { id: "faith", title: "الإيمان" },
   { id: "brotherhood", title: "الأخوة" },
   { id: "leadership", title: "القيادة" },
   { id: "service", title: "الخدمة" },
   { id: "discipline", title: "الانضباط" },
   { id: "cooperation", title: "التعاون" },
   { id: "responsibility", title: "المسؤولية" },
-  { id: "faith", title: "الإيمان" },
   { id: "giving", title: "العطاء" },
 ];
 

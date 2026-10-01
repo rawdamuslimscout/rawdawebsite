@@ -1,9 +1,15 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, CalendarDays, MapPin, Tent } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarDays,
+  Check,
+  ChevronDown,
+  MapPin,
+  Tent,
+} from "lucide-react";
 
 import NewsModal from "@/components/ui/NewsModal";
 import type { NewsItem } from "@/data/content";
@@ -43,9 +49,13 @@ const HASH_TO_TAB: Record<string, TabId> = {
 export default function HubClient({ items }: { items: HubItem[] }) {
   const [tab, setTab] = useState<TabId>("all");
   const [openNews, setOpenNews] = useState<NewsItem | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+
+  const filterRef = useRef<HTMLDivElement>(null);
 
   const closeNews = useCallback(() => setOpenNews(null), []);
 
+  // Keep hash navigation support
   useEffect(() => {
     const apply = () => {
       const t = HASH_TO_TAB[window.location.hash];
@@ -62,6 +72,35 @@ export default function HubClient({ items }: { items: HubItem[] }) {
     return () => window.removeEventListener("hashchange", apply);
   }, []);
 
+  // Close dropdown when clicking outside or pressing Escape
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (
+        filterRef.current &&
+        !filterRef.current.contains(event.target as Node)
+      ) {
+        setFilterOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setFilterOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
+  // Category counts
   const counts = useMemo(() => {
     const c: Record<string, number> = {
       all: items.length,
@@ -76,6 +115,7 @@ export default function HubClient({ items }: { items: HubItem[] }) {
 
   const visibleTabs = TABS.filter((t) => (counts[t.id] ?? 0) > 0);
 
+  // Featured item and supporting list
   const { featured, rest } = useMemo(() => {
     const pool = tab === "all" ? items : items.filter((i) => i.kind === tab);
 
@@ -85,7 +125,7 @@ export default function HubClient({ items }: { items: HubItem[] }) {
     let others = pool.filter((i) => i !== feat);
 
     if (tab === "all") {
-      // interleave kinds so the list feels mixed, not grouped
+      // Interleave kinds so the list feels mixed, not grouped
       const by = (k: string) => others.filter((i) => i.kind === k);
 
       const [n, e, c] = [by("news"), by("event"), by("camp")];
@@ -111,41 +151,85 @@ export default function HubClient({ items }: { items: HubItem[] }) {
     return null;
   }
 
+  const selectedTab = TABS.find((t) => t.id === tab);
+
   return (
     <>
       {visibleTabs.length > 1 && (
-        <div
-          role="group"
-          aria-label="تصفية المحتوى"
-          className="no-scrollbar -mx-5 mt-8 flex gap-2 overflow-x-auto px-5 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
-        >
-          {visibleTabs.map((t) => {
-            const active = tab === t.id;
+        <div ref={filterRef} className="relative mt-8 flex justify-start">
+          {/* Dropdown trigger */}
+          <button
+            type="button"
+            aria-expanded={filterOpen}
+            aria-haspopup="listbox"
+            aria-label="تصفية المحتوى"
+            onClick={() => setFilterOpen((prev) => !prev)}
+            className="inline-flex min-h-11 min-w-[180px] items-center justify-between gap-5 rounded-xl border border-brand-purple/15 bg-white px-4 py-2.5 text-sm font-semibold text-brand-ink shadow-sm transition-colors hover:border-brand-purple/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple/40"
+          >
+            <span className="flex items-center gap-2">
+              <span>{selectedTab?.label ?? "الكل"}</span>
 
-            return (
-              <button
-                key={t.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => setTab(t.id)}
-                className={`flex min-h-[44px] shrink-0 items-center gap-2 rounded-full px-5 text-sm font-bold transition-colors duration-200 ${
-                  active
-                    ? "bg-brand-purple text-white"
-                    : "bg-white text-brand-ink/70 ring-1 ring-brand-purple/15 hover:text-brand-purple hover:ring-brand-purple/40"
-                }`}
-              >
-                {t.label}
+              <span className="rounded-full bg-brand-purple/10 px-2 py-0.5 text-xs text-brand-purple">
+                {counts[tab]}
+              </span>
+            </span>
 
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] leading-none ${
-                    active ? "bg-white/20" : "bg-brand-purple/10"
-                  }`}
-                >
-                  {counts[t.id]}
-                </span>
-              </button>
-            );
-          })}
+            <ChevronDown
+              aria-hidden="true"
+              className={`h-4 w-4 text-brand-ink/50 transition-transform duration-200 ${
+                filterOpen ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+
+          {/* Dropdown options */}
+          {filterOpen && (
+            <div
+              role="listbox"
+              aria-label="تصفية المحتوى"
+              className="absolute right-0 top-full z-30 mt-2 min-w-[220px] overflow-hidden rounded-xl border border-brand-purple/10 bg-white p-1.5 shadow-lg"
+            >
+              {visibleTabs.map((t) => {
+                const active = tab === t.id;
+
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    role="option"
+                    aria-selected={active}
+                    onClick={() => {
+                      setTab(t.id);
+                      setFilterOpen(false);
+                    }}
+                    className={`flex min-h-11 w-full items-center justify-between gap-4 rounded-lg px-3 py-2.5 text-start text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-purple/40 ${
+                      active
+                        ? "bg-brand-purple/5 font-bold text-brand-purple"
+                        : "text-brand-ink/75 hover:bg-brand-purple-tint/50"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      {t.label}
+
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] ${
+                          active
+                            ? "bg-brand-purple/10 text-brand-purple"
+                            : "bg-brand-ink/5 text-brand-ink/50"
+                        }`}
+                      >
+                        {counts[t.id]}
+                      </span>
+                    </span>
+
+                    {active && (
+                      <Check className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -153,12 +237,12 @@ export default function HubClient({ items }: { items: HubItem[] }) {
         key={tab}
         className="animate-hub-in mt-8 grid gap-6 lg:grid-cols-12 lg:gap-8"
       >
-        {/* ---------- Featured ---------- */}
+        {/* Featured */}
         <div className="lg:col-span-7">
           <Featured item={featured} onOpen={setOpenNews} />
         </div>
 
-        {/* ---------- Supporting list ---------- */}
+        {/* Supporting list */}
         <ul className="lg:col-span-5 divide-y divide-brand-purple/10 self-start rounded-2xl border border-brand-purple/10 bg-white shadow-soft">
           {rest.length === 0 && (
             <li className="p-6 text-sm text-brand-ink/60">

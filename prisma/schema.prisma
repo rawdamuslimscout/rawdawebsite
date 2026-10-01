@@ -42,6 +42,7 @@ model SiteSettings {
   contactPhone    String
   contactLocation String
   joinIntro       String @db.Text
+  aboutImageIds   String @default("[]")
 }
 
 model SiteStat {

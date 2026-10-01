@@ -18,10 +18,19 @@ import type {
 // silently masked by static placeholder content.
 // ------------------------------------------------------------------
 
-// Not yet columns on SiteSettings — move these into the DB and read
-// them below once the schema has them.
 const SITE_NAME_EN = "Rawda Al-Fayhaa Scout Troop";
 const SITE_INSTAGRAM = "@rawda.fayhaa";
+
+function parseStringArray(value: string): string[] {
+  try {
+    const parsed = JSON.parse(value || "[]");
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
 
 export async function getSiteSettings() {
   const row = await prisma.siteSettings.findUnique({
@@ -43,6 +52,7 @@ export async function getSiteSettings() {
     nameEn: SITE_NAME_EN,
     contactPhone: row.contactPhone,
     contactLocation: row.contactLocation,
+    aboutImageIds: parseStringArray(row.aboutImageIds),
     joinIntro:
       row.joinIntro ||
       "انضم إلى فوج روضة الفيحاء وابدأ رحلتك الكشفية عبر الأنشطة الأسبوعية والمخيمات والرحلات.",

@@ -74,7 +74,7 @@ export default async function Achievements() {
 
                 {/* body */}
                 <div className="tl-body pb-12 pt-3 md:pt-2">
-                  {phase(i) && (
+                  {/* {phase(i) && (
                     <span
                       className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
                         i === last
@@ -84,7 +84,7 @@ export default async function Achievements() {
                     >
                       {phase(i)}
                     </span>
-                  )}
+                  )} */}
                   <h3 className="mt-3 font-display text-xl font-bold text-brand-ink sm:text-2xl">
                     {m.title}
                   </h3>

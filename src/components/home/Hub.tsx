@@ -4,12 +4,6 @@ import { iconMap } from "@/lib/icons";
 import { getActivities, getCamps, getEvents, getNews } from "@/lib/data";
 import HubClient, { type HubItem } from "./HubClient";
 
-/**
- * One content hub replaces four card-grid sections:
- * upcoming events + news + camps (tabbed, one featured item) and the
- * activities as a compact index below.
- * Anchors kept alive: #news (section), #camps (tab), #activities (index).
- */
 export default async function Hub() {
   const [news, events, camps, activities] = await Promise.all([
     getNews(),
@@ -66,6 +60,7 @@ export default async function Hub() {
             aria-hidden="true"
             className="absolute top-0 h-0 w-0 scroll-mt-24"
           />
+
           <div className="container-x">
             <Reveal>
               <SectionHeading
@@ -73,6 +68,7 @@ export default async function Hub() {
                 subtitle="أخبار، مناسبات قادمة ومخيمات — كل ما يجري في الفوج الآن في مكان واحد."
               />
             </Reveal>
+
             <HubClient items={items} />
           </div>
         </section>
@@ -81,35 +77,39 @@ export default async function Hub() {
       {activities.length > 0 && (
         <section
           id="activities"
-          className="relative overflow-hidden bg-brand-purple py-14 sm:py-16"
+          className="relative overflow-hidden bg-brand-purple py-10 sm:py-16"
         >
           <div className="texture-canvas absolute inset-0 opacity-30" />
+
           <div className="container-x relative">
-            <Reveal className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <Reveal className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
               <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">
                 الأنشطة
               </h2>
             </Reveal>
 
-            <ul className="mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-2xl bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
+            <ul className="mt-6 grid grid-cols-1 gap-px overflow-hidden rounded-xl bg-white/10 sm:mt-8 sm:grid-cols-2 lg:grid-cols-4">
               {activities.map((a, i) => {
                 const Icon = iconMap[a.icon];
+
                 return (
                   <li key={a.id} className="bg-brand-purple">
                     <Reveal
                       delay={(i % 4) * 60}
-                      className="group flex h-full gap-4 p-5 transition-colors duration-300 hover:bg-white/[0.06] sm:p-6"
+                      className="group flex h-full gap-3 p-4 transition-colors duration-300 hover:bg-white/[0.06] sm:gap-4 sm:p-6"
                     >
                       <Icon
-                        className="mt-1 h-6 w-6 shrink-0 text-brand-yellow transition-transform duration-300 group-hover:scale-110"
+                        className="mt-1 h-5 w-5 shrink-0 text-brand-yellow transition-transform duration-300 group-hover:scale-110 sm:h-6 sm:w-6"
                         strokeWidth={1.75}
                         aria-hidden="true"
                       />
-                      <div>
-                        <h3 className="font-display text-lg font-semibold text-white">
+
+                      <div className="min-w-0">
+                        <h3 className="font-display text-base font-semibold text-white sm:text-lg">
                           {a.title}
                         </h3>
-                        <p className="mt-1.5 text-sm leading-7 text-white/70">
+
+                        <p className="mt-1 text-xs leading-6 text-white/70 sm:mt-1.5 sm:text-sm sm:leading-7">
                           {a.description}
                         </p>
                       </div>
