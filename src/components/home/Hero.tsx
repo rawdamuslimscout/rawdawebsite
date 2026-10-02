@@ -31,7 +31,6 @@ export default async function Hero() {
       </div>
 
       {/* Mobile background */}
-      {/* Mobile background */}
       <div className="absolute inset-0 -z-30 overflow-hidden lg:hidden">
         <Image
           src="/images/hero-mobile-purple.png"
@@ -39,11 +38,7 @@ export default async function Hero() {
           fill
           priority
           sizes="100vw"
-          className="
-      object-cover
-      object-[left_35%]
-      scale-[1.25]
-    "
+          className="scale-[1.25] object-cover object-[left_35%]"
         />
       </div>
 
@@ -52,31 +47,42 @@ export default async function Hero() {
         aria-hidden="true"
         className="
           pointer-events-none absolute inset-0 -z-20
-          bg-[#24133e]/35
-          lg:bg-[#24133e]/45
+          bg-[#21133c]/20
         "
       />
-      {/* 
-      {/* Mobile gradient */}
+
+      {/* Desktop right-side gradient */}
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none absolute inset-0 -z-20
+          hidden lg:block
+          bg-gradient-to-l
+          from-[#21133c]/60
+          via-[#21133c]/25
+          to-transparent
+        "
+      />
+
       {/* Mobile gradient */}
       <div
         aria-hidden="true"
         className="
-    pointer-events-none absolute inset-0 -z-20
-    bg-gradient-to-b
-    from-[#24133e]/5
-    via-[#24133e]/30
-    to-[#24133e]/85
-    lg:hidden
-  "
+          pointer-events-none absolute inset-0 -z-20
+          bg-gradient-to-b
+          from-[#21133c]/10
+          via-[#21133c]/35
+          to-[#21133c]/80
+          lg:hidden
+        "
       />
 
-      {/* Mobile text readability layer */}
+      {/* Mobile text readability */}
       <div
         aria-hidden="true"
         className="
           pointer-events-none absolute inset-0 -z-10
-          bg-[radial-gradient(ellipse_at_center,rgba(36,19,62,0.45)_0%,rgba(36,19,62,0.2)_60%,transparent_100%)]
+          bg-[radial-gradient(ellipse_at_center,rgba(33,19,60,0.25)_0%,transparent_75%)]
           lg:hidden
         "
       />
@@ -88,9 +94,9 @@ export default async function Hero() {
           pointer-events-none absolute inset-0 -z-10
           hidden lg:block
           bg-gradient-to-b
-          from-[#24133e]/15
+          from-transparent
           via-transparent
-          to-brand-purple-dark/90
+          to-[#281747]/55
         "
       />
 
@@ -101,7 +107,7 @@ export default async function Hero() {
           pointer-events-none absolute
           -top-40 right-0 -z-10
           h-[400px] w-[400px]
-          rounded-full bg-purple-500/10
+          rounded-full bg-[#a78bfa]/10
           blur-[130px]
         "
       />
@@ -125,12 +131,7 @@ export default async function Hero() {
               lg:mb-6 lg:justify-start
             "
           >
-            <div
-              className="
-                relative h-10 w-10 shrink-0
-                sm:h-11 sm:w-11
-              "
-            >
+            <div className="relative h-10 w-10 shrink-0 sm:h-11 sm:w-11">
               <Image
                 src="/images/muslim-scout-emblem-white.png"
                 alt="شعار جمعية الكشّاف المسلم في لبنان"
@@ -145,6 +146,7 @@ export default async function Hero() {
                 className="
                   font-display text-sm font-bold
                   text-white sm:text-base
+                  drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]
                 "
               >
                 جمعية الكشّاف المسلم في لبنان
@@ -152,8 +154,9 @@ export default async function Hero() {
 
               <p
                 className="
-                  mt-1 text-xs font-medium
-                  text-brand-yellow sm:text-sm
+                  mt-1 text-xs font-semibold
+                  text-[#ffc52e] sm:text-sm
+                  drop-shadow-sm
                 "
               >
                 مفوضية الشمال
@@ -167,7 +170,7 @@ export default async function Hero() {
               font-display font-bold
               text-3xl leading-[1.4]
               tracking-tight text-white
-              drop-shadow-[0_3px_16px_rgba(0,0,0,0.4)]
+              drop-shadow-[0_3px_16px_rgba(0,0,0,0.45)]
               sm:text-5xl
               lg:text-6xl
               xl:text-7xl
@@ -182,8 +185,8 @@ export default async function Hero() {
             className="
               mx-auto mt-4 max-w-[600px]
               font-display text-[21px] font-semibold
-              leading-[1.6] text-brand-yellow
-              drop-shadow-md
+              leading-[1.6] text-[#ffc52e]
+              drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]
               sm:mt-5 sm:text-2xl
               lg:mx-0 lg:max-w-none lg:text-3xl
               text-center lg:text-right
@@ -197,8 +200,8 @@ export default async function Hero() {
             className="
               mx-auto mt-5 max-w-2xl
               text-[15px] leading-[1.9]
-              text-white/95
-              drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]
+              text-white
+              drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]
               sm:mt-6 sm:text-lg sm:leading-9
               lg:mx-0
               text-center lg:text-right
@@ -225,6 +228,7 @@ export default async function Hero() {
                 btn-gold justify-center
                 min-h-14
                 text-base
+                shadow-[0_6px_20px_rgba(0,0,0,0.12)]
                 sm:min-h-12
               "
             >
@@ -237,10 +241,11 @@ export default async function Hero() {
               className="
                 btn-outline-light justify-center
                 min-h-14
-                border-white/40
-                bg-white/10
+                border border-white/50
+                bg-[#281747]/25
                 backdrop-blur-md
-                text-base
+                text-base text-white
+                hover:bg-white/15
                 sm:min-h-12
               "
             >

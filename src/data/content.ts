@@ -20,7 +20,6 @@ export const navLinks = [
   { href: "/#about", label: "عن الفوج" },
   { href: "/#sections", label: "المراحل الكشفية" },
   { href: "/#activities", label: "الأنشطة" },
-  { href: "/#camps", label: "المخيمات" },
   { href: "/blog", label: "المدونة" },
   { href: "/library", label: "المكتبة" },
   { href: "/#news", label: "الأخبار" },

@@ -4,7 +4,8 @@ import { getJoinPricing, getJoinSchedule, getSiteSettings } from "@/lib/data";
 
 export const metadata = {
   title: "انضم إلينا | فوج روضة الفيحاء",
-  description: "معلومات الانتساب إلى فوج روضة الفيحاء: الأسعار، مواعيد الاجتماعات الأسبوعية، والمكان.",
+  description:
+    "معلومات الانتساب إلى فوج روضة الفيحاء: الأسعار، مواعيد الاجتماعات الأسبوعية، والمكان.",
 };
 
 export default async function JoinPage() {
@@ -27,7 +28,8 @@ export default async function JoinPage() {
             الاشتراكات
           </h2>
           <p className="mx-auto mt-2 max-w-md text-center text-sm text-brand-ink/60">
-            أرقام قابلة للتحديث من لوحة التحكم — تأكدوا من آخر الأسعار قبل الدفع.
+            أرقام قابلة للتحديث من لوحة التحكم — تأكدوا من آخر الأسعار قبل
+            الدفع.
           </p>
 
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -42,7 +44,9 @@ export default async function JoinPage() {
                 <p className="mt-4 font-display text-3xl font-bold text-brand-purple">
                   {tier.price}
                 </p>
-                <p className="text-xs font-medium text-brand-turquoise-dark">{tier.period}</p>
+                <p className="text-xs font-medium text-brand-turquoise-dark">
+                  {tier.period}
+                </p>
                 <p className="mt-4 text-sm leading-relaxed text-brand-ink/65">
                   {tier.description}
                 </p>
@@ -69,7 +73,9 @@ export default async function JoinPage() {
                   <p className="font-display text-base font-semibold text-brand-ink">
                     {s.stage}
                   </p>
-                  <p className="text-xs text-brand-turquoise-dark">{s.ageRange}</p>
+                  <p className="text-xs text-brand-turquoise-dark">
+                    {s.ageRange}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-brand-ink/70">
                   <Calendar className="h-4 w-4 shrink-0 text-brand-purple" />
@@ -94,7 +100,7 @@ export default async function JoinPage() {
       </section>
 
       {/* CTA */}
-      <section className="bg-brand-purple py-16 text-center sm:py-20">
+      {/* <section className="bg-brand-purple py-16 text-center sm:py-20">
         <div className="mx-auto max-w-xl px-5 sm:px-8">
           <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">
             جاهزون للانضمام؟
@@ -109,7 +115,7 @@ export default async function JoinPage() {
             تواصل معنا
           </a>
         </div>
-      </section>
+      </section> */}
     </>
   );
 }
