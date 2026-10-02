@@ -10,6 +10,7 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const adminId = await getSessionAdminId();
+
   if (!adminId) {
     redirect("/admin/login");
   }
@@ -21,10 +22,14 @@ export default async function AdminLayout({
 
   return (
     <ToastProvider>
-      <div className="min-h-screen bg-brand-cream" dir="rtl">
-        <div className="flex min-h-screen flex-col md:flex-row">
+      <div
+        dir="rtl"
+        className="min-h-screen w-full overflow-x-hidden bg-brand-cream"
+      >
+        <div className="flex min-h-screen w-full flex-col md:flex-row">
           <AdminNav resources={resources} />
-          <main className="flex-1 p-5 sm:p-8">{children}</main>
+
+          <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
         </div>
       </div>
     </ToastProvider>

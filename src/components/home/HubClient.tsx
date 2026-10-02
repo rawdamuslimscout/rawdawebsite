@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
 import {
   ArrowLeft,
   CalendarDays,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   MapPin,
   Tent,
 } from "lucide-react";
@@ -46,22 +47,26 @@ const HASH_TO_TAB: Record<string, TabId> = {
   "#camps": "camp",
 };
 
+const PAGE_SIZE = 5;
+
 export default function HubClient({ items }: { items: HubItem[] }) {
   const [tab, setTab] = useState<TabId>("all");
   const [openNews, setOpenNews] = useState<NewsItem | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [page, setPage] = useState(1);
 
   const filterRef = useRef<HTMLDivElement>(null);
 
   const closeNews = useCallback(() => setOpenNews(null), []);
 
-  // Keep hash navigation support
+  // Hash navigation
   useEffect(() => {
     const apply = () => {
       const t = HASH_TO_TAB[window.location.hash];
 
       if (t) {
         setTab(t);
+        setPage(1);
       }
     };
 
@@ -106,8 +111,8 @@ export default function HubClient({ items }: { items: HubItem[] }) {
       all: items.length,
     };
 
-    for (const it of items) {
-      c[it.kind] = (c[it.kind] ?? 0) + 1;
+    for (const item of items) {
+      c[item.kind] = (c[item.kind] ?? 0) + 1;
     }
 
     return c;
@@ -117,25 +122,32 @@ export default function HubClient({ items }: { items: HubItem[] }) {
 
   // Featured item and supporting list
   const { featured, rest } = useMemo(() => {
-    const pool = tab === "all" ? items : items.filter((i) => i.kind === tab);
+    const pool =
+      tab === "all" ? items : items.filter((item) => item.kind === tab);
 
     const feat =
-      pool.find((i) => i.kind === "news" && i.image) ?? pool[0] ?? null;
+      pool.find((item) => item.kind === "news" && item.image) ??
+      pool[0] ??
+      null;
 
-    let others = pool.filter((i) => i !== feat);
+    let others = pool.filter((item) => item !== feat);
 
     if (tab === "all") {
       // Interleave kinds so the list feels mixed, not grouped
-      const by = (k: string) => others.filter((i) => i.kind === k);
+      const by = (kind: string) => others.filter((item) => item.kind === kind);
 
-      const [n, e, c] = [by("news"), by("event"), by("camp")];
+      const [news, events, camps] = [by("news"), by("event"), by("camp")];
 
       const mixed: HubItem[] = [];
 
-      for (let i = 0; i < Math.max(n.length, e.length, c.length); i++) {
-        if (e[i]) mixed.push(e[i]);
-        if (n[i]) mixed.push(n[i]);
-        if (c[i]) mixed.push(c[i]);
+      for (
+        let i = 0;
+        i < Math.max(news.length, events.length, camps.length);
+        i++
+      ) {
+        if (events[i]) mixed.push(events[i]);
+        if (news[i]) mixed.push(news[i]);
+        if (camps[i]) mixed.push(camps[i]);
       }
 
       others = mixed;
@@ -143,9 +155,25 @@ export default function HubClient({ items }: { items: HubItem[] }) {
 
     return {
       featured: feat,
-      rest: others.slice(0, 5),
+      rest: others,
     };
   }, [items, tab]);
+
+  const totalPages = Math.max(1, Math.ceil(rest.length / PAGE_SIZE));
+
+  const paginatedItems = rest.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Reset page when filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [tab]);
+
+  // Keep page valid if the available items change
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   if (!items.length || !featured) {
     return null;
@@ -153,11 +181,15 @@ export default function HubClient({ items }: { items: HubItem[] }) {
 
   const selectedTab = TABS.find((t) => t.id === tab);
 
+  const changePage = (nextPage: number) => {
+    setPage(Math.max(1, Math.min(nextPage, totalPages)));
+  };
+
   return (
     <>
+      {/* Filter dropdown */}
       {visibleTabs.length > 1 && (
         <div ref={filterRef} className="relative mt-8 flex justify-start">
-          {/* Dropdown trigger */}
           <button
             type="button"
             aria-expanded={filterOpen}
@@ -182,7 +214,6 @@ export default function HubClient({ items }: { items: HubItem[] }) {
             />
           </button>
 
-          {/* Dropdown options */}
           {filterOpen && (
             <div
               role="listbox"
@@ -200,6 +231,7 @@ export default function HubClient({ items }: { items: HubItem[] }) {
                     aria-selected={active}
                     onClick={() => {
                       setTab(t.id);
+                      setPage(1);
                       setFilterOpen(false);
                     }}
                     className={`flex min-h-11 w-full items-center justify-between gap-4 rounded-lg px-3 py-2.5 text-start text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-purple/40 ${
@@ -233,6 +265,7 @@ export default function HubClient({ items }: { items: HubItem[] }) {
         </div>
       )}
 
+      {/* Featured content and list */}
       <div
         key={tab}
         className="animate-hub-in mt-8 grid gap-6 lg:grid-cols-12 lg:gap-8"
@@ -242,20 +275,85 @@ export default function HubClient({ items }: { items: HubItem[] }) {
           <Featured item={featured} onOpen={setOpenNews} />
         </div>
 
-        {/* Supporting list */}
-        <ul className="lg:col-span-5 divide-y divide-brand-purple/10 self-start rounded-2xl border border-brand-purple/10 bg-white shadow-soft">
-          {rest.length === 0 && (
-            <li className="p-6 text-sm text-brand-ink/60">
-              لا توجد عناصر أخرى حاليًا.
-            </li>
+        {/* Supporting list and pagination */}
+        <div className="lg:col-span-5">
+          <ul className="divide-y divide-brand-purple/10 self-start rounded-2xl border border-brand-purple/10 bg-white shadow-soft">
+            {paginatedItems.length === 0 && (
+              <li className="p-6 text-sm text-brand-ink/60">
+                لا توجد عناصر أخرى حاليًا.
+              </li>
+            )}
+
+            {paginatedItems.map((item) => (
+              <li key={item.key}>
+                <Row item={item} onOpen={setOpenNews} />
+              </li>
+            ))}
+          </ul>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <nav
+              aria-label="التنقل بين صفحات المحتوى"
+              className="mt-5 flex flex-wrap items-center justify-center gap-2"
+              dir="rtl"
+            >
+              {/* Previous */}
+              <button
+                type="button"
+                onClick={() => changePage(page - 1)}
+                disabled={page === 1}
+                aria-label="الصفحة السابقة"
+                className="flex h-10 items-center justify-center gap-1 rounded-lg border border-brand-purple/15 bg-white px-3 text-sm font-semibold text-brand-purple transition hover:bg-brand-purple/5 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronRight className="h-4 w-4" />
+                <span>السابق</span>
+              </button>
+
+              {/* Page numbers */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => changePage(p)}
+                      aria-label={`الصفحة ${p}`}
+                      aria-current={page === p ? "page" : undefined}
+                      className={`h-10 min-w-10 rounded-lg px-3 text-sm font-bold transition ${
+                        page === p
+                          ? "bg-brand-purple text-white"
+                          : "border border-brand-purple/15 bg-white text-brand-purple hover:bg-brand-purple/5"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ),
+                )}
+              </div>
+
+              {/* Next */}
+              <button
+                type="button"
+                onClick={() => changePage(page + 1)}
+                disabled={page === totalPages}
+                aria-label="الصفحة التالية"
+                className="flex h-10 items-center justify-center gap-1 rounded-lg border border-brand-purple/15 bg-white px-3 text-sm font-semibold text-brand-purple transition hover:bg-brand-purple/5 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <span>التالي</span>
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+            </nav>
           )}
 
-          {rest.map((item) => (
-            <li key={item.key}>
-              <Row item={item} onOpen={setOpenNews} />
-            </li>
-          ))}
-        </ul>
+          {/* Results count */}
+          {rest.length > 0 && (
+            <p className="mt-3 text-center text-xs text-brand-ink/50">
+              عرض {Math.min((page - 1) * PAGE_SIZE + 1, rest.length)}–
+              {Math.min(page * PAGE_SIZE, rest.length)} من {rest.length} عناصر
+            </p>
+          )}
+        </div>
       </div>
 
       <NewsModal item={openNews} onClose={closeNews} />

@@ -21,11 +21,11 @@ const cairo = Cairo({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://rawda-fayhaa-scout.example"),
-  title: "فوج روضة الفيحاء | الكشافة المسلم في لبنان",
+  title: "فوج روضة الفيحاء | الكشاف المسلم في لبنان",
   description:
     "الموقع الرسمي لفوج روضة الفيحاء، جمعية الكشاف المسلم في لبنان - مفوضية الشمال. نُنمّي الإنسان، ونبني القائد، ونصنع الذكريات.",
   openGraph: {
-    title: "فوج روضة الفيحاء | الكشافة المسلم في لبنان",
+    title: "فوج روضة الفيحاء | الكشاف المسلم في لبنان",
     description:
       "الموقع الرسمي لفوج روضة الفيحاء — مخيمات، رحلات، أنشطة كشفية وتربوية في طرابلس، لبنان.",
     locale: "ar_LB",
@@ -42,7 +42,11 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const siteInfo = await getSiteSettings();
   return (
-    <html lang="ar" dir="rtl" className={`${elMessiri.variable} ${cairo.variable}`}>
+    <html
+      lang="ar"
+      dir="rtl"
+      className={`${elMessiri.variable} ${cairo.variable}`}
+    >
       <body className="font-sans antialiased bg-brand-cream text-brand-ink">
         <Navbar siteName={siteInfo.name} />
         <main>{children}</main>
