@@ -6,7 +6,8 @@ import { usePathname } from "next/navigation";
 import { Menu, X, Settings, LayoutGrid } from "lucide-react";
 import LogoutButton from "./LogoutButton";
 
-type NavResource = { key: string; label: string };
+type NavResource = { key: string; label: string; group: string };
+type NavGroup = { key: string; label: string };
 
 function NavLink({
   href,
@@ -34,7 +35,51 @@ function NavLink({
   );
 }
 
-export default function AdminNav({ resources }: { resources: NavResource[] }) {
+function ResourceLinks({
+  resources,
+  groups,
+  isActive,
+  onClick,
+}: {
+  resources: NavResource[];
+  groups: NavGroup[];
+  isActive: (href: string) => boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <>
+      {groups.map((group) => {
+        const items = resources.filter((r) => r.group === group.key);
+        if (items.length === 0) return null;
+        return (
+          <div key={group.key} className="pt-3">
+            <p className="px-3 pb-1 text-[11px] font-bold tracking-wide text-brand-ink/40">
+              {group.label}
+            </p>
+            {items.map((r) => (
+              <NavLink
+                key={r.key}
+                href={`/admin/${r.key}`}
+                active={isActive(`/admin/${r.key}`)}
+                onClick={onClick}
+              >
+                {r.label}
+              </NavLink>
+            ))}
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+export default function AdminNav({
+  resources,
+  groups,
+}: {
+  resources: NavResource[];
+  groups: NavGroup[];
+}) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -48,7 +93,7 @@ export default function AdminNav({ resources }: { resources: NavResource[] }) {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden w-64 shrink-0 border-l border-brand-purple/10 bg-white p-5 md:block">
+      <aside className="hidden max-h-screen w-64 shrink-0 overflow-y-auto border-l border-brand-purple/10 bg-white p-5 md:sticky md:top-0 md:block">
         <Link
           href="/admin"
           className="font-display text-lg font-bold text-brand-purple"
@@ -65,16 +110,11 @@ export default function AdminNav({ resources }: { resources: NavResource[] }) {
           >
             إعدادات الموقع العامة
           </NavLink>
-          <div className="my-2 border-t border-brand-purple/10" />
-          {resources.map((r) => (
-            <NavLink
-              key={r.key}
-              href={`/admin/${r.key}`}
-              active={isActive(`/admin/${r.key}`)}
-            >
-              {r.label}
-            </NavLink>
-          ))}
+          <ResourceLinks
+            resources={resources}
+            groups={groups}
+            isActive={isActive}
+          />
         </nav>
         <div className="mt-8 border-t border-brand-purple/10 pt-4">
           <LogoutButton />
@@ -141,17 +181,12 @@ export default function AdminNav({ resources }: { resources: NavResource[] }) {
                     <Settings className="h-4 w-4" /> إعدادات الموقع العامة
                   </span>
                 </NavLink>
-                <div className="my-2 border-t border-brand-purple/10" />
-                {resources.map((r) => (
-                  <NavLink
-                    key={r.key}
-                    href={`/admin/${r.key}`}
-                    active={isActive(`/admin/${r.key}`)}
-                    onClick={() => setDrawerOpen(false)}
-                  >
-                    {r.label}
-                  </NavLink>
-                ))}
+                <ResourceLinks
+                  resources={resources}
+                  groups={groups}
+                  isActive={isActive}
+                  onClick={() => setDrawerOpen(false)}
+                />
               </nav>
 
               <div className="border-t border-brand-purple/10 pt-4">

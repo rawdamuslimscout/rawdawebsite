@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSessionAdminId } from "@/lib/session";
-import { resourceRegistry } from "@/lib/admin-resources";
+import { resourceGroups, resourceRegistry } from "@/lib/admin-resources";
 import ToastProvider from "./ToastProvider";
 import AdminNav from "./AdminNav";
 
@@ -18,6 +18,11 @@ export default async function AdminLayout({
   const resources = Object.values(resourceRegistry).map((r) => ({
     key: r.key,
     label: r.label,
+    group: r.group,
+  }));
+  const groups = Object.entries(resourceGroups).map(([key, label]) => ({
+    key,
+    label,
   }));
 
   return (
@@ -27,7 +32,7 @@ export default async function AdminLayout({
         className="min-h-screen w-full overflow-x-hidden bg-brand-cream"
       >
         <div className="flex min-h-screen w-full flex-col md:flex-row">
-          <AdminNav resources={resources} />
+          <AdminNav resources={resources} groups={groups} />
 
           <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
         </div>

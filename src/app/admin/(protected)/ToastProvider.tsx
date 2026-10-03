@@ -47,7 +47,7 @@ export default function ToastProvider({
     (kind: Toast["kind"], message: string) => {
       const id = ++idRef.current;
       setToasts((prev) => [...prev, { id, kind, message }]);
-      window.setTimeout(() => dismiss(id), 4500);
+      window.setTimeout(() => dismiss(id), kind === "error" ? 9000 : 4500);
     },
     [dismiss],
   );
@@ -70,7 +70,7 @@ export default function ToastProvider({
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            role="status"
+            role={toast.kind === "error" ? "alert" : "status"}
             className={`pointer-events-auto flex w-full max-w-sm items-start gap-2 rounded-xl border p-3 shadow-lg backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2 ${
               toast.kind === "success"
                 ? "border-emerald-200 bg-emerald-50/95 text-emerald-800"

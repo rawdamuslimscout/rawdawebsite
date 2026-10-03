@@ -6,8 +6,21 @@ import { navLinks, siteInfo as staticSiteInfo } from "@/data/content";
 import { getSiteSettings } from "@/lib/data";
 import DeveloperWatermark from "./DeveloperWatermark";
 
+/** Builds a wa.me number from whatever the admin typed (Lebanese local numbers get +961). */
+function toWhatsAppNumber(phone: string): string {
+  let digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  if (digits.startsWith("0")) digits = digits.slice(1);
+  if (digits.length > 0 && digits.length <= 8) digits = `961${digits}`;
+  return digits;
+}
+
 export default async function Footer() {
   const siteInfo = await getSiteSettings();
+  // Contact details come from "إعدادات الموقع العامة" in the admin.
+  const location = siteInfo.contactLocation?.trim() || "طرابلس، لبنان";
+  const phone = siteInfo.contactPhone?.trim() || "+961 81 348 184";
+  const whatsapp = toWhatsAppNumber(phone) || "96181348184";
 
   return (
     <footer id="contact" className="bg-brand-purple-dark text-white">
@@ -84,7 +97,7 @@ export default async function Footer() {
                   <MapPin className="h-4 w-4 text-brand-turquoise" />
                 </span>
 
-                <span>طرابلس، لبنان</span>
+                <span>{location}</span>
               </li>
 
               {/* Phone */}
@@ -93,13 +106,13 @@ export default async function Footer() {
                   <Phone className="h-4 w-4 text-brand-turquoise" />
                 </span>
 
-                <span dir="ltr">+961 81 348 184</span>
+                <span dir="ltr">{phone}</span>
               </li>
 
               {/* WhatsApp */}
               <li>
                 <a
-                  href="https://wa.me/96181348184"
+                  href={`https://wa.me/${whatsapp}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex items-center gap-3"

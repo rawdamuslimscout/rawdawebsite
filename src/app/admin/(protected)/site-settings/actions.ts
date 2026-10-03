@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getSessionAdminId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { friendlyMessage } from "@/lib/errors";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -11,7 +12,7 @@ export async function saveSiteSettings(
 ): Promise<ActionResult> {
   try {
     const adminId = await getSessionAdminId();
-    if (!adminId) return { ok: false, error: "يلزم تسجيل الدخول" };
+    if (!adminId) return { ok: false, error: "انتهت جلسة الدخول. حدّث الصفحة وسجّل الدخول من جديد." };
 
     const selectedImageIds = formData.getAll("aboutImageIds").map(String);
     const validImageIds = new Set(
@@ -23,8 +24,11 @@ export async function saveSiteSettings(
       ).map((item) => item.id),
     );
 
+    const name = String(formData.get("name") || "").trim();
+    if (!name) return { ok: false, error: "اسم الفوج مطلوب." };
+
     const data = {
-      name: String(formData.get("name") || ""),
+      name,
       tagline: String(formData.get("tagline") || ""),
       parentOrg: String(formData.get("parentOrg") || ""),
       instagramUrl: String(formData.get("instagramUrl") || ""),
@@ -50,10 +54,7 @@ export async function saveSiteSettings(
     console.error("saveSiteSettings failed", err);
     return {
       ok: false,
-      error:
-        err instanceof Error && err.message
-          ? err.message
-          : "تعذّر حفظ الإعدادات. حاول مجددًا.",
+      error: friendlyMessage(err, "تعذّر حفظ الإعدادات. حاول مجددًا."),
     };
   }
 }
