@@ -45,12 +45,12 @@ type Person = {
   occupation: string;
   bio: string;
   qualifications: Qualification[];
-  positions: { title: string; nodeTitle: string; responsibilities: string }[];
+  positions: { title: string; nodeTitle: string; responsibilities?: string }[];
 };
 type Member = {
   assignmentId: string;
   title: string;
-  responsibilities: string;
+  responsibilities?: string;
   person: Person;
 };
 type StageLeader = {
