@@ -24,7 +24,8 @@ export const navLinks = [
   { href: "/library", label: "المكتبة" },
   { href: "/#news", label: "الأخبار" },
   { href: "/#gallery", label: "معرض الصور" },
-  { href: "/#contact", label: "تواصل معنا" },
+  { href: "/faq", label: "الأسئلة الشائعة" },
+  { href: "/structure", label: "الهيكلية" },
 ];
 
 export const stats = [

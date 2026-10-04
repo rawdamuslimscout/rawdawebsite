@@ -29,14 +29,20 @@ export type FieldConfig = {
   /** Kept in the data but not shown in the form. */
   hidden?: boolean;
   placeholder?: string;
+  /** select fields only: store "true"/"false" as a real boolean. */
+  valueType?: "boolean";
+  /** Longest accepted text (characters). Defaults: 300 for text, 8000 for textarea. */
+  maxLength?: number;
 };
 
-export type ResourceGroup = "home" | "join" | "content";
+export type ResourceGroup = "home" | "join" | "content" | "faq" | "structure";
 
 export const resourceGroups: Record<ResourceGroup, string> = {
   home: "الصفحة الرئيسية",
   join: "صفحة «انضم إلينا»",
   content: "المدونة والمكتبة",
+  faq: "الأسئلة الشائعة",
+  structure: "الهيكل التنظيمي",
 };
 
 export type ResourceConfig = {
@@ -530,6 +536,242 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
       { name: "order", label: "الترتيب", type: "number", optional: true },
     ],
   },
+
+  faqs: {
+    key: "faqs",
+    label: "الأسئلة الشائعة",
+    group: "faq",
+    singular: "سؤال",
+    description: "صفحة «الأسئلة الشائعة». لا يظهر للزوار إلا ما كانت حالته «ظاهر في الموقع».",
+    siteHref: "/faq",
+    titleField: "question",
+    subtitleField: "category",
+    orderBy: { order: "asc" },
+    fields: [
+      { name: "question", label: "السؤال", type: "text", maxLength: 300 },
+      { name: "answer", label: "الجواب", type: "textarea", maxLength: 5000 },
+      {
+        name: "category",
+        label: "التصنيف",
+        type: "select",
+        options: [
+          { value: "about", label: "عن الجمعية والفوج" },
+          { value: "joining", label: "الانتساب والانضمام" },
+          { value: "activities", label: "الأنشطة والمخيمات" },
+          { value: "training", label: "التدريب والتأهيل" },
+          { value: "contact", label: "التواصل والاستفسارات" },
+        ],
+      },
+      {
+        name: "isPublished",
+        label: "الحالة",
+        type: "select",
+        valueType: "boolean",
+        options: [
+          { value: "true", label: "ظاهر في الموقع" },
+          { value: "false", label: "مخفي (مسودة)" },
+        ],
+      },
+      { name: "order", label: "الترتيب", type: "number", optional: true },
+    ],
+  },
+  "org-nodes": {
+    key: "org-nodes",
+    label: "مستويات الهيكل (جمعية، مفوضية، فوج، وحدات…)",
+    group: "structure",
+    singular: "مستوى",
+    description:
+      "صفحة «الهيكل التنظيمي». كل مستوى يتبع مستوى أعلى منه. لا يظهر للزوار إلا المستوى الذي حالته «ظاهر» وكل ما فوقه ظاهر أيضًا.",
+    siteHref: "/structure",
+    titleField: "title",
+    subtitleField: "kind",
+    thumbField: "logoUrl",
+    orderBy: { order: "asc" },
+    fields: [
+      {
+        name: "kind",
+        label: "نوع المستوى",
+        type: "select",
+        options: [
+          { value: "association", label: "الجمعية" },
+          { value: "governorate", label: "المفوضية" },
+          { value: "troop", label: "الفوج" },
+          { value: "dean", label: "عميد الفوج" },
+          { value: "council", label: "مجلس الفوج" },
+          { value: "unit", label: "وحدة" },
+          { value: "other", label: "أخرى" },
+        ],
+      },
+      { name: "title", label: "الاسم", type: "text", maxLength: 200 },
+      {
+        name: "parentId",
+        label: "يتبع لـ",
+        type: "relation",
+        relation: "org-nodes",
+        optional: true,
+        help: "اختر المستوى الأعلى. اتركه فارغًا للجمعية فقط.",
+      },
+      {
+        name: "description",
+        label: "نبذة (اختياري)",
+        type: "textarea",
+        optional: true,
+        maxLength: 2000,
+        help: "اكتب معلومات صحيحة فقط. إن لم تكن لديك معلومات اتركه فارغًا.",
+      },
+      {
+        name: "stageId",
+        label: "المرحلة الكشفية المرتبطة (للوحدات)",
+        type: "relation",
+        relation: "scout-stages",
+        optional: true,
+        help: "اختياري. عند الربط تظهر قيادة المرحلة المسجّلة في الموقع ضمن هذه الوحدة.",
+      },
+      {
+        name: "logoUpload",
+        label: "الشعار (اختياري)",
+        type: "file",
+        uploadTo: "logoUrl",
+        accept: "image/*",
+        optional: true,
+        help: "استخدم شعارًا مصرّحًا باستخدامه فقط.",
+      },
+      {
+        name: "isPublished",
+        label: "الحالة",
+        type: "select",
+        valueType: "boolean",
+        options: [
+          { value: "false", label: "مخفي (مسودة)" },
+          { value: "true", label: "ظاهر في الموقع" },
+        ],
+      },
+      { name: "order", label: "الترتيب", type: "number", optional: true },
+    ],
+  },
+  "org-people": {
+    key: "org-people",
+    label: "الأشخاص (ملفات القادة والأعضاء)",
+    group: "structure",
+    singular: "شخص",
+    description:
+      "ملف تعريفي لكل شخص. لا يظهر أي شخص للزوار إلا إذا كانت حالته «ظاهر» وكان مربوطًا بمنصب ظاهر. لا تُكتب هنا أرقام هواتف أو عناوين.",
+    siteHref: "/structure",
+    titleField: "fullName",
+    subtitleField: "rank",
+    thumbField: "photoUrl",
+    orderBy: { fullName: "asc" },
+    fields: [
+      { name: "fullName", label: "الاسم الكامل", type: "text", maxLength: 150 },
+      { name: "rank", label: "الرتبة الكشفية", type: "text", optional: true },
+      { name: "section", label: "المرحلة / القسم الحالي", type: "text", optional: true },
+      { name: "education", label: "المؤهل العلمي", type: "text", optional: true },
+      { name: "fieldOfStudy", label: "التخصص", type: "text", optional: true },
+      { name: "occupation", label: "المهنة", type: "text", optional: true },
+      { name: "bio", label: "نبذة قصيرة", type: "textarea", optional: true, maxLength: 2000 },
+      {
+        name: "photoUpload",
+        label: "الصورة الشخصية",
+        type: "file",
+        uploadTo: "photoUrl",
+        accept: "image/*",
+        optional: true,
+        help: "اختيارية، وبموافقة صاحبها.",
+      },
+      {
+        name: "showEducation",
+        label: "إظهار المؤهل والتخصص",
+        type: "select",
+        valueType: "boolean",
+        options: [
+          { value: "true", label: "نعم" },
+          { value: "false", label: "لا" },
+        ],
+      },
+      {
+        name: "showOccupation",
+        label: "إظهار المهنة",
+        type: "select",
+        valueType: "boolean",
+        options: [
+          { value: "true", label: "نعم" },
+          { value: "false", label: "لا" },
+        ],
+      },
+      {
+        name: "isPublic",
+        label: "ظهور الملف للزوار",
+        type: "select",
+        valueType: "boolean",
+        options: [
+          { value: "false", label: "مخفي" },
+          { value: "true", label: "ظاهر" },
+        ],
+      },
+    ],
+  },
+  "org-assignments": {
+    key: "org-assignments",
+    label: "المناصب (ربط الأشخاص بالمستويات)",
+    group: "structure",
+    singular: "منصب",
+    description:
+      "هنا تربط الشخص بمستوى (عميد، عضو مجلس، قائد وحدة…). يمكن للشخص الواحد أن يكون له أكثر من منصب.",
+    siteHref: "/structure",
+    titleField: "title",
+    subtitleField: "personId",
+    orderBy: { order: "asc" },
+    fields: [
+      { name: "personId", label: "الشخص", type: "relation", relation: "org-people" },
+      { name: "nodeId", label: "المستوى", type: "relation", relation: "org-nodes" },
+      { name: "title", label: "المنصب", type: "text", maxLength: 150, placeholder: "مثال: أمين السر" },
+      {
+        name: "responsibilities",
+        label: "المهام والمسؤوليات (اختياري)",
+        type: "textarea",
+        optional: true,
+        maxLength: 2000,
+      },
+      {
+        name: "isPublished",
+        label: "الحالة",
+        type: "select",
+        valueType: "boolean",
+        options: [
+          { value: "true", label: "ظاهر" },
+          { value: "false", label: "مخفي" },
+        ],
+      },
+      { name: "order", label: "الترتيب", type: "number", optional: true },
+    ],
+  },
+  "org-qualifications": {
+    key: "org-qualifications",
+    label: "الدورات والمؤهلات",
+    group: "structure",
+    singular: "دورة أو مؤهل",
+    description: "الدورات التدريبية والمؤهلات التي تظهر في الملف التعريفي للشخص.",
+    siteHref: "/structure",
+    titleField: "title",
+    subtitleField: "personId",
+    orderBy: { order: "asc" },
+    fields: [
+      { name: "personId", label: "الشخص", type: "relation", relation: "org-people" },
+      {
+        name: "kind",
+        label: "النوع",
+        type: "select",
+        options: [
+          { value: "course", label: "دورة تدريبية" },
+          { value: "education", label: "مؤهل علمي" },
+        ],
+      },
+      { name: "title", label: "العنوان", type: "text", maxLength: 200 },
+      { name: "issuer", label: "الجهة (اختياري)", type: "text", optional: true },
+      { name: "year", label: "السنة (اختياري)", type: "text", optional: true },
+      { name: "order", label: "الترتيب", type: "number", optional: true },
+    ],
+  },
 };
 
 export function getResourceConfig(key: string): ResourceConfig | undefined {
@@ -577,29 +819,86 @@ export function getDelegate(resource: string): GenericDelegate | null {
       return prisma.joinPricing;
     case "join-schedule":
       return prisma.joinSchedule;
+    case "faqs":
+      return prisma.faq;
+    case "org-nodes":
+      return prisma.orgNode;
+    case "org-people":
+      return prisma.orgPerson;
+    case "org-assignments":
+      return prisma.orgAssignment;
+    case "org-qualifications":
+      return prisma.orgQualification;
     default:
       return null;
   }
+}
+
+export type CoercedValue = string | number | boolean | null;
+
+const ID_PATTERN = /^[a-z0-9_-]{8,40}$/i;
+
+/** Resources whose rows are all public content and may be listed by the public JSON API. */
+export const PUBLIC_API_RESOURCES = new Set([
+  "site-stats", "scout-stages", "scout-leaders", "activities", "events", "camps",
+  "milestones", "values", "news", "gallery", "blog", "library", "join-pricing", "join-schedule",
+]);
+
+/**
+ * Coerces raw values into the right JS types per field config and validates
+ * them (length, type, option membership, id shape). Only fields declared in
+ * the config are ever read, so unknown fields can't be mass-assigned.
+ * Throws an Arabic, admin-friendly Error on invalid input.
+ */
+export function coerceValues(
+  config: ResourceConfig,
+  get: (name: string) => unknown,
+): Record<string, CoercedValue> {
+  const data: Record<string, CoercedValue> = {};
+  for (const field of config.fields) {
+    if (field.type === "file" || field.type === "file-multiple" || field.type === "slug") continue;
+    const raw = get(field.name);
+    if (raw === null || raw === undefined) continue;
+
+    if (field.type === "number") {
+      const n = Math.trunc(Number(raw));
+      data[field.name] = Number.isFinite(n) ? Math.max(-100000, Math.min(100000, n)) : 0;
+      continue;
+    }
+
+    const text = String(raw).replace(/\u0000/g, "").trim();
+    const limit = field.maxLength ?? (field.name === "content" ? 60000 : field.type === "textarea" ? 8000 : 300);
+    if (text.length > limit)
+      throw new Error(`«${field.label}» طويل جدًا (الحد الأقصى ${limit} حرفًا).`);
+
+    if (field.type === "select") {
+      if (field.options && !field.options.some((o) => o.value === text))
+        throw new Error(`القيمة المختارة في «${field.label}» غير صحيحة.`);
+      data[field.name] = field.valueType === "boolean" ? text === "true" : text;
+      continue;
+    }
+    if (field.type === "relation") {
+      if (!text) {
+        if (field.optional) { data[field.name] = null; continue; }
+        throw new Error(`اختر «${field.label}» من القائمة.`);
+      }
+      if (!ID_PATTERN.test(text)) throw new Error(`القيمة المختارة في «${field.label}» غير صحيحة.`);
+      data[field.name] = text;
+      continue;
+    }
+    if (!text && !field.optional && !field.hidden)
+      throw new Error(`الحقل «${field.label}» مطلوب.`);
+    data[field.name] = text;
+  }
+  return data;
 }
 
 /** Coerces raw form-data strings into the right JS types per field config. */
 export function coerceFormData(
   config: ResourceConfig,
   formData: FormData,
-): Record<string, string | number> {
-  const data: Record<string, string | number> = {};
-  for (const field of config.fields) {
-    if (
-      field.type === "file" ||
-      field.type === "file-multiple" ||
-      field.type === "slug"
-    )
-      continue;
-    const raw = formData.get(field.name);
-    if (raw === null) continue;
-    data[field.name] = field.type === "number" ? Number(raw) || 0 : String(raw);
-  }
-  return data;
+): Record<string, CoercedValue> {
+  return coerceValues(config, (name) => formData.get(name));
 }
 
 /** Technical identifier for new items (e.g. "post-lq3k9a2f") — the admin never types this. */

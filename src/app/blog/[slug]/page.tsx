@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, BookOpen } from "lucide-react";
 import { getBlogPost, getBlogPosts } from "@/lib/data";
+import JsonLd from "@/components/ui/JsonLd";
+import { SITE_URL, SITE_NAME } from "@/lib/site";
 
 export async function generateStaticParams() {
   const posts = await getBlogPosts();
@@ -14,6 +16,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   return {
     title: `${post.title} | فوج روضة الفيحاء`,
     description: post.excerpt,
+    alternates: { canonical: `/blog/${encodeURIComponent(post.slug)}` },
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      url: `/blog/${encodeURIComponent(post.slug)}`,
+      type: "article" as const,
+      locale: "ar_LB",
+    },
   };
 }
 
@@ -23,6 +33,19 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
   return (
     <>
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: post.title,
+          description: post.excerpt,
+          inLanguage: "ar",
+          author: { "@type": "Person", name: post.author },
+          publisher: { "@id": `${SITE_URL}/#organization` },
+          mainEntityOfPage: `${SITE_URL}/blog/${encodeURIComponent(post.slug)}`,
+          isPartOf: { "@type": "WebSite", name: SITE_NAME, url: SITE_URL },
+        }}
+      />
       <section className="relative overflow-hidden bg-brand-purple-dark pt-32 pb-16 sm:pt-40 sm:pb-20">
         <div className="texture-canvas absolute inset-0 opacity-30" />
         <div className="relative mx-auto max-w-3xl px-5 text-center sm:px-8">

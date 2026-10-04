@@ -6,6 +6,8 @@ export const metadata = {
   title: "المكتبة | فوج روضة الفيحاء",
   description:
     "أدلة تدريبية، متطلبات شارات، استمارات وأناشيد فوج روضة الفيحاء.",
+  alternates: { canonical: "/library" },
+  openGraph: { title: "المكتبة | فوج روضة الفيحاء", url: "/library", locale: "ar_LB", type: "website" },
 };
 
 export default async function LibraryPage() {

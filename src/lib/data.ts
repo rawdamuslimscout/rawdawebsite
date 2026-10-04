@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { safeHref } from "@/lib/safe-url";
 import { siteInfo as defaultSiteInfo } from "@/data/content";
 import type {
   ScoutStage,
@@ -66,7 +67,7 @@ export async function getSiteSettings() {
     tagline: settings.tagline,
     parent: settings.parentOrg,
     instagram: SITE_INSTAGRAM,
-    instagramUrl: settings.instagramUrl,
+    instagramUrl: safeHref(settings.instagramUrl) || defaults.instagramUrl,
     nameEn: SITE_NAME_EN,
     contactPhone: settings.contactPhone,
     contactLocation: settings.contactLocation,

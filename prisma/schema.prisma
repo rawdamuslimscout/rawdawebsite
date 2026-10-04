@@ -27,7 +27,31 @@ model Admin {
   id           String   @id @default(cuid())
   username     String   @unique
   passwordHash String
+  /// Bumped on logout / password change; sessions carrying an older value are rejected.
+  sessionVersion Int     @default(0)
   createdAt    DateTime @default(now())
+}
+
+// Fixed-window counters for rate limiting (works on serverless: state lives in the DB).
+model RateLimit {
+  key     String   @id
+  count   Int      @default(0)
+  resetAt DateTime
+  @@index([resetAt])
+}
+
+// Append-only security / admin audit trail. Never stores passwords, tokens or secrets.
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  adminId   String?
+  resource  String?
+  targetId  String?
+  ip        String?
+  meta      String   @default("")
+  createdAt DateTime @default(now())
+  @@index([createdAt])
+  @@index([action, createdAt])
 }
 
 // ---------------------------------------------------------------
@@ -63,6 +87,7 @@ model ScoutStage {
   fileUrl     String @default("")
   order       Int    @default(0)
   leaders     ScoutLeader[]
+  orgNodes    OrgNode[]
 }
 
 model ScoutLeader {
@@ -184,4 +209,87 @@ model JoinSchedule {
   location String
   leaders  Int    @default(1)
   order    Int    @default(0)
+}
+
+// ---------------------------------------------------------------
+// الأسئلة الشائعة
+// ---------------------------------------------------------------
+model Faq {
+  id          String  @id @default(dbgenerated("gen_random_uuid()::text"))
+  question    String
+  answer      String  @db.Text
+  category    String  @default("about")
+  order       Int     @default(0)
+  isPublished Boolean @default(true)
+
+  @@index([isPublished, category, order])
+}
+
+// ---------------------------------------------------------------
+// الهيكل التنظيمي — nodes form a tree; people are separate records
+// linked to nodes through assignments (one person, many positions).
+// Only records explicitly marked as published are ever shown publicly.
+// ---------------------------------------------------------------
+model OrgNode {
+  id          String   @id @default(cuid())
+  parentId    String?
+  parent      OrgNode? @relation("OrgTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children    OrgNode[] @relation("OrgTree")
+  kind        String   // association | governorate | troop | dean | council | unit | other
+  title       String
+  description String   @default("") @db.Text
+  logoUrl     String   @default("")
+  stageId     String?  // optional link to an existing ScoutStage (for unit nodes)
+  stage       ScoutStage? @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  order       Int      @default(0)
+  isPublished Boolean  @default(false)
+  assignments OrgAssignment[]
+
+  @@index([parentId, order])
+}
+
+model OrgPerson {
+  id             String   @id @default(cuid())
+  fullName       String
+  photoUrl       String   @default("")
+  rank           String   @default("")
+  section        String   @default("")
+  education      String   @default("")
+  fieldOfStudy   String   @default("")
+  occupation     String   @default("")
+  bio            String   @default("") @db.Text
+  isPublic       Boolean  @default(false)
+  showEducation  Boolean  @default(true)
+  showOccupation Boolean  @default(true)
+  assignments    OrgAssignment[]
+  qualifications OrgQualification[]
+  createdAt      DateTime @default(now())
+}
+
+model OrgAssignment {
+  id               String    @id @default(cuid())
+  nodeId           String
+  node             OrgNode   @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  personId         String
+  person           OrgPerson @relation(fields: [personId], references: [id], onDelete: Cascade)
+  title            String
+  responsibilities String    @default("") @db.Text
+  order            Int       @default(0)
+  isPublished      Boolean   @default(true)
+
+  @@unique([nodeId, personId, title])
+  @@index([nodeId, order])
+}
+
+model OrgQualification {
+  id       String    @id @default(cuid())
+  personId String
+  person   OrgPerson @relation(fields: [personId], references: [id], onDelete: Cascade)
+  kind     String    // course | education
+  title    String
+  issuer   String    @default("")
+  year     String    @default("")
+  order    Int       @default(0)
+
+  @@index([personId, order])
 }

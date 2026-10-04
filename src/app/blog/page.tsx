@@ -5,6 +5,8 @@ import { getBlogPosts } from "@/lib/data";
 export const metadata = {
   title: "المدونة | فوج روضة الفيحاء",
   description: "مقالات ومنشورات فوج روضة الفيحاء حول الكشافة والقيادة والقيم.",
+  alternates: { canonical: "/blog" },
+  openGraph: { title: "المدونة | فوج روضة الفيحاء", url: "/blog", locale: "ar_LB", type: "website" },
 };
 
 export default async function BlogPage() {

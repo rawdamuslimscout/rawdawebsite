@@ -6,6 +6,8 @@ export const metadata = {
   title: "انضم إلينا | فوج روضة الفيحاء",
   description:
     "معلومات الانتساب إلى فوج روضة الفيحاء: الأسعار، مواعيد الاجتماعات الأسبوعية، والمكان.",
+  alternates: { canonical: "/join" },
+  openGraph: { title: "انضم إلينا | فوج روضة الفيحاء", url: "/join", locale: "ar_LB", type: "website" },
 };
 
 export default async function JoinPage() {

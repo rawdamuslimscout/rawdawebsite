@@ -8,9 +8,14 @@ import {
   getDelegate,
   getResourceConfig,
   type FieldConfig,
+  type CoercedValue,
 } from "@/lib/admin-resources";
 import { uploadToStorage } from "@/lib/supabase-storage";
 import { friendlyMessage } from "@/lib/errors";
+import { validateResourceWrite } from "@/lib/resource-hooks";
+import { rateLimit } from "@/lib/rate-limit";
+import { audit } from "@/lib/audit";
+import { safeHref } from "@/lib/safe-url";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 export type UploadResult =
@@ -25,6 +30,9 @@ function revalidateEverywhere(resource: string) {
   revalidatePath("/blog");
   revalidatePath("/library");
   revalidatePath("/join");
+  revalidatePath("/faq");
+  revalidatePath("/structure");
+  revalidatePath("/sitemap.xml");
 }
 
 const isFileField = (f: FieldConfig) =>
@@ -35,7 +43,7 @@ function parseUrlList(raw: unknown): string[] {
   try {
     const parsed = JSON.parse(String(raw));
     return Array.isArray(parsed)
-      ? parsed.filter((u): u is string => typeof u === "string")
+      ? parsed.filter((u): u is string => typeof u === "string" && safeHref(u) !== "")
       : [];
   } catch {
     return [];
@@ -56,12 +64,17 @@ export async function uploadFile(formData: FormData): Promise<UploadResult> {
     if (!getResourceConfig(resource))
       return { ok: false, error: "القسم غير موجود" };
 
+    const limited = await rateLimit(`upload:${adminId}`, 60, 10 * 60);
+    if (!limited.allowed)
+      return { ok: false, error: "رفعت ملفات كثيرة في وقت قصير. انتظر بضع دقائق ثم أعد المحاولة." };
+
     const file = formData.get("file");
     if (!(file instanceof File) || file.size === 0)
       return { ok: false, error: "لم يتم اختيار ملف" };
 
     const url = await uploadToStorage(file, resource);
     if (!url) return { ok: false, error: "تعذّر رفع الملف" };
+    await audit({ action: "upload", adminId, resource });
     return { ok: true, url };
   } catch (err) {
     console.error("uploadFile failed", err);
@@ -83,7 +96,7 @@ export async function saveItem(formData: FormData): Promise<ActionResult> {
     const delegate = getDelegate(resource);
     if (!config || !delegate) return { ok: false, error: "القسم غير موجود" };
 
-    const data: Record<string, string | number> = coerceFormData(
+    const data: Record<string, CoercedValue> = coerceFormData(
       config,
       formData,
     );
@@ -144,11 +157,18 @@ export async function saveItem(formData: FormData): Promise<ActionResult> {
       data.order = last ? Number(last.order) + 1 : 1;
     }
 
+    if (id && !/^[a-z0-9_-]{8,40}$/i.test(id)) return { ok: false, error: "العنصر غير صالح." };
+    const invalid = await validateResourceWrite(resource, id, data);
+    if (invalid) return { ok: false, error: invalid };
+
+    let targetId = id;
     if (id) {
       await delegate.update({ where: { id }, data });
     } else {
-      await delegate.create({ data });
+      const created = await delegate.create({ data });
+      targetId = String(created.id);
     }
+    await audit({ action: id ? "update" : "create", adminId, resource, targetId });
 
     revalidateEverywhere(resource);
     return { ok: true };
@@ -171,7 +191,9 @@ export async function deleteItem(formData: FormData): Promise<ActionResult> {
     const delegate = getDelegate(resource);
     if (!delegate) return { ok: false, error: "القسم غير موجود" };
 
+    if (!/^[a-z0-9_-]{8,40}$/i.test(id)) return { ok: false, error: "العنصر غير صالح." };
     await delegate.delete({ where: { id } });
+    await audit({ action: "delete", adminId, resource, targetId: id });
 
     revalidateEverywhere(resource);
     return { ok: true };
@@ -201,6 +223,7 @@ export async function reorderItem(
     const delegate = getDelegate(resource);
     if (!config || !delegate) return { ok: false, error: "القسم غير موجود" };
 
+    if (direction !== "up" && direction !== "down") return { ok: false, error: "طلب غير صالح" };
     const rows: { id: string; order: number }[] = await delegate.findMany({
       orderBy: { order: "asc" },
       select: { id: true, order: true },
@@ -240,6 +263,7 @@ export async function reorderItem(
       ]);
     }
 
+    await audit({ action: "reorder", adminId, resource, targetId: id, meta: { direction } });
     revalidateEverywhere(resource);
     return { ok: true };
   } catch (err) {

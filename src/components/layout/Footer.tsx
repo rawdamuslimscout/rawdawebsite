@@ -1,26 +1,34 @@
-import { Instagram, Facebook, MapPin, Phone } from "lucide-react";
+import { Instagram, Facebook, MapPin, Phone, Mail } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 
 import Logo from "@/components/ui/Logo";
-import { navLinks, siteInfo as staticSiteInfo } from "@/data/content";
+import { navLinks } from "@/data/content";
 import { getSiteSettings } from "@/lib/data";
 import DeveloperWatermark from "./DeveloperWatermark";
 
-/** Builds a wa.me number from whatever the admin typed (Lebanese local numbers get +961). */
+/**
+ * Builds a wa.me number from whatever the admin typed.
+ * Lebanese local numbers get +961.
+ */
 function toWhatsAppNumber(phone: string): string {
   let digits = phone.replace(/\D/g, "");
+
   if (digits.startsWith("00")) digits = digits.slice(2);
   if (digits.startsWith("0")) digits = digits.slice(1);
-  if (digits.length > 0 && digits.length <= 8) digits = `961${digits}`;
+  if (digits.length > 0 && digits.length <= 8) {
+    digits = `961${digits}`;
+  }
+
   return digits;
 }
 
 export default async function Footer() {
   const siteInfo = await getSiteSettings();
-  // Contact details come from "إعدادات الموقع العامة" in the admin.
+
   const location = siteInfo.contactLocation?.trim() || "طرابلس، لبنان";
   const phone = siteInfo.contactPhone?.trim() || "+961 81 348 184";
-  const whatsapp = toWhatsAppNumber(phone) || "96181348184";
+  const whatsapp = toWhatsAppNumber(phone);
+  const email = "info@rawdamuslimscout.org";
 
   return (
     <footer id="contact" className="bg-brand-purple-dark text-white">
@@ -71,7 +79,11 @@ export default async function Footer() {
             </h4>
 
             <ul className="mt-5 grid grid-cols-2 gap-x-6 gap-y-3 text-sm text-white/60">
-              {navLinks.map((link) => (
+              {[
+                ...navLinks,
+                { href: "/structure", label: "الهيكل التنظيمي" },
+                { href: "/faq", label: "الأسئلة الشائعة" },
+              ].map((link) => (
                 <li key={link.href}>
                   <a
                     href={link.href}
@@ -107,6 +119,26 @@ export default async function Footer() {
                 </span>
 
                 <span dir="ltr">{phone}</span>
+              </li>
+
+              {/* Email */}
+              <li>
+                <a
+                  href={`mailto:${email}`}
+                  className="group flex min-w-0 items-center gap-3"
+                  aria-label={`راسلنا عبر ${email}`}
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.06]">
+                    <Mail className="h-4 w-4 text-brand-turquoise transition-colors group-hover:text-brand-yellow" />
+                  </span>
+
+                  <span
+                    className="min-w-0 break-all transition-colors group-hover:text-white"
+                    dir="ltr"
+                  >
+                    {email}
+                  </span>
+                </a>
               </li>
 
               {/* WhatsApp */}

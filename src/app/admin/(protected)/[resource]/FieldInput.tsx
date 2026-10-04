@@ -137,8 +137,12 @@ export default function FieldInput({
           required={required}
           className={`${inputClass} appearance-none pl-10`}
         >
-          <option value="" disabled>
-            {options.length ? "اختر من القائمة…" : "لا توجد خيارات بعد"}
+          <option value="" disabled={required}>
+            {!required
+              ? "— بدون —"
+              : options.length
+                ? "اختر من القائمة…"
+                : "لا توجد خيارات بعد"}
           </option>
           {options.map((opt) => (
             <option key={opt.value} value={opt.value}>
