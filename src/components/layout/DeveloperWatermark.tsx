@@ -26,7 +26,7 @@ const links = [
   },
   {
     label: "Direct WhatsApp",
-    href: "https://wa.me/96181348184",
+    href: "https://wa.me/96170860161",
     icon: MessageCircle,
     tone: "text-emerald-400",
   },
