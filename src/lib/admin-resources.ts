@@ -6,6 +6,7 @@ export type FieldType =
   | "number"
   | "select"
   | "relation" // pick one item from another section (e.g. a leader's stage)
+  | "location" // map picker: fills the two columns latitude + longitude
   | "slug" // technical identifier — never shown to the admin, generated automatically
   | "file"
   | "file-multiple";
@@ -277,6 +278,84 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
       { name: "year", label: "السنة", type: "text", placeholder: "مثال: ٢٠٢٦" },
       { name: "location", label: "المكان", type: "text" },
       { name: "summary", label: "نبذة عن المخيم", type: "textarea" },
+      { name: "order", label: "الترتيب", type: "number", optional: true },
+    ],
+  },
+  places: {
+    key: "places",
+    label: "أماكن الخريطة",
+    group: "home",
+    singular: "مكان",
+    description:
+      "قسم «أماكن من رحلتنا الكشفية» في الصفحة الرئيسية: خريطة بالمخيمات والرحلات والدورات والأنشطة. لا يظهر على الخريطة إلا المكان الذي حُدّد موقعه وحالته «ظاهر».",
+    siteHref: "/#map",
+    titleField: "title",
+    subtitleField: "locationName",
+    thumbField: "imageUrl",
+    orderBy: { order: "asc" },
+    fields: [
+      { name: "title", label: "اسم النشاط", type: "text", placeholder: "مثال: دورة الدرجة الأولى" },
+      {
+        name: "category",
+        label: "نوع النشاط",
+        type: "select",
+        options: [
+          { value: "camps", label: "مخيم" },
+          { value: "trips", label: "رحلة" },
+          { value: "training", label: "تدريب" },
+          { value: "service", label: "خدمة مجتمعية" },
+          { value: "events", label: "مناسبة" },
+        ],
+      },
+      { name: "locationName", label: "اسم المكان", type: "text", placeholder: "مثال: غابة العذر – فنيدق" },
+      {
+        name: "location",
+        label: "الموقع على الخريطة",
+        type: "location",
+        help: "ابحث عن المكان بالاسم أو اضغط على الخريطة لتحديده، ثم تأكد أن الدبوس في المكان الصحيح قبل الحفظ.",
+      },
+      {
+        name: "dateText",
+        label: "التاريخ",
+        type: "text",
+        optional: true,
+        placeholder: "مثال: ١٦–١٩ تموز ٢٠٢٦",
+      },
+      {
+        name: "participants",
+        label: "عدد المشاركين",
+        type: "number",
+        optional: true,
+        help: "اتركه ٠ إن لم يكن العدد معروفًا، ولن يظهر في الموقع.",
+      },
+      { name: "description", label: "نبذة قصيرة", type: "textarea", optional: true, maxLength: 1000 },
+      {
+        name: "imageUpload",
+        label: "صورة المكان",
+        type: "file",
+        uploadTo: "imageUrl",
+        accept: "image/*",
+        optional: true,
+        help: "اختيارية. تظهر على بطاقة المكان.",
+      },
+      {
+        name: "newsId",
+        label: "الخبر المرتبط (اختياري)",
+        type: "relation",
+        relation: "news",
+        optional: true,
+        help: "عند اختيار خبر يظهر زر «عرض التفاصيل» على البطاقة ويفتح الخبر كاملًا.",
+      },
+      {
+        name: "isPublished",
+        label: "الحالة",
+        type: "select",
+        valueType: "boolean",
+        options: [
+          { value: "true", label: "ظاهر على الخريطة" },
+          { value: "false", label: "مخفي (مسودة)" },
+        ],
+      },
       { name: "order", label: "الترتيب", type: "number", optional: true },
     ],
   },
@@ -803,6 +882,8 @@ export function getDelegate(resource: string): GenericDelegate | null {
       return prisma.eventItem;
     case "camps":
       return prisma.camp;
+    case "places":
+      return prisma.scoutPlace;
     case "milestones":
       return prisma.milestone;
     case "values":
@@ -856,6 +937,18 @@ export function coerceValues(
 ): Record<string, CoercedValue> {
   const data: Record<string, CoercedValue> = {};
   for (const field of config.fields) {
+    if (field.type === "location") {
+      const lat = parseCoordinate(get("latitude"));
+      const lng = parseCoordinate(get("longitude"));
+      if (lat === null || lng === null)
+        throw new Error(`حدّد «${field.label}» بالضغط على الخريطة أو بكتابة خطّي العرض والطول.`);
+      if (Math.abs(lat) > 90 || Math.abs(lng) > 180)
+        throw new Error("خطّا العرض والطول غير صحيحين. خط العرض بين -90 و 90، وخط الطول بين -180 و 180.");
+      if (lat === 0 && lng === 0) throw new Error("الموقع غير صحيح. حدّد المكان على الخريطة.");
+      data.latitude = Math.round(lat * 1e6) / 1e6;
+      data.longitude = Math.round(lng * 1e6) / 1e6;
+      continue;
+    }
     if (field.type === "file" || field.type === "file-multiple" || field.type === "slug") continue;
     const raw = get(field.name);
     if (raw === null || raw === undefined) continue;
@@ -891,6 +984,19 @@ export function coerceValues(
     data[field.name] = text;
   }
   return data;
+}
+
+const ARABIC_DIGITS = "٠١٢٣٤٥٦٧٨٩";
+
+/** Accepts «34.4367», «٣٤٫٤٣٦٧» or «34,4367»; returns null when empty or not a number. */
+function parseCoordinate(raw: unknown): number | null {
+  const text = String(raw ?? "")
+    .replace(/[٠-٩]/g, (d) => String(ARABIC_DIGITS.indexOf(d)))
+    .replace(/[٫،,]/g, ".")
+    .trim();
+  if (!text) return null;
+  const n = Number(text);
+  return Number.isFinite(n) ? n : null;
 }
 
 /** Coerces raw form-data strings into the right JS types per field config. */

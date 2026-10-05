@@ -265,7 +265,7 @@ export default function ResourceManager({
     return (
       <div
         key={field.name}
-        className={field.type === "textarea" ? "sm:col-span-2" : ""}
+        className={field.type === "textarea" || field.type === "location" ? "sm:col-span-2" : ""}
       >
         <label className="mb-1.5 block text-sm font-semibold text-brand-ink/80">
           {field.label}
@@ -281,6 +281,7 @@ export default function ResourceManager({
           isCreate={isCreate}
           defaultValue={row ? (row[field.name] as string | number) : undefined}
           relationOptions={relations[field.name]}
+          rowValues={row ?? undefined}
         />
 
         {!isCreate &&

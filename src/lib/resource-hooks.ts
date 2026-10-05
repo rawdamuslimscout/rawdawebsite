@@ -22,11 +22,12 @@ export async function validateResourceWrite(
 ): Promise<string | null> {
   if (resource === "org-nodes") return validateNode(id, data);
   if (resource === "org-assignments") return validateAssignment(data);
+  if (resource === "places") return validateExists("newsItem", data.newsId, "الخبر المختار غير موجود.");
   if (resource === "org-qualifications") return validateExists("orgPerson", data.personId, "الشخص المختار غير موجود.");
   return null;
 }
 
-async function validateExists(model: "orgPerson" | "orgNode", value: CoercedValue | undefined, message: string) {
+async function validateExists(model: "orgPerson" | "orgNode" | "newsItem", value: CoercedValue | undefined, message: string) {
   if (typeof value !== "string") return null;
   const found = await (prisma[model] as any).findUnique({ where: { id: value }, select: { id: true } });
   return found ? null : message;

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ChevronDown, FileText, ImagePlus } from "lucide-react";
 import type { FieldConfig } from "@/lib/admin-resources";
+import LocationPicker from "@/components/map/LocationPicker";
 import { iconMap } from "@/lib/icons";
 
 export const inputClass =
@@ -97,11 +98,14 @@ export default function FieldInput({
   defaultValue,
   isCreate,
   relationOptions,
+  rowValues,
 }: {
   field: FieldConfig;
   defaultValue?: string | number;
   isCreate: boolean;
   relationOptions?: { value: string; label: string }[];
+  /** The whole saved row (used by fields that fill several columns, like the map location). */
+  rowValues?: Record<string, unknown>;
 }) {
   const required = !isOptional(field);
   const [selected, setSelected] = useState<string>(
@@ -109,6 +113,18 @@ export default function FieldInput({
       ? String(defaultValue)
       : (field.options?.[0]?.value ?? ""),
   );
+
+  if (field.type === "location") {
+    const lat = rowValues?.latitude;
+    const lng = rowValues?.longitude;
+    return (
+      <LocationPicker
+        required={required}
+        defaultLat={typeof lat === "number" ? lat : null}
+        defaultLng={typeof lng === "number" ? lng : null}
+      />
+    );
+  }
 
   if (field.type === "textarea") {
     return (

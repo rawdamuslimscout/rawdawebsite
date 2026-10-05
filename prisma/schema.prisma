@@ -130,6 +130,30 @@ model Camp {
   order    Int    @default(0)
 }
 
+// ---------------------------------------------------------------
+// خريطة «أماكن من رحلتنا الكشفية» — one row per place on the public map.
+// Only rows with isPublished = true and real coordinates are ever shown.
+// participants = 0 means "unknown" and is never displayed.
+// ---------------------------------------------------------------
+model ScoutPlace {
+  id           String    @id @default(cuid())
+  title        String
+  category     String // camps | trips | training | service | events
+  locationName String
+  latitude     Float
+  longitude    Float
+  dateText     String    @default("")
+  description  String    @default("") @db.Text
+  participants Int       @default(0)
+  imageUrl     String    @default("")
+  newsId       String? // optional link to a news item that holds the full story
+  news         NewsItem? @relation(fields: [newsId], references: [id], onDelete: SetNull)
+  isPublished  Boolean   @default(true)
+  order        Int       @default(0)
+
+  @@index([isPublished, order])
+}
+
 model Milestone {
   id          String @id @default(cuid())
   year        String
@@ -154,6 +178,7 @@ model NewsItem {
   imageUrl String @default("")
   imageUrls String @default("[]")
   order    Int    @default(0)
+  places   ScoutPlace[]
 }
 
 model GalleryItem {
