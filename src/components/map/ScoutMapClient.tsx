@@ -19,7 +19,7 @@ import MapSkeleton from "./MapSkeleton";
 import { placesCountLabel } from "./categories";
 
 /* -------------------------------------------------------------------------- */
-/*                                MAP                                          */
+/*                                    MAP                                     */
 /* -------------------------------------------------------------------------- */
 
 const LeafletMap = dynamic(() => import("./LeafletMap"), {
@@ -28,7 +28,7 @@ const LeafletMap = dynamic(() => import("./LeafletMap"), {
 });
 
 /* -------------------------------------------------------------------------- */
-/*                              COMPONENT                                      */
+/*                                 COMPONENT                                  */
 /* -------------------------------------------------------------------------- */
 
 export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
@@ -59,7 +59,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
   const wasSelectedRef = useRef(false);
 
   /* ------------------------------------------------------------------------ */
-  /* RESPONSIVE PAGINATION                                                    */
+  /* RESPONSIVE PAGINATION                                                   */
   /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
@@ -85,7 +85,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
   }, []);
 
   /* ------------------------------------------------------------------------ */
-  /* COUNTS                                                                   */
+  /* COUNTS                                                                  */
   /* ------------------------------------------------------------------------ */
 
   const counts = useMemo(() => {
@@ -103,9 +103,16 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
   }, [places]);
 
   /* ------------------------------------------------------------------------ */
-  /* FILTERED                                                                 */
+  /* FILTERED                                                                */
   /* ------------------------------------------------------------------------ */
 
+  /**
+   * This is the complete set of places matching the active filter.
+   *
+   * IMPORTANT:
+   * The map uses this array.
+   * Pagination only affects the list below.
+   */
   const filtered = useMemo(() => {
     const allowed = FILTER_CATEGORIES[filter];
 
@@ -113,11 +120,14 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
   }, [places, filter]);
 
   /* ------------------------------------------------------------------------ */
-  /* PAGINATION                                                               */
+  /* PAGINATION                                                              */
   /* ------------------------------------------------------------------------ */
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
 
+  /**
+   * Only the visible/list items are paginated.
+   */
   const paginatedPlaces = useMemo(() => {
     const start = (page - 1) * itemsPerPage;
 
@@ -125,7 +135,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
   }, [filtered, page, itemsPerPage]);
 
   /* ------------------------------------------------------------------------ */
-  /* KEEP PAGE VALID                                                          */
+  /* KEEP PAGE VALID                                                         */
   /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
@@ -135,16 +145,23 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
   }, [page, totalPages]);
 
   /* ------------------------------------------------------------------------ */
-  /* SELECTED PLACE                                                           */
+  /* SELECTED PLACE                                                          */
   /* ------------------------------------------------------------------------ */
 
+  /**
+   * IMPORTANT:
+   * Search inside `filtered`, NOT `paginatedPlaces`.
+   *
+   * This means a place can remain selected even if it is not
+   * on the currently visible pagination page.
+   */
   const selected = useMemo(
-    () => paginatedPlaces.find((place) => place.id === selectedId) ?? null,
-    [paginatedPlaces, selectedId],
+    () => filtered.find((place) => place.id === selectedId) ?? null,
+    [filtered, selectedId],
   );
 
   /* ------------------------------------------------------------------------ */
-  /* LAZY LOAD MAP                                                            */
+  /* LAZY LOAD MAP                                                           */
   /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
@@ -175,7 +192,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
   }, []);
 
   /* ------------------------------------------------------------------------ */
-  /* SELECT                                                                   */
+  /* SELECT                                                                  */
   /* ------------------------------------------------------------------------ */
 
   const select = useCallback((id: string) => {
@@ -184,7 +201,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
   }, []);
 
   /* ------------------------------------------------------------------------ */
-  /* BACK                                                                     */
+  /* BACK                                                                    */
   /* ------------------------------------------------------------------------ */
 
   const back = useCallback(() => {
@@ -192,7 +209,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
   }, []);
 
   /* ------------------------------------------------------------------------ */
-  /* SELECTED CARD UX                                                         */
+  /* SELECTED CARD UX                                                        */
   /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
@@ -202,7 +219,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
       "(prefers-reduced-motion: reduce)",
     ).matches;
 
-    /*
+    /**
      * Mobile / tablet:
      * Bring selected content into view.
      *
@@ -227,7 +244,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
   }, [selected]);
 
   /* ------------------------------------------------------------------------ */
-  /* RESTORE FOCUS                                                            */
+  /* RESTORE FOCUS                                                           */
   /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
@@ -247,18 +264,25 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
   }, [selected]);
 
   /* ------------------------------------------------------------------------ */
-  /* FILTER CHANGE                                                            */
+  /* FILTER CHANGE                                                           */
   /* ------------------------------------------------------------------------ */
 
   const changeFilter = (key: MapFilterKey) => {
     setFilter(key);
+
+    // Reset selection because the selected place may
+    // no longer belong to the new filter.
     setSelectedId(null);
+
+    // Always start from the first list page.
     setPage(1);
+
+    // Allow the map to recover if the previous state failed.
     setMapFailed(false);
   };
 
   /* ------------------------------------------------------------------------ */
-  /* PAGE CHANGE                                                              */
+  /* PAGE CHANGE                                                             */
   /* ------------------------------------------------------------------------ */
 
   const changePage = (newPage: number) => {
@@ -266,13 +290,13 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
       return;
     }
 
+    // Pagination affects the LIST only.
     setSelectedId(null);
     setPage(newPage);
 
-    /*
-     * On mobile/tablet, move the user
-     * back to the beginning of the map/list
-     * instead of leaving them halfway down.
+    /**
+     * On mobile/tablet, move the user back to the beginning
+     * of the map/list instead of leaving them halfway down.
      */
     requestAnimationFrame(() => {
       mapBoxRef.current?.scrollIntoView({
@@ -283,7 +307,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
   };
 
   /* ------------------------------------------------------------------------ */
-  /* PAGINATION NUMBERS                                                       */
+  /* PAGINATION NUMBERS                                                      */
   /* ------------------------------------------------------------------------ */
 
   const paginationPages = useMemo(() => {
@@ -303,13 +327,13 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
   }, [page, totalPages]);
 
   /* ------------------------------------------------------------------------ */
-  /* NEWS                                                                     */
+  /* NEWS                                                                    */
   /* ------------------------------------------------------------------------ */
 
   const newsPlace = places.find((place) => place.id === openNewsFor);
 
   /* ------------------------------------------------------------------------ */
-  /* RENDER                                                                   */
+  /* RENDER                                                                  */
   /* ------------------------------------------------------------------------ */
 
   return (
@@ -323,9 +347,9 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
         lg:mt-9
       "
     >
-      {/* ==================================================================== */}
-      {/* FILTER HEADER                                                         */}
-      {/* ==================================================================== */}
+      {/* ================================================================== */}
+      {/* FILTER HEADER                                                      */}
+      {/* ================================================================== */}
 
       <div
         className="
@@ -369,9 +393,9 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
         </p>
       </div>
 
-      {/* ==================================================================== */}
-      {/* MAIN CONTENT                                                          */}
-      {/* ==================================================================== */}
+      {/* ================================================================== */}
+      {/* MAIN CONTENT                                                       */}
+      {/* ================================================================== */}
 
       <div
         className="
@@ -387,9 +411,9 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
           xl:gap-6
         "
       >
-        {/* ================================================================== */}
-        {/* MAP                                                                 */}
-        {/* ================================================================== */}
+        {/* ================================================================= */}
+        {/* MAP                                                               */}
+        {/* ================================================================= */}
 
         <div
           className="
@@ -417,9 +441,9 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
               lg:rounded-3xl
             "
           >
-            {/* ============================================================ */}
-            {/* MAP ERROR                                                      */}
-            {/* ============================================================ */}
+            {/* =========================================================== */}
+            {/* MAP ERROR                                                    */}
+            {/* =========================================================== */}
 
             {mapFailed ? (
               <div
@@ -469,7 +493,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                   تعذّر عرض الخريطة الآن. يمكنك الاطلاع على الأماكن من القائمة.
                 </p>
               </div>
-            ) : paginatedPlaces.length === 0 ? (
+            ) : filtered.length === 0 ? (
               /* ========================================================== */
               /* EMPTY                                                        */
               /* ========================================================== */
@@ -543,12 +567,21 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
               </div>
             ) : mapVisible ? (
               /* ========================================================== */
-              /* ACTUAL MAP                                                   */
+              /* ACTUAL MAP                                                  */
               /* ========================================================== */
 
               <LeafletMap
-                places={paginatedPlaces}
-                selectedId={selected?.id ?? null}
+                /*
+                 * IMPORTANT:
+                 * The map receives ALL filtered places.
+                 *
+                 * Do NOT use `paginatedPlaces` here.
+                 *
+                 * This is what makes the mobile map show every
+                 * location while the list still has pagination.
+                 */
+                places={filtered}
+                selectedId={selectedId}
                 onSelect={select}
                 onFailed={() => setMapFailed(true)}
               />
@@ -558,9 +591,9 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
           </div>
         </div>
 
-        {/* ================================================================== */}
-        {/* LIST / DETAILS                                                     */}
-        {/* ================================================================== */}
+        {/* ================================================================= */}
+        {/* LIST / DETAILS                                                    */}
+        {/* ================================================================= */}
 
         <div
           className="
@@ -575,7 +608,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
         >
           {selected ? (
             /* ============================================================ */
-            /* SELECTED PLACE                                                */
+            /* SELECTED PLACE                                               */
             /* ============================================================ */
 
             <div
@@ -605,7 +638,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
             </div>
           ) : (
             /* ============================================================ */
-            /* PLACES LIST                                                   */
+            /* PLACES LIST                                                  */
             /* ============================================================ */
 
             <div
@@ -627,7 +660,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
               "
             >
               {/* -------------------------------------------------------- */}
-              {/* LIST HEADER                                                */}
+              {/* LIST HEADER                                               */}
               {/* -------------------------------------------------------- */}
 
               <div
@@ -688,7 +721,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
               </div>
 
               {/* -------------------------------------------------------- */}
-              {/* LIST                                                       */}
+              {/* LIST                                                        */}
               {/* -------------------------------------------------------- */}
 
               {paginatedPlaces.length > 0 ? (
@@ -718,7 +751,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
               )}
 
               {/* ======================================================== */}
-              {/* PAGINATION                                                */}
+              {/* PAGINATION                                                 */}
               {/* ======================================================== */}
 
               {totalPages > 1 && (
@@ -795,19 +828,19 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                           <div
                             key={pageNumber}
                             className="
-                                flex
-                                items-center
-                                gap-0.5
-                                sm:gap-1
-                              "
+                              flex
+                              items-center
+                              gap-0.5
+                              sm:gap-1
+                            "
                           >
                             {showDots && (
                               <span
                                 className="
-                                    px-0.5
-                                    text-[10px]
-                                    text-brand-ink/30
-                                  "
+                                  px-0.5
+                                  text-[10px]
+                                  text-brand-ink/30
+                                "
                               >
                                 …
                               </span>
@@ -820,23 +853,23 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                                 pageNumber === page ? "page" : undefined
                               }
                               className={`
-                                  flex
-                                  h-8
-                                  min-w-8
-                                  items-center
-                                  justify-center
-                                  rounded-lg
-                                  px-1.5
-                                  text-[10px]
-                                  font-bold
-                                  transition
-                                  sm:text-[11px]
-                                  ${
-                                    pageNumber === page
-                                      ? "bg-brand-purple text-white shadow-sm"
-                                      : "text-brand-ink/50 hover:bg-brand-purple/[0.05] hover:text-brand-purple"
-                                  }
-                                `}
+                                flex
+                                h-8
+                                min-w-8
+                                items-center
+                                justify-center
+                                rounded-lg
+                                px-1.5
+                                text-[10px]
+                                font-bold
+                                transition
+                                sm:text-[11px]
+                                ${
+                                  pageNumber === page
+                                    ? "bg-brand-purple text-white shadow-sm"
+                                    : "text-brand-ink/50 hover:bg-brand-purple/[0.05] hover:text-brand-purple"
+                                }
+                              `}
                             >
                               {pageNumber}
                             </button>
@@ -882,9 +915,9 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
         </div>
       </div>
 
-      {/* ==================================================================== */}
-      {/* NEWS MODAL                                                           */}
-      {/* ==================================================================== */}
+      {/* ================================================================== */}
+      {/* NEWS MODAL                                                         */}
+      {/* ================================================================== */}
 
       <NewsModal
         item={newsPlace?.news ?? null}

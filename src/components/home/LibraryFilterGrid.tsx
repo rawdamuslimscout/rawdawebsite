@@ -45,10 +45,6 @@ export default function LibraryFilterGrid({
           {filtered.map((resource) => (
             <div key={resource.id} className="flex flex-col gap-2">
               <ResourceCard resource={resource} />
-
-              <div className="flex justify-end">
-                <SharePdfButton url={resource.fileUrl} title={resource.title} />
-              </div>
             </div>
           ))}
         </div>

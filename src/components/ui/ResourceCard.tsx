@@ -1,7 +1,12 @@
 import { FileText, Download } from "lucide-react";
 import type { LibraryResource } from "@/data/content";
+import SharePdfButton from "./SharePdfButton";
 
-export default function ResourceCard({ resource }: { resource: LibraryResource }) {
+export default function ResourceCard({
+  resource,
+}: {
+  resource: LibraryResource;
+}) {
   return (
     <article className="flex items-start gap-4 rounded-2xl border border-brand-purple/10 bg-white p-5 shadow-sm transition-shadow duration-300 hover:shadow-lg">
       <div className="badge-shield flex h-12 w-12 shrink-0 items-center justify-center bg-brand-purple-tint text-brand-purple">
@@ -19,14 +24,17 @@ export default function ResourceCard({ resource }: { resource: LibraryResource }
         <p className="mt-1.5 text-sm leading-relaxed text-brand-ink/65">
           {resource.description}
         </p>
-        <a
+        {/* <a
           href={resource.fileUrl}
           download
           className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-purple transition-colors hover:text-brand-purple-dark"
         >
           <Download className="h-4 w-4" />
           تحميل الملف
-        </a>
+        </a> */}
+        <div className="flex justify-end">
+          <SharePdfButton url={resource.fileUrl} title={resource.title} />
+        </div>
       </div>
     </article>
   );
