@@ -11,38 +11,38 @@ export default async function Values() {
   return (
     <section
       id="values"
-      className="relative overflow-hidden bg-brand-purple-dark py-12 sm:py-16 lg:py-24"
+      className="relative overflow-hidden bg-brand-purple-dark py-8 sm:py-12 lg:py-24"
     >
       <div className="texture-canvas absolute inset-0 opacity-30" />
 
       <div className="container-x relative">
-        <div className="grid gap-8 lg:grid-cols-12 lg:gap-16">
+        <div className="grid gap-6 sm:gap-8 lg:grid-cols-12 lg:gap-16">
           {/* Statement */}
           <Reveal className="lg:sticky lg:top-28 lg:col-span-5 lg:self-start">
-            <h2 className="font-display text-3xl font-bold leading-[1.3] text-white sm:text-4xl lg:text-5xl">
+            <h2 className="font-display text-2xl font-bold leading-tight text-white sm:text-4xl lg:text-5xl">
               قيمنا
             </h2>
 
-            <p className="mt-3 max-w-md text-sm leading-7 text-white/75 sm:mt-5 sm:text-lg sm:leading-8">
+            <p className="mt-2 max-w-md text-xs leading-6 text-white/75 sm:mt-5 sm:text-lg sm:leading-8">
               قيم نعيشها في كل مخيم ورحلة ومهمة، ونبني عليها شخصية الكشاف
               والقائد.
             </p>
           </Reveal>
 
-          {/* Numbered values */}
-          <ol className="grid grid-cols-2 gap-x-5 gap-y-0 lg:col-span-7 lg:gap-x-10">
+          {/* Values */}
+          <ol className="grid grid-cols-2 sm:grid-cols-2 lg:col-span-7 lg:gap-x-10">
             {values.map((v, i) => (
               <Reveal
                 as="li"
                 key={v.id}
                 delay={(i % 2) * 80}
-                className="value-row group relative flex min-w-0 items-center gap-2 border-b border-white/10 py-4 sm:gap-4 sm:py-6"
+                className="value-row group relative flex min-w-0 items-center gap-3 border-b border-white/10 py-3 sm:gap-4 sm:py-5"
               >
-                <span className="shrink-0 font-display text-lg font-bold text-brand-yellow sm:text-2xl">
+                <span className="shrink-0 font-display text-sm font-bold text-brand-yellow sm:text-xl">
                   {ar(i + 1)}
                 </span>
 
-                <span className="min-w-0 font-display text-sm font-semibold text-white transition-transform duration-300 group-hover:-translate-x-1 sm:text-xl lg:text-2xl">
+                <span className="min-w-0 font-display text-sm font-semibold leading-snug text-white transition-transform duration-300 group-hover:-translate-x-1 sm:text-lg lg:text-2xl">
                   {v.title}
                 </span>
 

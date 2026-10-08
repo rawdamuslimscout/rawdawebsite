@@ -88,7 +88,7 @@ export default async function Hub() {
               </h2>
             </Reveal>
 
-            <ul className="mt-6 grid grid-cols-1 gap-px overflow-hidden rounded-xl bg-white/10 sm:mt-8 sm:grid-cols-2 lg:grid-cols-4">
+            <ul className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-white/10 sm:mt-8 sm:grid-cols-2 lg:grid-cols-4">
               {activities.map((a, i) => {
                 const Icon = iconMap[a.icon];
 

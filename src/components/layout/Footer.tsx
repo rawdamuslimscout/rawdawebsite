@@ -15,6 +15,7 @@ function toWhatsAppNumber(phone: string): string {
 
   if (digits.startsWith("00")) digits = digits.slice(2);
   if (digits.startsWith("0")) digits = digits.slice(1);
+
   if (digits.length > 0 && digits.length <= 8) {
     digits = `961${digits}`;
   }
@@ -32,53 +33,52 @@ export default async function Footer() {
 
   return (
     <footer id="contact" className="bg-brand-purple-dark text-white">
-      <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8 lg:py-16">
-        {/* Main Grid */}
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-12 lg:gap-10 xl:gap-14">
+      <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10 lg:py-14">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-12 lg:gap-10 xl:gap-14">
           {/* Brand */}
           <div className="lg:col-span-5">
-            <div className="flex items-center gap-3">
-              <Logo size={48} dark />
+            <div className="flex items-center gap-2.5">
+              <Logo size={40} dark />
 
-              <span className="font-display text-lg font-semibold">
+              <span className="font-display text-base font-semibold sm:text-lg">
                 {siteInfo.name}
               </span>
             </div>
 
-            <p className="mt-5 max-w-md text-sm leading-7 text-white/60">
+            <p className="mt-3 max-w-md text-[12px] leading-6 text-white/55 sm:mt-4 sm:text-sm sm:leading-7">
               {siteInfo.parent}. نعمل على بناء جيل من القادة عبر الكشافة والقيم
               والخدمة.
             </p>
 
             {/* Socials */}
-            <div className="mt-7 flex items-center gap-3">
+            <div className="mt-4 flex items-center gap-2.5 sm:mt-6 sm:gap-3">
               <a
                 href={siteInfo.instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.07] text-white/75 transition-all duration-200 hover:bg-brand-yellow hover:text-brand-purple-dark"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.07] text-white/70 transition-all duration-200 hover:bg-brand-yellow hover:text-brand-purple-dark sm:h-10 sm:w-10"
               >
-                <Instagram className="h-[18px] w-[18px]" />
+                <Instagram className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
               </a>
 
               <a
                 href="#"
                 aria-label="Facebook"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.07] text-white/75 transition-all duration-200 hover:bg-brand-yellow hover:text-brand-purple-dark"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.07] text-white/70 transition-all duration-200 hover:bg-brand-yellow hover:text-brand-purple-dark sm:h-10 sm:w-10"
               >
-                <Facebook className="h-[18px] w-[18px]" />
+                <Facebook className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
               </a>
             </div>
           </div>
 
           {/* Navigation */}
           <div className="lg:col-span-3">
-            <h4 className="font-display text-sm font-semibold text-brand-yellow">
+            <h4 className="font-display text-[13px] font-semibold text-brand-yellow sm:text-sm">
               التصفح
             </h4>
 
-            <ul className="mt-5 grid grid-cols-2 gap-x-6 gap-y-3 text-sm text-white/60">
+            <ul className="mt-3 grid grid-cols-3 lg:grid-cols-2 gap-x-5 gap-y-2 text-[12px] text-white/55 sm:mt-5 sm:gap-y-3 sm:text-sm">
               {[
                 ...navLinks,
                 { href: "/structure", label: "الهيكل التنظيمي" },
@@ -97,25 +97,25 @@ export default async function Footer() {
           </div>
 
           {/* Contact */}
-          <div className="lg:col-span-4">
-            <h4 className="font-display text-sm font-semibold text-brand-yellow">
+          <div className="lg:col-span-4 ">
+            <h4 className="font-display text-[13px] font-semibold text-brand-yellow sm:text-sm">
               تواصل معنا
             </h4>
 
-            <ul className="mt-5 space-y-4 text-sm text-white/60">
+            <ul className="mt-3 grid grid-cols-2 lg:grid-cols-1 space-y-2.5 text-[12px] text-white/55 sm:mt-5 sm:space-y-4 sm:text-sm">
               {/* Location */}
-              <li className="flex items-center gap-3">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.06]">
-                  <MapPin className="h-4 w-4 text-brand-turquoise" />
+              <li className="flex items-center gap-2.5">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/[0.06] sm:h-8 sm:w-8">
+                  <MapPin className="h-3.5 w-3.5 text-brand-turquoise sm:h-4 sm:w-4" />
                 </span>
 
                 <span>{location}</span>
               </li>
 
               {/* Phone */}
-              <li className="flex items-center gap-3">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.06]">
-                  <Phone className="h-4 w-4 text-brand-turquoise" />
+              <li className="flex items-center gap-2.5">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/[0.06] sm:h-8 sm:w-8">
+                  <Phone className="h-3.5 w-3.5 text-brand-turquoise sm:h-4 sm:w-4" />
                 </span>
 
                 <span dir="ltr">{phone}</span>
@@ -125,11 +125,11 @@ export default async function Footer() {
               <li>
                 <a
                   href={`mailto:${email}`}
-                  className="group flex min-w-0 items-center gap-3"
+                  className="group flex min-w-0 items-center gap-2.5"
                   aria-label={`راسلنا عبر ${email}`}
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.06]">
-                    <Mail className="h-4 w-4 text-brand-turquoise transition-colors group-hover:text-brand-yellow" />
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/[0.06] sm:h-8 sm:w-8">
+                    <Mail className="h-3.5 w-3.5 text-brand-turquoise transition-colors group-hover:text-brand-yellow sm:h-4 sm:w-4" />
                   </span>
 
                   <span
@@ -147,10 +147,10 @@ export default async function Footer() {
                   href={`https://wa.me/${whatsapp}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center gap-3"
+                  className="group flex items-center gap-2.5"
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.06]">
-                    <FaWhatsapp className="h-[17px] w-[17px] text-emerald-400 transition-colors group-hover:text-emerald-300" />
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/[0.06] sm:h-8 sm:w-8">
+                    <FaWhatsapp className="h-4 w-4 text-emerald-400 transition-colors group-hover:text-emerald-300 sm:h-[17px] sm:w-[17px]" />
                   </span>
 
                   <span className="transition-colors group-hover:text-white">
@@ -163,7 +163,7 @@ export default async function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="mt-14 flex flex-col gap-5 border-t border-white/[0.08] pt-6 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-8 flex flex-col gap-3 border-t border-white/[0.08] pt-4 text-[10px] text-white/40 sm:mt-12 sm:flex-row sm:items-center sm:justify-between sm:gap-5 sm:pt-6 sm:text-xs">
           <p className="text-center sm:text-right">
             © {new Date().getFullYear()} {siteInfo.name} — جميع الحقوق محفوظة.
           </p>
