@@ -159,7 +159,7 @@ export async function saveItem(formData: FormData): Promise<ActionResult> {
       data.order = last ? Number(last.order) + 1 : 1;
     }
 
-    if (!id) return { ok: false, error: "العنصر غير صالح." };
+    if (id) return { ok: false, error: "العنصر غير صالح." };
     const invalid = await validateResourceWrite(resource, id, data);
     if (invalid) return { ok: false, error: invalid };
 
