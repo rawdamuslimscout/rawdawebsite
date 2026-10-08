@@ -43,7 +43,9 @@ function parseUrlList(raw: unknown): string[] {
   try {
     const parsed = JSON.parse(String(raw));
     return Array.isArray(parsed)
-      ? parsed.filter((u): u is string => typeof u === "string" && safeHref(u) !== "")
+      ? parsed.filter(
+          (u): u is string => typeof u === "string" && safeHref(u) !== "",
+        )
       : [];
   } catch {
     return [];
@@ -66,7 +68,10 @@ export async function uploadFile(formData: FormData): Promise<UploadResult> {
 
     const limited = await rateLimit(`upload:${adminId}`, 60, 10 * 60);
     if (!limited.allowed)
-      return { ok: false, error: "رفعت ملفات كثيرة في وقت قصير. انتظر بضع دقائق ثم أعد المحاولة." };
+      return {
+        ok: false,
+        error: "رفعت ملفات كثيرة في وقت قصير. انتظر بضع دقائق ثم أعد المحاولة.",
+      };
 
     const file = formData.get("file");
     if (!(file instanceof File) || file.size === 0)
@@ -96,10 +101,7 @@ export async function saveItem(formData: FormData): Promise<ActionResult> {
     const delegate = getDelegate(resource);
     if (!config || !delegate) return { ok: false, error: "القسم غير موجود" };
 
-    const data: Record<string, CoercedValue> = coerceFormData(
-      config,
-      formData,
-    );
+    const data: Record<string, CoercedValue> = coerceFormData(config, formData);
 
     // Technical identifiers (slugs) are generated, never typed by the admin.
     // They are only created for NEW items so existing links keep working.
@@ -157,7 +159,7 @@ export async function saveItem(formData: FormData): Promise<ActionResult> {
       data.order = last ? Number(last.order) + 1 : 1;
     }
 
-    if (id && !/^[a-z0-9_-]{8,40}$/i.test(id)) return { ok: false, error: "العنصر غير صالح." };
+    if (!id) return { ok: false, error: "العنصر غير صالح." };
     const invalid = await validateResourceWrite(resource, id, data);
     if (invalid) return { ok: false, error: invalid };
 
@@ -168,7 +170,12 @@ export async function saveItem(formData: FormData): Promise<ActionResult> {
       const created = await delegate.create({ data });
       targetId = String(created.id);
     }
-    await audit({ action: id ? "update" : "create", adminId, resource, targetId });
+    await audit({
+      action: id ? "update" : "create",
+      adminId,
+      resource,
+      targetId,
+    });
 
     revalidateEverywhere(resource);
     return { ok: true };
@@ -191,7 +198,7 @@ export async function deleteItem(formData: FormData): Promise<ActionResult> {
     const delegate = getDelegate(resource);
     if (!delegate) return { ok: false, error: "القسم غير موجود" };
 
-    if (!/^[a-z0-9_-]{8,40}$/i.test(id)) return { ok: false, error: "العنصر غير صالح." };
+    if (!id) return { ok: false, error: "العنصر غير صالح." };
     await delegate.delete({ where: { id } });
     await audit({ action: "delete", adminId, resource, targetId: id });
 
@@ -223,7 +230,8 @@ export async function reorderItem(
     const delegate = getDelegate(resource);
     if (!config || !delegate) return { ok: false, error: "القسم غير موجود" };
 
-    if (direction !== "up" && direction !== "down") return { ok: false, error: "طلب غير صالح" };
+    if (direction !== "up" && direction !== "down")
+      return { ok: false, error: "طلب غير صالح" };
     const rows: { id: string; order: number }[] = await delegate.findMany({
       orderBy: { order: "asc" },
       select: { id: true, order: true },
@@ -263,7 +271,13 @@ export async function reorderItem(
       ]);
     }
 
-    await audit({ action: "reorder", adminId, resource, targetId: id, meta: { direction } });
+    await audit({
+      action: "reorder",
+      adminId,
+      resource,
+      targetId: id,
+      meta: { direction },
+    });
     revalidateEverywhere(resource);
     return { ok: true };
   } catch (err) {

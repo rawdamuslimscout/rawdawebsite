@@ -307,7 +307,7 @@ export default function HubClient({ items }: { items: HubItem[] }) {
                 className="flex h-10 items-center justify-center gap-1 rounded-lg border border-brand-purple/15 bg-white px-3 text-sm font-semibold text-brand-purple transition hover:bg-brand-purple/5 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <ChevronRight className="h-4 w-4" />
-                <span>السابق</span>
+                {/* <span>السابق</span> */}
               </button>
 
               {/* Page numbers */}
@@ -340,7 +340,7 @@ export default function HubClient({ items }: { items: HubItem[] }) {
                 aria-label="الصفحة التالية"
                 className="flex h-10 items-center justify-center gap-1 rounded-lg border border-brand-purple/15 bg-white px-3 text-sm font-semibold text-brand-purple transition hover:bg-brand-purple/5 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <span>التالي</span>
+                {/* <span>التالي</span> */}
                 <ChevronLeft className="h-4 w-4" />
               </button>
             </nav>

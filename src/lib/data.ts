@@ -332,7 +332,6 @@ export type JoinScheduleItem = {
   day: string;
   time: string;
   location: string;
-  leaders: number;
 };
 
 export async function getJoinPricing(): Promise<JoinPricingItem[]> {

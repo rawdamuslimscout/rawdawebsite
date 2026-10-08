@@ -294,7 +294,12 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     thumbField: "imageUrl",
     orderBy: { order: "asc" },
     fields: [
-      { name: "title", label: "اسم النشاط", type: "text", placeholder: "مثال: دورة الدرجة الأولى" },
+      {
+        name: "title",
+        label: "اسم النشاط",
+        type: "text",
+        placeholder: "مثال: دورة الدرجة الأولى",
+      },
       {
         name: "category",
         label: "نوع النشاط",
@@ -305,9 +310,15 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
           { value: "training", label: "تدريب" },
           { value: "service", label: "خدمة مجتمعية" },
           { value: "events", label: "مناسبة" },
+          { value: "hikes", label: "مسير" },
         ],
       },
-      { name: "locationName", label: "اسم المكان", type: "text", placeholder: "مثال: غابة العذر – فنيدق" },
+      {
+        name: "locationName",
+        label: "اسم المكان",
+        type: "text",
+        placeholder: "مثال: غابة العذر – فنيدق",
+      },
       {
         name: "location",
         label: "الموقع على الخريطة",
@@ -328,7 +339,13 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
         optional: true,
         help: "اتركه ٠ إن لم يكن العدد معروفًا، ولن يظهر في الموقع.",
       },
-      { name: "description", label: "نبذة قصيرة", type: "textarea", optional: true, maxLength: 1000 },
+      {
+        name: "description",
+        label: "نبذة قصيرة",
+        type: "textarea",
+        optional: true,
+        maxLength: 1000,
+      },
       {
         name: "imageUpload",
         label: "صورة المكان",
@@ -364,8 +381,7 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     label: "محطات مسيرة الفوج",
     group: "home",
     singular: "محطة",
-    description:
-      "الخط الزمني «محطات من مسيرة الفوج» في الصفحة الرئيسية.",
+    description: "الخط الزمني «محطات من مسيرة الفوج» في الصفحة الرئيسية.",
     siteHref: "/#history",
     titleField: "title",
     subtitleField: "year",
@@ -382,7 +398,13 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
       },
       { name: "title", label: "العنوان", type: "text" },
       { name: "description", label: "الوصف", type: "textarea" },
-      { name: "order", label: "الترتيب", type: "number", optional: true, hidden: true },
+      {
+        name: "order",
+        label: "الترتيب",
+        type: "number",
+        optional: true,
+        hidden: true,
+      },
     ],
   },
   values: {
@@ -396,7 +418,12 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     orderBy: { order: "asc" },
     fields: [
       { name: "slug", label: "المعرّف", type: "slug", slugPrefix: "value" },
-      { name: "title", label: "القيمة", type: "text", placeholder: "مثال: الأمانة" },
+      {
+        name: "title",
+        label: "القيمة",
+        type: "text",
+        placeholder: "مثال: الأمانة",
+      },
       { name: "order", label: "الترتيب", type: "number", optional: true },
     ],
   },
@@ -507,7 +534,12 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
         type: "text",
         placeholder: "مثال: قيادة، مهارات كشفية",
       },
-      { name: "date", label: "التاريخ", type: "text", placeholder: "مثال: ٣ تشرين الأول ٢٠٢٦" },
+      {
+        name: "date",
+        label: "التاريخ",
+        type: "text",
+        placeholder: "مثال: ٣ تشرين الأول ٢٠٢٦",
+      },
       { name: "author", label: "الكاتب", type: "text" },
       { name: "excerpt", label: "مقتطف قصير", type: "textarea" },
       {
@@ -523,7 +555,8 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     label: "المكتبة",
     group: "content",
     singular: "ملف",
-    description: "صفحة «المكتبة»: أدلة، متطلبات شارات، استمارات وأناشيد للتحميل.",
+    description:
+      "صفحة «المكتبة»: أدلة، متطلبات شارات، استمارات وأناشيد للتحميل.",
     siteHref: "/library",
     titleField: "title",
     subtitleField: "category",
@@ -583,7 +616,12 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     subtitleField: "price",
     orderBy: { order: "asc" },
     fields: [
-      { name: "title", label: "نوع الاشتراك", type: "text", placeholder: "مثال: الانتساب السنوي" },
+      {
+        name: "title",
+        label: "نوع الاشتراك",
+        type: "text",
+        placeholder: "مثال: الانتساب السنوي",
+      },
       { name: "price", label: "السعر", type: "text", placeholder: "مثال: ٢٠$" },
       {
         name: "period",
@@ -609,7 +647,12 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
       { name: "stage", label: "المرحلة الكشفية", type: "text" },
       { name: "ageRange", label: "الفئة العمرية", type: "text" },
       { name: "day", label: "اليوم", type: "text", placeholder: "مثال: السبت" },
-      { name: "time", label: "الوقت", type: "text", placeholder: "مثال: ٣:٠٠ – ٥:٠٠ م" },
+      {
+        name: "time",
+        label: "الوقت",
+        type: "text",
+        placeholder: "مثال: ٣:٠٠ – ٥:٠٠ م",
+      },
       { name: "location", label: "المكان", type: "text" },
       { name: "leaders", label: "عدد القادة", type: "number" },
       { name: "order", label: "الترتيب", type: "number", optional: true },
@@ -621,7 +664,8 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     label: "الأسئلة الشائعة",
     group: "faq",
     singular: "سؤال",
-    description: "صفحة «الأسئلة الشائعة». لا يظهر للزوار إلا ما كانت حالته «ظاهر في الموقع».",
+    description:
+      "صفحة «الأسئلة الشائعة». لا يظهر للزوار إلا ما كانت حالته «ظاهر في الموقع».",
     siteHref: "/faq",
     titleField: "question",
     subtitleField: "category",
@@ -743,11 +787,27 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     fields: [
       { name: "fullName", label: "الاسم الكامل", type: "text", maxLength: 150 },
       { name: "rank", label: "الرتبة الكشفية", type: "text", optional: true },
-      { name: "section", label: "المرحلة / القسم الحالي", type: "text", optional: true },
-      { name: "education", label: "المؤهل العلمي", type: "text", optional: true },
+      {
+        name: "section",
+        label: "المرحلة / القسم الحالي",
+        type: "text",
+        optional: true,
+      },
+      {
+        name: "education",
+        label: "المؤهل العلمي",
+        type: "text",
+        optional: true,
+      },
       { name: "fieldOfStudy", label: "التخصص", type: "text", optional: true },
       { name: "occupation", label: "المهنة", type: "text", optional: true },
-      { name: "bio", label: "نبذة قصيرة", type: "textarea", optional: true, maxLength: 2000 },
+      {
+        name: "bio",
+        label: "نبذة قصيرة",
+        type: "textarea",
+        optional: true,
+        maxLength: 2000,
+      },
       {
         name: "photoUpload",
         label: "الصورة الشخصية",
@@ -801,9 +861,25 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     subtitleField: "personId",
     orderBy: { order: "asc" },
     fields: [
-      { name: "personId", label: "الشخص", type: "relation", relation: "org-people" },
-      { name: "nodeId", label: "المستوى", type: "relation", relation: "org-nodes" },
-      { name: "title", label: "المنصب", type: "text", maxLength: 150, placeholder: "مثال: أمين السر" },
+      {
+        name: "personId",
+        label: "الشخص",
+        type: "relation",
+        relation: "org-people",
+      },
+      {
+        name: "nodeId",
+        label: "المستوى",
+        type: "relation",
+        relation: "org-nodes",
+      },
+      {
+        name: "title",
+        label: "المنصب",
+        type: "text",
+        maxLength: 150,
+        placeholder: "مثال: أمين السر",
+      },
       {
         name: "responsibilities",
         label: "المهام والمسؤوليات (اختياري)",
@@ -829,13 +905,19 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     label: "الدورات والمؤهلات",
     group: "structure",
     singular: "دورة أو مؤهل",
-    description: "الدورات التدريبية والمؤهلات التي تظهر في الملف التعريفي للشخص.",
+    description:
+      "الدورات التدريبية والمؤهلات التي تظهر في الملف التعريفي للشخص.",
     siteHref: "/structure",
     titleField: "title",
     subtitleField: "personId",
     orderBy: { order: "asc" },
     fields: [
-      { name: "personId", label: "الشخص", type: "relation", relation: "org-people" },
+      {
+        name: "personId",
+        label: "الشخص",
+        type: "relation",
+        relation: "org-people",
+      },
       {
         name: "kind",
         label: "النوع",
@@ -846,7 +928,12 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
         ],
       },
       { name: "title", label: "العنوان", type: "text", maxLength: 200 },
-      { name: "issuer", label: "الجهة (اختياري)", type: "text", optional: true },
+      {
+        name: "issuer",
+        label: "الجهة (اختياري)",
+        type: "text",
+        optional: true,
+      },
       { name: "year", label: "السنة (اختياري)", type: "text", optional: true },
       { name: "order", label: "الترتيب", type: "number", optional: true },
     ],
@@ -921,8 +1008,20 @@ const ID_PATTERN = /^[a-z0-9_-]{8,40}$/i;
 
 /** Resources whose rows are all public content and may be listed by the public JSON API. */
 export const PUBLIC_API_RESOURCES = new Set([
-  "site-stats", "scout-stages", "scout-leaders", "activities", "events", "camps",
-  "milestones", "values", "news", "gallery", "blog", "library", "join-pricing", "join-schedule",
+  "site-stats",
+  "scout-stages",
+  "scout-leaders",
+  "activities",
+  "events",
+  "camps",
+  "milestones",
+  "values",
+  "news",
+  "gallery",
+  "blog",
+  "library",
+  "join-pricing",
+  "join-schedule",
 ]);
 
 /**
@@ -941,28 +1040,50 @@ export function coerceValues(
       const lat = parseCoordinate(get("latitude"));
       const lng = parseCoordinate(get("longitude"));
       if (lat === null || lng === null)
-        throw new Error(`حدّد «${field.label}» بالضغط على الخريطة أو بكتابة خطّي العرض والطول.`);
+        throw new Error(
+          `حدّد «${field.label}» بالضغط على الخريطة أو بكتابة خطّي العرض والطول.`,
+        );
       if (Math.abs(lat) > 90 || Math.abs(lng) > 180)
-        throw new Error("خطّا العرض والطول غير صحيحين. خط العرض بين -90 و 90، وخط الطول بين -180 و 180.");
-      if (lat === 0 && lng === 0) throw new Error("الموقع غير صحيح. حدّد المكان على الخريطة.");
+        throw new Error(
+          "خطّا العرض والطول غير صحيحين. خط العرض بين -90 و 90، وخط الطول بين -180 و 180.",
+        );
+      if (lat === 0 && lng === 0)
+        throw new Error("الموقع غير صحيح. حدّد المكان على الخريطة.");
       data.latitude = Math.round(lat * 1e6) / 1e6;
       data.longitude = Math.round(lng * 1e6) / 1e6;
       continue;
     }
-    if (field.type === "file" || field.type === "file-multiple" || field.type === "slug") continue;
+    if (
+      field.type === "file" ||
+      field.type === "file-multiple" ||
+      field.type === "slug"
+    )
+      continue;
     const raw = get(field.name);
     if (raw === null || raw === undefined) continue;
 
     if (field.type === "number") {
       const n = Math.trunc(Number(raw));
-      data[field.name] = Number.isFinite(n) ? Math.max(-100000, Math.min(100000, n)) : 0;
+      data[field.name] = Number.isFinite(n)
+        ? Math.max(-100000, Math.min(100000, n))
+        : 0;
       continue;
     }
 
-    const text = String(raw).replace(/\u0000/g, "").trim();
-    const limit = field.maxLength ?? (field.name === "content" ? 60000 : field.type === "textarea" ? 8000 : 300);
+    const text = String(raw)
+      .replace(/\u0000/g, "")
+      .trim();
+    const limit =
+      field.maxLength ??
+      (field.name === "content"
+        ? 60000
+        : field.type === "textarea"
+          ? 8000
+          : 300);
     if (text.length > limit)
-      throw new Error(`«${field.label}» طويل جدًا (الحد الأقصى ${limit} حرفًا).`);
+      throw new Error(
+        `«${field.label}» طويل جدًا (الحد الأقصى ${limit} حرفًا).`,
+      );
 
     if (field.type === "select") {
       if (field.options && !field.options.some((o) => o.value === text))
@@ -972,10 +1093,14 @@ export function coerceValues(
     }
     if (field.type === "relation") {
       if (!text) {
-        if (field.optional) { data[field.name] = null; continue; }
+        if (field.optional) {
+          data[field.name] = null;
+          continue;
+        }
         throw new Error(`اختر «${field.label}» من القائمة.`);
       }
-      if (!ID_PATTERN.test(text)) throw new Error(`القيمة المختارة في «${field.label}» غير صحيحة.`);
+      if (!ID_PATTERN.test(text))
+        throw new Error(`القيمة المختارة في «${field.label}» غير صحيحة.`);
       data[field.name] = text;
       continue;
     }

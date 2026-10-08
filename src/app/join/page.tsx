@@ -7,7 +7,12 @@ export const metadata = {
   description:
     "معلومات الانتساب إلى فوج روضة الفيحاء: الأسعار، مواعيد الاجتماعات الأسبوعية، والمكان.",
   alternates: { canonical: "/join" },
-  openGraph: { title: "انضم إلينا | فوج روضة الفيحاء", url: "/join", locale: "ar_LB", type: "website" },
+  openGraph: {
+    title: "انضم إلينا | فوج روضة الفيحاء",
+    url: "/join",
+    locale: "ar_LB",
+    type: "website",
+  },
 };
 
 export default async function JoinPage() {
@@ -23,18 +28,31 @@ export default async function JoinPage() {
     <>
       <PageHeader title="انضم إلينا" subtitle={joinIntro} />
 
+      {/* Who can join */}
+      <section className="bg-white py-10 sm:py-14">
+        <div className="mx-auto max-w-5xl px-5 sm:px-8">
+          <div className="rounded-2xl border border-brand-purple/10 bg-brand-cream px-6 py-6 text-center sm:px-8">
+            <h2 className="font-display text-xl font-bold text-brand-ink sm:text-2xl">
+              من يمكنه الانضمام؟
+            </h2>
+
+            <p className="mx-auto mt-3 max-w-3xl text-sm leading-7 text-brand-ink/65 sm:text-base">
+              نستقبل تلامذة مدرسة روضة الفيحاء، إضافةً إلى أصدقاء وأقارب
+              الكشفيين الراغبين في الانضمام إلى الفوج والمشاركة في أنشطته
+              وبرامجه.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
-      <section className="bg-white py-16 sm:py-20">
+      <section className="bg-white pb-16 sm:pb-20">
         <div className="mx-auto max-w-6xl px-5 sm:px-8">
           <h2 className="text-center font-display text-2xl font-bold text-brand-ink sm:text-3xl">
             الاشتراكات
           </h2>
-          <p className="mx-auto mt-2 max-w-md text-center text-sm text-brand-ink/60">
-            أرقام قابلة للتحديث من لوحة التحكم — تأكدوا من آخر الأسعار قبل
-            الدفع.
-          </p>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mx-auto mt-10 grid max-w-4xl gap-6 sm:grid-cols-2">
             {pricing.map((tier) => (
               <div
                 key={tier.id}
@@ -43,12 +61,15 @@ export default async function JoinPage() {
                 <h3 className="font-display text-lg font-semibold text-brand-ink">
                   {tier.title}
                 </h3>
+
                 <p className="mt-4 font-display text-3xl font-bold text-brand-purple">
                   {tier.price}
                 </p>
+
                 <p className="text-xs font-medium text-brand-turquoise-dark">
                   {tier.period}
                 </p>
+
                 <p className="mt-4 text-sm leading-relaxed text-brand-ink/65">
                   {tier.description}
                 </p>
@@ -69,7 +90,7 @@ export default async function JoinPage() {
             {schedule.map((s) => (
               <div
                 key={s.id}
-                className="grid gap-3 rounded-2xl border border-brand-purple/10 bg-white p-5 shadow-sm sm:grid-cols-[1.3fr_1fr_1fr_1fr_0.7fr] sm:items-center"
+                className="grid gap-3 rounded-2xl border border-brand-purple/10 bg-white p-5 shadow-sm sm:grid-cols-[1.3fr_1fr_1fr_1fr] sm:items-center"
               >
                 <div>
                   <p className="font-display text-base font-semibold text-brand-ink">
@@ -79,21 +100,20 @@ export default async function JoinPage() {
                     {s.ageRange}
                   </p>
                 </div>
+
                 <div className="flex items-center gap-2 text-sm text-brand-ink/70">
                   <Calendar className="h-4 w-4 shrink-0 text-brand-purple" />
                   {s.day}
                 </div>
+
                 <div className="flex items-center gap-2 text-sm text-brand-ink/70">
                   <Clock className="h-4 w-4 shrink-0 text-brand-purple" />
                   {s.time}
                 </div>
+
                 <div className="flex items-center gap-2 text-sm text-brand-ink/70">
                   <MapPin className="h-4 w-4 shrink-0 text-brand-purple" />
                   {s.location}
-                </div>
-                <div className="flex items-center gap-2 text-sm font-medium text-brand-ink/70">
-                  <Users className="h-4 w-4 shrink-0 text-brand-purple" />
-                  {s.leaders} {s.leaders === 1 ? "قائد" : "قادة"}
                 </div>
               </div>
             ))}
@@ -102,22 +122,26 @@ export default async function JoinPage() {
       </section>
 
       {/* CTA */}
-      {/* <section className="bg-brand-purple py-16 text-center sm:py-20">
+      <section className="bg-brand-purple py-14 text-center sm:py-16">
         <div className="mx-auto max-w-xl px-5 sm:px-8">
           <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">
-            جاهزون للانضمام؟
+            للاستفسار والانتساب
           </h2>
+
           <p className="mt-3 text-sm leading-relaxed text-white/75 sm:text-base">
-            تواصلوا معنا لمعرفة الخطوات القادمة وتسجيل ابنكم أو ابنتكم في الفوج.
+            تواصلوا معنا لمعرفة التفاصيل وخطوات الانتساب إلى الفوج.
           </p>
+
           <a
-            href="/#contact"
+            href="https://wa.me/81348184"
+            target="_blank"
+            rel="noopener noreferrer"
             className="mt-7 inline-block rounded-full bg-brand-yellow px-8 py-3.5 text-sm font-bold text-brand-purple-dark transition-colors hover:bg-white"
           >
-            تواصل معنا
+            تواصلوا معنا عبر واتساب
           </a>
         </div>
-      </section> */}
+      </section>
     </>
   );
 }

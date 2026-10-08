@@ -1,11 +1,23 @@
 import type { NewsItem } from "@/data/content";
 
 /** The five kinds of place shown on the map. Stored as plain strings in ScoutPlace.category. */
-export const MAP_CATEGORIES = ["camps", "trips", "training", "service", "events"] as const;
+export const MAP_CATEGORIES = [
+  "camps",
+  "trips",
+  "training",
+  "service",
+  "events",
+  "hikes",
+] as const;
 export type MapCategory = (typeof MAP_CATEGORIES)[number];
 
 /** Filter chips above the map. «أنشطة» groups community service and events. */
-export type MapFilterKey = "all" | "camps" | "trips" | "training" | "activities";
+export type MapFilterKey =
+  | "all"
+  | "camps"
+  | "trips"
+  | "training"
+  | "activities";
 
 export const FILTER_CATEGORIES: Record<MapFilterKey, readonly MapCategory[]> = {
   all: MAP_CATEGORIES,

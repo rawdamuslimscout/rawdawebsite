@@ -232,7 +232,6 @@ model JoinSchedule {
   day      String // e.g. "السبت"
   time     String // e.g. "٣:٠٠ – ٥:٠٠ م"
   location String
-  leaders  Int    @default(1)
   order    Int    @default(0)
 }
 
