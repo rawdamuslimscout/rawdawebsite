@@ -322,7 +322,6 @@ async function main() {
         day: s.day,
         time: s.time,
         location: s.location,
-        leaders: s.leaders,
         order: i,
       },
       create: {
