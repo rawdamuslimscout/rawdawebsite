@@ -11,10 +11,11 @@ import ResourceManager from "./ResourceManager";
 export const dynamic = "force-dynamic";
 
 export default async function ResourceAdminPage({
-  params,
+  params: paramsPromise,
 }: {
-  params: { resource: string };
+  params: Promise<{ resource: string }>;
 }) {
+  const params = await paramsPromise;
   const config = getResourceConfig(params.resource);
   const delegate = getDelegate(params.resource);
   if (!config || !delegate) notFound();

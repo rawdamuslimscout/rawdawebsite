@@ -34,6 +34,7 @@ export default function AdminError({
         >
           إعادة المحاولة
         </button>
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- full reload is intentional after an error */}
         <a
           href="/admin"
           className="rounded-full border border-brand-purple/25 px-6 py-2.5 text-sm font-bold text-brand-purple transition-colors hover:bg-brand-purple-tint"

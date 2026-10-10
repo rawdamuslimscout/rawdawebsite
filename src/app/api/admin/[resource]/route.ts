@@ -10,8 +10,9 @@ const json = (body: unknown, status = 200) => NextResponse.json(body, { status, 
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { resource: string } }
+  { params: paramsPromise }: { params: Promise<{ resource: string }> }
 ) {
+  const params = await paramsPromise;
   if (!(await requireAdmin())) return unauthorized();
 
   const config = getResourceConfig(params.resource);
@@ -29,8 +30,9 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { resource: string } }
+  { params: paramsPromise }: { params: Promise<{ resource: string }> }
 ) {
+  const params = await paramsPromise;
   if (!isSameOrigin(req)) return json({ error: "طلب غير مسموح" }, 403);
   const adminId = await requireAdmin();
   if (!adminId) return unauthorized();

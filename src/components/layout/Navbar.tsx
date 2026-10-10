@@ -76,6 +76,7 @@ export default function Navbar({ siteName }: { siteName: string }) {
         }`}
       >
         {/* Logo and site name */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- hash scroll handled by handleNavigation */}
         <a
           href="/#home"
           onClick={() => handleNavigation("/#home")}

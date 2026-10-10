@@ -11,8 +11,9 @@ const ID = /^[a-z0-9_-]{8,40}$/i;
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { resource: string; id: string } }
+  { params: paramsPromise }: { params: Promise<{ resource: string; id: string }> }
 ) {
+  const params = await paramsPromise;
   if (!isSameOrigin(req)) return json({ error: "طلب غير مسموح" }, 403);
   const adminId = await requireAdmin();
   if (!adminId) return unauthorized();
@@ -40,8 +41,9 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { resource: string; id: string } }
+  { params: paramsPromise }: { params: Promise<{ resource: string; id: string }> }
 ) {
+  const params = await paramsPromise;
   if (!isSameOrigin(req)) return json({ error: "طلب غير مسموح" }, 403);
   const adminId = await requireAdmin();
   if (!adminId) return unauthorized();

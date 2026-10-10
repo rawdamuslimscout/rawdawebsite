@@ -5,8 +5,9 @@ import { PUBLIC_API_RESOURCES, getDelegate, getResourceConfig } from "@/lib/admi
 // served; FAQ drafts, organizational people and every other table are never reachable here.
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { resource: string } }
+  { params: paramsPromise }: { params: Promise<{ resource: string }> }
 ) {
+  const params = await paramsPromise;
   if (!PUBLIC_API_RESOURCES.has(params.resource)) {
     return NextResponse.json({ error: "المورد غير موجود" }, { status: 404 });
   }
