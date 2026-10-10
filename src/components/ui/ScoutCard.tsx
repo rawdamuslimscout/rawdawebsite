@@ -29,13 +29,13 @@ export default function ScoutCard({
         <div className="relative aspect-[4/3] overflow-hidden bg-brand-purple-dark sm:aspect-[16/10] lg:aspect-[4/3]">
           {stage.imageUrl ? (
             <img
-              {...responsiveImage(stage.imageUrl)}
               sizes="(min-width: 1024px) 33vw, 100vw"
               alt={stage.title}
               width={800}
               height={600}
               loading="lazy"
               decoding="async"
+              {...responsiveImage(stage.imageUrl)}
               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
             />
           ) : (

@@ -25,10 +25,10 @@ export default function GalleryCard({
       className="group relative h-full w-full overflow-hidden rounded-2xl bg-brand-purple-tint text-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple focus-visible:ring-offset-2"
     >
       <img
-        {...responsiveImage(item.imageUrl)}
         sizes={item.size === "small" ? SMALL_TILE : WIDE_TILE}
         alt={item.title}
         loading="lazy"
+        {...responsiveImage(item.imageUrl)}
         className="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-105"
       />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-brand-ink/80 via-brand-ink/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100" />

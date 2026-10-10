@@ -100,12 +100,12 @@ function Avatar({
 }) {
   return url ? (
     <img
-      src={thumbUrl(url)}
       alt={name}
       width={96}
       height={96}
       loading="lazy"
       decoding="async"
+      src={thumbUrl(url)}
       className={`${size} shrink-0 rounded-full object-cover ring-2 ring-brand-yellow/70`}
     />
   ) : (

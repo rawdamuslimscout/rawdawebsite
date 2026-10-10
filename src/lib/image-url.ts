@@ -20,11 +20,12 @@ export function thumbUrl(url: string): string {
 /**
  * src/srcSet for an <img>: the thumbnail by default, the original only when
  * the browser needs more pixels (wide tiles, high-density screens).
- * Pass `sizes` on the <img> alongside these props.
+ * Spread these props after `sizes` and `loading` (React 18 sets attributes in
+ * prop order), and keep srcSet before src — the same order next/image uses.
  */
-export function responsiveImage(url: string | undefined): { src?: string; srcSet?: string } {
+export function responsiveImage(url: string | undefined): { srcSet?: string; src?: string } {
   if (!url) return { src: url };
   const thumb = thumbUrl(url);
   if (thumb === url) return { src: url };
-  return { src: thumb, srcSet: `${thumb} ${THUMB_WIDTH}w, ${url} 1920w` };
+  return { srcSet: `${thumb} ${THUMB_WIDTH}w, ${url} 1920w`, src: thumb };
 }

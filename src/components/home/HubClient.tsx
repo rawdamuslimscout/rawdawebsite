@@ -400,11 +400,11 @@ function Featured({
     >
       {item.image ? (
         <img
-          {...responsiveImage(item.image)}
           sizes="(min-width: 1024px) 58vw, 100vw"
           alt=""
           loading="lazy"
           decoding="async"
+          {...responsiveImage(item.image)}
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
       ) : (
@@ -492,12 +492,12 @@ function Row({
       <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-purple text-brand-yellow sm:h-[72px] sm:w-[72px]">
         {item.image ? (
           <img
-            src={thumbUrl(item.image)}
             alt=""
             width={72}
             height={72}
             loading="lazy"
             decoding="async"
+            src={thumbUrl(item.image)}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
         ) : Icon ? (

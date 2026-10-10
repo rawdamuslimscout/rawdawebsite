@@ -20,10 +20,10 @@ const MapActivityCard = forwardRef<
     <article className="animate-hub-in overflow-hidden rounded-2xl border border-brand-purple/10 bg-white shadow-soft">
       {place.imageUrl && (
         <img
-          src={thumbUrl(place.imageUrl)}
           alt={`صورة من ${place.title}`}
           loading="lazy"
           decoding="async"
+          src={thumbUrl(place.imageUrl)}
           className="aspect-[16/10] w-full object-cover"
         />
       )}
