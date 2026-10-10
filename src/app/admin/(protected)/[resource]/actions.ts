@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+
 import { getSessionAdminId } from "@/lib/session";
+
 import {
   coerceFormData,
   generateSlug,
@@ -10,6 +12,7 @@ import {
   type FieldConfig,
   type CoercedValue,
 } from "@/lib/admin-resources";
+
 import { uploadToStorage } from "@/lib/supabase-storage";
 import { friendlyMessage } from "@/lib/errors";
 import { validateResourceWrite } from "@/lib/resource-hooks";
@@ -18,6 +21,7 @@ import { audit } from "@/lib/audit";
 import { safeHref } from "@/lib/safe-url";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
+
 export type UploadResult =
   | { ok: true; url: string }
   | { ok: false; error: string };
@@ -26,7 +30,7 @@ const NOT_LOGGED_IN = "انتهت جلسة الدخول. حدّث الصفحة �
 
 function revalidateEverywhere(resource: string) {
   revalidatePath(`/admin/${resource}`);
-  revalidatePath("/"); // homepage sections read most resources
+  revalidatePath("/");
   revalidatePath("/blog");
   revalidatePath("/library");
   revalidatePath("/join");
@@ -35,16 +39,19 @@ function revalidateEverywhere(resource: string) {
   revalidatePath("/sitemap.xml");
 }
 
-const isFileField = (f: FieldConfig) =>
-  f.type === "file" || f.type === "file-multiple";
+const isFileField = (field: FieldConfig) =>
+  field.type === "file" || field.type === "file-multiple";
 
 function parseUrlList(raw: unknown): string[] {
   if (!raw) return [];
+
   try {
     const parsed = JSON.parse(String(raw));
+
     return Array.isArray(parsed)
       ? parsed.filter(
-          (u): u is string => typeof u === "string" && safeHref(u) !== "",
+          (url): url is string =>
+            typeof url === "string" && safeHref(url) !== "",
         )
       : [];
   } catch {
@@ -53,36 +60,54 @@ function parseUrlList(raw: unknown): string[] {
 }
 
 /**
- * Uploads ONE file and returns its public URL. The admin screen calls this once
- * per file (after shrinking images in the browser) so every request stays small
- * and a failure affects only that file, with a clear message.
+ * Uploads one file and returns its public URL.
+ * Each file is uploaded separately to keep requests small.
  */
 export async function uploadFile(formData: FormData): Promise<UploadResult> {
   try {
     const adminId = await getSessionAdminId();
-    if (!adminId) return { ok: false, error: NOT_LOGGED_IN };
+
+    if (!adminId) {
+      return { ok: false, error: NOT_LOGGED_IN };
+    }
 
     const resource = String(formData.get("_resource") || "");
-    if (!getResourceConfig(resource))
+
+    if (!getResourceConfig(resource)) {
       return { ok: false, error: "القسم غير موجود" };
+    }
 
     const limited = await rateLimit(`upload:${adminId}`, 60, 10 * 60);
-    if (!limited.allowed)
+
+    if (!limited.allowed) {
       return {
         ok: false,
         error: "رفعت ملفات كثيرة في وقت قصير. انتظر بضع دقائق ثم أعد المحاولة.",
       };
+    }
 
     const file = formData.get("file");
-    if (!(file instanceof File) || file.size === 0)
+
+    if (!(file instanceof File) || file.size === 0) {
       return { ok: false, error: "لم يتم اختيار ملف" };
+    }
 
     const url = await uploadToStorage(file, resource);
-    if (!url) return { ok: false, error: "تعذّر رفع الملف" };
-    await audit({ action: "upload", adminId, resource });
+
+    if (!url) {
+      return { ok: false, error: "تعذّر رفع الملف" };
+    }
+
+    await audit({
+      action: "upload",
+      adminId,
+      resource,
+    });
+
     return { ok: true, url };
   } catch (err) {
     console.error("uploadFile failed", err);
+
     return {
       ok: false,
       error: friendlyMessage(err, "تعذّر رفع الملف. حاول مجددًا."),
@@ -90,43 +115,62 @@ export async function uploadFile(formData: FormData): Promise<UploadResult> {
   }
 }
 
+/**
+ * Creates a new resource item or updates an existing one.
+ */
 export async function saveItem(formData: FormData): Promise<ActionResult> {
   const resource = String(formData.get("_resource") || "");
+
   try {
     const adminId = await getSessionAdminId();
-    if (!adminId) return { ok: false, error: NOT_LOGGED_IN };
+
+    if (!adminId) {
+      return { ok: false, error: NOT_LOGGED_IN };
+    }
 
     const id = String(formData.get("_id") || "");
     const config = getResourceConfig(resource);
     const delegate = getDelegate(resource);
-    if (!config || !delegate) return { ok: false, error: "القسم غير موجود" };
+
+    if (!config || !delegate) {
+      return { ok: false, error: "القسم غير موجود" };
+    }
 
     const data: Record<string, CoercedValue> = coerceFormData(config, formData);
 
-    // Technical identifiers (slugs) are generated, never typed by the admin.
-    // They are only created for NEW items so existing links keep working.
+    // Generate technical slugs only for new items.
+    // Existing slugs remain unchanged to preserve links.
     if (!id) {
       for (const field of config.fields) {
-        if (field.type === "slug")
+        if (field.type === "slug") {
           data[field.name] = generateSlug(field.slugPrefix || "item");
+        }
       }
     }
 
-    // Files: the browser uploads each one first (see uploadFile) and sends the
-    // resulting URLs here. Raw File objects are still accepted as a fallback.
+    // Handle uploaded files and their resulting URLs.
     for (const field of config.fields) {
-      if (!isFileField(field) || !field.uploadTo) continue;
+      if (!isFileField(field) || !field.uploadTo) {
+        continue;
+      }
 
       const uploaded: string[] = parseUrlList(
         formData.get(`_uploaded:${field.uploadTo}`),
       );
+
       for (const value of formData.getAll(field.name)) {
         if (value instanceof File && value.size > 0) {
           const url = await uploadToStorage(value, resource);
-          if (url) uploaded.push(url);
+
+          if (url) {
+            uploaded.push(url);
+          }
         }
       }
-      if (uploaded.length === 0) continue;
+
+      if (uploaded.length === 0) {
+        continue;
+      }
 
       if (field.type === "file-multiple") {
         const existing = id
@@ -135,41 +179,74 @@ export async function saveItem(formData: FormData): Promise<ActionResult> {
               select: { [field.uploadTo]: true },
             })
           : null;
+
         const oldUrls = parseUrlList(existing?.[field.uploadTo]);
+
+        // Keep existing files and append newly uploaded files.
         data[field.uploadTo] = JSON.stringify([...oldUrls, ...uploaded]);
       } else {
         data[field.uploadTo] = uploaded[0];
-        // Library items: file type follows the uploaded file automatically.
+
+        // Infer the library file type from its uploaded URL.
         if (
           field.uploadTo === "fileUrl" &&
-          config.fields.some((f) => f.name === "fileType")
+          config.fields.some((item) => item.name === "fileType")
         ) {
           data.fileType = /\.pdf(\?|$)/i.test(uploaded[0]) ? "PDF" : "DOCX";
         }
       }
     }
 
-    // New items default to the end of the list so the admin never has to
-    // guess an "order" number.
+    // Put new items at the end of the list by default.
     const hasOrderField = config.fields.some(
-      (f) => f.name === "order" && f.type === "number",
+      (field) => field.name === "order" && field.type === "number",
     );
+
     if (!id && hasOrderField && !Number(data.order)) {
-      const last = await delegate.findFirst({ orderBy: { order: "desc" } });
+      const last = await delegate.findFirst({
+        orderBy: { order: "desc" },
+      });
+
       data.order = last ? Number(last.order) + 1 : 1;
     }
 
-    if (id) return { ok: false, error: "العنصر غير صالح." };
+    // Validate both creates and updates before writing to the database.
     const invalid = await validateResourceWrite(resource, id, data);
-    if (invalid) return { ok: false, error: invalid };
+
+    if (invalid) {
+      return { ok: false, error: invalid };
+    }
 
     let targetId = id;
+
     if (id) {
-      await delegate.update({ where: { id }, data });
+      // FIX: Existing items can now be updated.
+      // The previous unconditional `if (id) return ...`
+      // incorrectly rejected every update.
+      const existing = await delegate.findUnique({
+        where: { id },
+        select: { id: true },
+      });
+
+      if (!existing) {
+        return {
+          ok: false,
+          error: "العنصر غير موجود أو تم حذفه.",
+        };
+      }
+
+      await delegate.update({
+        where: { id },
+        data,
+      });
     } else {
-      const created = await delegate.create({ data });
+      const created = await delegate.create({
+        data,
+      });
+
       targetId = String(created.id);
     }
+
     await audit({
       action: id ? "update" : "create",
       adminId,
@@ -178,9 +255,11 @@ export async function saveItem(formData: FormData): Promise<ActionResult> {
     });
 
     revalidateEverywhere(resource);
+
     return { ok: true };
   } catch (err) {
     console.error(`saveItem(${resource}) failed`, err);
+
     return {
       ok: false,
       error: friendlyMessage(err, "تعذّر حفظ التغييرات. حاول مجددًا."),
@@ -188,24 +267,50 @@ export async function saveItem(formData: FormData): Promise<ActionResult> {
   }
 }
 
+/**
+ * Deletes an existing resource item.
+ */
 export async function deleteItem(formData: FormData): Promise<ActionResult> {
   const resource = String(formData.get("_resource") || "");
+
   try {
     const adminId = await getSessionAdminId();
-    if (!adminId) return { ok: false, error: NOT_LOGGED_IN };
+
+    if (!adminId) {
+      return { ok: false, error: NOT_LOGGED_IN };
+    }
 
     const id = String(formData.get("_id") || "");
     const delegate = getDelegate(resource);
-    if (!delegate) return { ok: false, error: "القسم غير موجود" };
 
-    if (!id) return { ok: false, error: "العنصر غير صالح." };
-    await delegate.delete({ where: { id } });
-    await audit({ action: "delete", adminId, resource, targetId: id });
+    if (!delegate) {
+      return { ok: false, error: "القسم غير موجود" };
+    }
+
+    if (!id) {
+      return {
+        ok: false,
+        error: "العنصر غير صالح.",
+      };
+    }
+
+    await delegate.delete({
+      where: { id },
+    });
+
+    await audit({
+      action: "delete",
+      adminId,
+      resource,
+      targetId: id,
+    });
 
     revalidateEverywhere(resource);
+
     return { ok: true };
   } catch (err) {
     console.error(`deleteItem(${resource}) failed`, err);
+
     return {
       ok: false,
       error: friendlyMessage(err, "تعذّر حذف العنصر. حاول مجددًا."),
@@ -214,8 +319,7 @@ export async function deleteItem(formData: FormData): Promise<ActionResult> {
 }
 
 /**
- * Swaps the "order" value of one item with its immediate neighbor, so the
- * admin can nudge an item up/down the list without retyping every number.
+ * Swaps an item's order with its immediate neighbor.
  */
 export async function reorderItem(
   resource: string,
@@ -224,38 +328,61 @@ export async function reorderItem(
 ): Promise<ActionResult> {
   try {
     const adminId = await getSessionAdminId();
-    if (!adminId) return { ok: false, error: NOT_LOGGED_IN };
+
+    if (!adminId) {
+      return { ok: false, error: NOT_LOGGED_IN };
+    }
 
     const config = getResourceConfig(resource);
     const delegate = getDelegate(resource);
-    if (!config || !delegate) return { ok: false, error: "القسم غير موجود" };
 
-    if (direction !== "up" && direction !== "down")
+    if (!config || !delegate) {
+      return { ok: false, error: "القسم غير موجود" };
+    }
+
+    if (direction !== "up" && direction !== "down") {
       return { ok: false, error: "طلب غير صالح" };
+    }
+
     const rows: { id: string; order: number }[] = await delegate.findMany({
       orderBy: { order: "asc" },
       select: { id: true, order: true },
     });
-    const index = rows.findIndex((r) => String(r.id) === id);
-    if (index === -1) return { ok: false, error: "العنصر غير موجود" };
+
+    const index = rows.findIndex((row) => String(row.id) === id);
+
+    if (index === -1) {
+      return {
+        ok: false,
+        error: "العنصر غير موجود",
+      };
+    }
 
     const swapIndex = direction === "up" ? index - 1 : index + 1;
-    if (swapIndex < 0 || swapIndex >= rows.length) return { ok: true };
+
+    if (swapIndex < 0 || swapIndex >= rows.length) {
+      return { ok: true };
+    }
 
     const current = rows[index];
     const neighbor = rows[swapIndex];
 
-    // If two items share the same number, swapping would change nothing —
-    // renumber the whole list first so moving always works.
+    // If order values are duplicated, renumber the list
+    // after swapping the two adjacent items.
     if (current.order === neighbor.order) {
       const reordered = [...rows];
+
       [reordered[index], reordered[swapIndex]] = [
         reordered[swapIndex],
         reordered[index],
       ];
+
       await Promise.all(
-        reordered.map((r, i) =>
-          delegate.update({ where: { id: r.id }, data: { order: i + 1 } }),
+        reordered.map((row, i) =>
+          delegate.update({
+            where: { id: row.id },
+            data: { order: i + 1 },
+          }),
         ),
       );
     } else {
@@ -278,10 +405,13 @@ export async function reorderItem(
       targetId: id,
       meta: { direction },
     });
+
     revalidateEverywhere(resource);
+
     return { ok: true };
   } catch (err) {
     console.error(`reorderItem(${resource}) failed`, err);
+
     return {
       ok: false,
       error: friendlyMessage(err, "تعذّر تغيير الترتيب. حاول مجددًا."),
@@ -289,7 +419,9 @@ export async function reorderItem(
   }
 }
 
-/** Removes a single uploaded file's URL from a file-multiple field's JSON array. */
+/**
+ * Removes one uploaded file URL from a file-multiple field.
+ */
 export async function removeUploadedFile(
   resource: string,
   id: string,
@@ -298,29 +430,55 @@ export async function removeUploadedFile(
 ): Promise<ActionResult> {
   try {
     const adminId = await getSessionAdminId();
-    if (!adminId) return { ok: false, error: NOT_LOGGED_IN };
+
+    if (!adminId) {
+      return { ok: false, error: NOT_LOGGED_IN };
+    }
 
     const config = getResourceConfig(resource);
     const delegate = getDelegate(resource);
-    if (!config || !delegate) return { ok: false, error: "القسم غير موجود" };
-    // Only allow touching fields that really are upload fields of this section.
-    if (!config.fields.some((f) => f.uploadTo === fieldKey))
-      return { ok: false, error: "الحقل غير صالح" };
+
+    if (!config || !delegate) {
+      return { ok: false, error: "القسم غير موجود" };
+    }
+
+    // Only allow fields configured as upload destinations.
+    if (!config.fields.some((field) => field.uploadTo === fieldKey)) {
+      return {
+        ok: false,
+        error: "الحقل غير صالح",
+      };
+    }
 
     const existing = await delegate.findUnique({
       where: { id },
       select: { [fieldKey]: true },
     });
-    const urls = parseUrlList(existing?.[fieldKey]).filter((u) => u !== url);
+
+    if (!existing) {
+      return {
+        ok: false,
+        error: "العنصر غير موجود أو تم حذفه.",
+      };
+    }
+
+    const urls = parseUrlList(existing[fieldKey]).filter(
+      (existingUrl) => existingUrl !== url,
+    );
+
     await delegate.update({
       where: { id },
-      data: { [fieldKey]: JSON.stringify(urls) },
+      data: {
+        [fieldKey]: JSON.stringify(urls),
+      },
     });
 
     revalidateEverywhere(resource);
+
     return { ok: true };
   } catch (err) {
     console.error(`removeUploadedFile(${resource}) failed`, err);
+
     return {
       ok: false,
       error: friendlyMessage(err, "تعذّر حذف الملف. حاول مجددًا."),
