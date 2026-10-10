@@ -6,6 +6,7 @@ import { forwardRef } from "react";
 import { ArrowRight, CalendarDays, ExternalLink, MapPin, Users } from "lucide-react";
 import type { MapPlace } from "@/data/map";
 import { CATEGORY_META, participantsLabel } from "./categories";
+import { thumbUrl } from "@/lib/image-url";
 
 /** Shows only what is stored for the place — a missing field is simply not rendered. */
 const MapActivityCard = forwardRef<
@@ -19,7 +20,7 @@ const MapActivityCard = forwardRef<
     <article className="animate-hub-in overflow-hidden rounded-2xl border border-brand-purple/10 bg-white shadow-soft">
       {place.imageUrl && (
         <img
-          src={place.imageUrl}
+          src={thumbUrl(place.imageUrl)}
           alt={`صورة من ${place.title}`}
           loading="lazy"
           decoding="async"

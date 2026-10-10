@@ -93,7 +93,13 @@ export async function uploadFile(formData: FormData): Promise<UploadResult> {
       return { ok: false, error: "لم يتم اختيار ملف" };
     }
 
-    const url = await uploadToStorage(file, resource);
+    // Optional small copy made in the browser (images only); validated again on upload.
+    const thumb = formData.get("thumb");
+    const url = await uploadToStorage(
+      file,
+      resource,
+      thumb instanceof File ? thumb : null,
+    );
 
     if (!url) {
       return { ok: false, error: "تعذّر رفع الملف" };

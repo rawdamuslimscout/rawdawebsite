@@ -8,6 +8,7 @@ import { badgeIconMap } from "@/lib/badgeIcons";
 import { stageBadges } from "@/data/stageBadges";
 import { stageCurriculum } from "@/data/stageCurriculum";
 import type { ScoutStage } from "@/data/content";
+import { thumbUrl } from "@/lib/image-url";
 
 type Tab = "overview" | "goals" | "badges" | "leaders";
 
@@ -306,7 +307,7 @@ export default function StageDetailModal({
                 <div key={leader.id} className="flex gap-3">
                   {leader.photoUrl ? (
                     <img
-                      src={leader.photoUrl}
+                      src={thumbUrl(leader.photoUrl)}
                       alt={leader.name}
                       className="h-12 w-12 shrink-0 rounded-full object-cover"
                     />

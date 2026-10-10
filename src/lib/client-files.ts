@@ -3,11 +3,15 @@
  *  - phone photos (often 5–12 MB) are resized/compressed before upload, so they
  *    never exceed the server's request size limit;
  *  - wrong file types / oversized documents are rejected up front with a clear
- *    Arabic message instead of failing deep inside the server.
+ *    Arabic message instead of failing deep inside the server;
+ *  - images also get a small thumbnail for cards and grids.
  */
+
+import { THUMB_WIDTH } from "@/lib/image-url";
 
 export const DOC_MAX_BYTES = 4 * 1024 * 1024; // keep under typical hosting request limits
 export const IMAGE_TARGET_BYTES = 800 * 1024;
+const THUMB_MAX_BYTES = 400 * 1024; // same cap as the server check
 
 export class FilePrepError extends Error {}
 
@@ -96,6 +100,39 @@ async function compressImage(file: File): Promise<File> {
       type: "image/jpeg",
       lastModified: Date.now(),
     });
+  } finally {
+    bitmap.close?.();
+  }
+}
+
+/**
+ * Small JPEG copy (THUMB_WIDTH px wide) shown in cards and grids, so visitors
+ * don't download the full photo for a small tile. Returns null for GIFs or if
+ * the browser can't decode/encode — the upload then simply has no thumbnail.
+ */
+export async function makeThumbnail(file: File): Promise<File | null> {
+  if (!/^(jpe?g|png|webp|avif)$/.test(extOf(file.name))) return null;
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await decodeImage(file);
+  } catch {
+    return null;
+  }
+  try {
+    const scale = Math.min(1, THUMB_WIDTH / bitmap.width);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await canvasToBlob(canvas, 0.78);
+    if (blob.type !== "image/jpeg" || blob.size > THUMB_MAX_BYTES) return null;
+    return new File([blob], "thumb.jpg", { type: "image/jpeg", lastModified: Date.now() });
+  } catch {
+    return null;
   } finally {
     bitmap.close?.();
   }

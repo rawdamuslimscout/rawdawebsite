@@ -3,6 +3,9 @@ import { createClient } from "@supabase/supabase-js";
 const bucket = process.env.SUPABASE_STORAGE_BUCKET || "uploads";
 
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+const MAX_THUMB_BYTES = 400 * 1024;
+/** Image types that get a "<uuid>/full.<ext>" + "<uuid>/thumb.jpg" pair (see lib/image-url.ts). */
+const THUMB_EXTS = new Set(["jpg", "jpeg", "png", "webp", "avif"]);
 
 // Extension -> the ONLY content type we ever store it with (never trust file.type).
 // SVG is intentionally not allowed: it can carry scripts.
@@ -44,7 +47,14 @@ function getStorageClient() {
   return createClient(url, serviceRoleKey, { auth: { persistSession: false } });
 }
 
-export async function uploadToStorage(file: File, folder: string) {
+/** A browser-made thumbnail is only used if it really is a small JPEG. */
+async function validThumb(thumb: File | null | undefined): Promise<File | null> {
+  if (!thumb || thumb.size === 0 || thumb.size > MAX_THUMB_BYTES) return null;
+  const head = new Uint8Array(await thumb.slice(0, 16).arrayBuffer());
+  return signatureMatches("jpg", head) ? thumb : null;
+}
+
+export async function uploadToStorage(file: File, folder: string, thumb?: File | null) {
   if (!file || file.size === 0) return null;
   if (file.size > MAX_UPLOAD_BYTES) throw new Error("حجم الملف يتجاوز 10 ميغابايت");
 
@@ -57,16 +67,32 @@ export async function uploadToStorage(file: File, folder: string) {
 
   // Server-generated name only: no user-controlled path segments, no traversal.
   const safeFolder = folder.replace(/[^a-z0-9-]/gi, "").slice(0, 40) || "misc";
-  const path = `${safeFolder}/${crypto.randomUUID()}.${ext}`;
+  const id = crypto.randomUUID();
   const client = getStorageClient();
-  const { error } = await client.storage.from(bucket).upload(path, file, {
-    contentType,
-    upsert: false,
-    cacheControl: "31536000",
-  });
+  const store = client.storage.from(bucket);
+  const options = { upsert: false, cacheControl: "31536000" };
+
+  // Thumbnail first, so a saved ".../full.<ext>" URL always has its thumb.jpg.
+  // If the thumbnail is missing or fails, fall back to the single-file layout.
+  let path = `${safeFolder}/${id}.${ext}`;
+  let thumbPath: string | null = null;
+  const thumbFile = THUMB_EXTS.has(ext) ? await validThumb(thumb) : null;
+  if (thumbFile) {
+    const candidate = `${safeFolder}/${id}/thumb.jpg`;
+    const { error } = await store.upload(candidate, thumbFile, { ...options, contentType: "image/jpeg" });
+    if (error) {
+      console.error("[storage] thumbnail upload failed", error.message);
+    } else {
+      thumbPath = candidate;
+      path = `${safeFolder}/${id}/full.${ext}`;
+    }
+  }
+
+  const { error } = await store.upload(path, file, { ...options, contentType });
   if (error) {
     console.error("[storage] upload failed", error.message);
+    if (thumbPath) await store.remove([thumbPath]);
     throw new Error("تعذّر رفع الملف. تحقق من اتصالك وأعد المحاولة.");
   }
-  return client.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+  return store.getPublicUrl(path).data.publicUrl;
 }

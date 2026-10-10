@@ -14,6 +14,7 @@ import {
 
 import NewsModal from "@/components/ui/NewsModal";
 import type { NewsItem } from "@/data/content";
+import { responsiveImage, thumbUrl } from "@/lib/image-url";
 
 export type HubItem = {
   key: string;
@@ -399,7 +400,8 @@ function Featured({
     >
       {item.image ? (
         <img
-          src={item.image}
+          {...responsiveImage(item.image)}
+          sizes="(min-width: 1024px) 58vw, 100vw"
           alt=""
           loading="lazy"
           decoding="async"
@@ -490,7 +492,7 @@ function Row({
       <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-purple text-brand-yellow sm:h-[72px] sm:w-[72px]">
         {item.image ? (
           <img
-            src={item.image}
+            src={thumbUrl(item.image)}
             alt=""
             width={72}
             height={72}

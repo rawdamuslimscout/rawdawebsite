@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { saveSiteSettings } from "./actions";
 import { useToast } from "../ToastProvider";
 import { friendlyMessage } from "@/lib/errors";
+import { thumbUrl } from "@/lib/image-url";
 
 type Settings = {
   name: string;
@@ -181,7 +182,7 @@ export default function SiteSettingsForm({
                 />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={item.imageUrl}
+                  src={thumbUrl(item.imageUrl)}
                   alt=""
                   className="h-12 w-12 rounded-md object-cover"
                 />

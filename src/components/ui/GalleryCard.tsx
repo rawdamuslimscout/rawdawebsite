@@ -3,6 +3,12 @@
 /* eslint-disable @next/next/no-img-element */
 
 import type { GalleryItem } from "@/data/content";
+import { responsiveImage } from "@/lib/image-url";
+
+// Mirrors GalleryFilterGrid: 2 cols on phones, 3 on tablets, 4 on desktop,
+// where every size except "small" spans two columns.
+const SMALL_TILE = "(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw";
+const WIDE_TILE = "(min-width: 1024px) 50vw, (min-width: 640px) 33vw, 50vw";
 
 export default function GalleryCard({
   item,
@@ -19,7 +25,8 @@ export default function GalleryCard({
       className="group relative h-full w-full overflow-hidden rounded-2xl bg-brand-purple-tint text-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple focus-visible:ring-offset-2"
     >
       <img
-        src={item.imageUrl}
+        {...responsiveImage(item.imageUrl)}
+        sizes={item.size === "small" ? SMALL_TILE : WIDE_TILE}
         alt={item.title}
         loading="lazy"
         className="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-105"

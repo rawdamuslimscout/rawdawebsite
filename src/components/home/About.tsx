@@ -4,6 +4,7 @@ import { Mountain } from "lucide-react";
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { getGalleryItems, getSiteSettings } from "@/lib/data";
+import { responsiveImage } from "@/lib/image-url";
 
 export default async function About() {
   const [siteInfo, gallery] = await Promise.all([
@@ -55,7 +56,8 @@ export default async function About() {
               <div className="relative mx-auto grid max-w-xl grid-cols-12 gap-3 sm:gap-4">
                 <div className="col-span-7 aspect-[4/5] overflow-hidden rounded-2xl shadow-soft">
                   <img
-                    src={photos[0].imageUrl}
+                    {...responsiveImage(photos[0].imageUrl)}
+                    sizes="(min-width: 640px) 340px, 58vw"
                     alt={photos[0].title}
                     width={640}
                     height={800}
@@ -68,7 +70,8 @@ export default async function About() {
                   {photos[1] ? (
                     <div className="aspect-[4/5] overflow-hidden rounded-2xl shadow-soft">
                       <img
-                        src={photos[1].imageUrl}
+                        {...responsiveImage(photos[1].imageUrl)}
+                        sizes="(min-width: 640px) 240px, 42vw"
                         alt={photos[1].title}
                         width={480}
                         height={600}

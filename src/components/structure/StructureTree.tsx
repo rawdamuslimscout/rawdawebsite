@@ -26,6 +26,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { thumbUrl } from "@/lib/image-url";
 
 type Qualification = {
   id: string;
@@ -99,7 +100,7 @@ function Avatar({
 }) {
   return url ? (
     <img
-      src={url}
+      src={thumbUrl(url)}
       alt={name}
       width={96}
       height={96}

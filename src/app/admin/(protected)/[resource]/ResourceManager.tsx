@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 import type { FieldConfig, ResourceConfig } from "@/lib/admin-resources";
 import { friendlyMessage } from "@/lib/errors";
-import { prepareFile } from "@/lib/client-files";
+import { makeThumbnail, prepareFile } from "@/lib/client-files";
+import { thumbUrl } from "@/lib/image-url";
 import {
   saveItem,
   deleteItem,
@@ -151,6 +152,10 @@ export default function ResourceManager({
         const upload = new FormData();
         upload.set("_resource", config.key);
         upload.set("file", prepared);
+        if (field.accept === "image/*") {
+          const thumb = await makeThumbnail(prepared);
+          if (thumb) upload.set("thumb", thumb);
+        }
         const result = await uploadFile(upload);
         if (!result.ok) throw new Error(result.error);
         urls.push(result.url);
@@ -292,7 +297,7 @@ export default function ResourceManager({
             {isImageUrl(existingRaw) ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={existingRaw}
+                src={thumbUrl(existingRaw)}
                 alt=""
                 className="h-14 w-14 rounded-lg border border-brand-purple/10 object-cover"
               />
@@ -316,7 +321,7 @@ export default function ResourceManager({
                 {isImageUrl(url) ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={url}
+                    src={thumbUrl(url)}
                     alt=""
                     className="h-16 w-16 rounded-lg border border-brand-purple/10 object-cover"
                   />
@@ -459,7 +464,7 @@ export default function ResourceManager({
                 {thumb ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={thumb}
+                    src={thumbUrl(thumb)}
                     alt=""
                     className="h-12 w-12 shrink-0 rounded-lg border border-brand-purple/10 object-cover"
                   />
