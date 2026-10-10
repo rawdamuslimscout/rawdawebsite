@@ -5,6 +5,8 @@ import { getBlogPost, getBlogPosts } from "@/lib/data";
 import JsonLd from "@/components/ui/JsonLd";
 import { SITE_URL, SITE_NAME } from "@/lib/site";
 
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
   const posts = await getBlogPosts();
   return posts.map((p) => ({ slug: p.slug }));

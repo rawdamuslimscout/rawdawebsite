@@ -51,10 +51,11 @@ export default function AdminLoginPage() {
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-brand-ink/75">
+            <label htmlFor="admin-username" className="mb-1.5 block text-sm font-medium text-brand-ink/75">
               اسم المستخدم
             </label>
             <input
+              id="admin-username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -66,11 +67,12 @@ export default function AdminLoginPage() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-brand-ink/75">
+            <label htmlFor="admin-password" className="mb-1.5 block text-sm font-medium text-brand-ink/75">
               كلمة المرور
             </label>
             <div className="relative">
               <input
+                id="admin-password"
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

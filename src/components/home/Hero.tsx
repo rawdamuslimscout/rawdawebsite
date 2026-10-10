@@ -1,6 +1,10 @@
-import Image from "next/image";
+import Image, { getImageProps } from "next/image";
 import { ArrowLeft } from "lucide-react";
 import { getSiteSettings } from "@/lib/data";
+
+const heroImage = { alt: "", fill: true, priority: true, sizes: "100vw" } as const;
+const { props: heroDesktop } = getImageProps({ ...heroImage, src: "/images/hero-purple.png" });
+const { props: heroMobile } = getImageProps({ ...heroImage, src: "/images/hero-mobile-purple.png" });
 
 export default async function Hero() {
   const siteInfo = await getSiteSettings();
@@ -18,28 +22,17 @@ export default async function Hero() {
         lg:pb-20 lg:pt-24
       "
     >
-      {/* Desktop background */}
-      <div className="absolute inset-0 -z-30 hidden lg:block">
-        <Image
-          src="/images/hero-purple.png"
-          alt="راية فوج روضة الفيحاء في الطبيعة"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-[left_32%]"
-        />
-      </div>
-
-      {/* Mobile background */}
-      <div className="absolute inset-0 -z-30 overflow-hidden lg:hidden">
-        <Image
-          src="/images/hero-mobile-purple.png"
-          alt="راية فوج روضة الفيحاء"
-          fill
-          priority
-          sizes="100vw"
-          className="scale-[1.25] object-cover object-[left_35%]"
-        />
+      {/* Background: one <picture>, so each device downloads only its own image
+          (two priority <Image>s used to preload both on every device). */}
+      <div className="absolute inset-0 -z-30 overflow-hidden">
+        <picture>
+          <source media="(min-width: 1024px)" srcSet={heroDesktop.srcSet} sizes="100vw" />
+          <img
+            {...heroMobile}
+            alt="راية فوج روضة الفيحاء في الطبيعة"
+            className="scale-[1.25] object-cover object-[left_35%] lg:scale-100 lg:object-[left_32%]"
+          />
+        </picture>
       </div>
 
       {/* Base overlay */}

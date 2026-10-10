@@ -18,32 +18,40 @@ export default function SharePdfButton({ url, title }: SharePdfButtonProps) {
   const handleShare = async () => {
     const fullUrl = getFullUrl();
 
-    // Try sharing the actual PDF file on supported devices
-    try {
-      const response = await fetch(fullUrl);
+    // Try sharing the actual file, but only on devices that can share files —
+    // otherwise the whole file would be downloaded just to be thrown away.
+    const isDocx = /\.docx(\?|$)/i.test(fullUrl);
+    const type = isDocx
+      ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      : "application/pdf";
+    const fileName = `${title}.${isDocx ? "docx" : "pdf"}`;
+    const canShareFiles =
+      !!navigator.share &&
+      !!navigator.canShare?.({ files: [new File([""], fileName, { type })] });
 
-      if (!response.ok) throw new Error("Could not fetch PDF");
+    if (canShareFiles) {
+      try {
+        const response = await fetch(fullUrl);
 
-      const blob = await response.blob();
-      const file = new File([blob], `${title}.pdf`, {
-        type: "application/pdf",
-      });
+        if (!response.ok) throw new Error("Could not fetch file");
 
-      if (
-        navigator.canShare &&
-        navigator.canShare({ files: [file] }) &&
-        navigator.share
-      ) {
-        await navigator.share({
-          title,
-          text: title,
-          files: [file],
-        });
-        return;
+        const blob = await response.blob();
+        const file = new File([blob], fileName, { type });
+
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title,
+            text: title,
+            files: [file],
+          });
+          return;
+        }
+      } catch (error) {
+        // The visitor closed the share sheet: don't open a second one.
+        if (error instanceof Error && error.name === "AbortError") return;
+        // Otherwise fall back to sharing the link
+        console.log("File sharing unavailable:", error);
       }
-    } catch (error) {
-      // Fall back to sharing the link
-      console.log("File sharing unavailable:", error);
     }
 
     // Share the link if supported

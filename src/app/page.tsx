@@ -9,6 +9,8 @@ import ScoutMap from "@/components/home/ScoutMap";
 import Gallery from "@/components/home/Gallery";
 import CTA from "@/components/home/CTA";
 
+export const revalidate = 3600;
+
 export default function Home() {
   return (
     <>

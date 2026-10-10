@@ -32,6 +32,7 @@ function revalidateEverywhere(resource: string) {
   revalidatePath(`/admin/${resource}`);
   revalidatePath("/");
   revalidatePath("/blog");
+  revalidatePath("/blog/[slug]", "page");
   revalidatePath("/library");
   revalidatePath("/join");
   revalidatePath("/faq");

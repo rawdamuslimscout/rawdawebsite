@@ -2,6 +2,8 @@ import PageHeader from "@/components/ui/PageHeader";
 import LibraryFilterGrid from "@/components/home/LibraryFilterGrid";
 import { getLibraryResources } from "@/lib/data";
 
+export const revalidate = 3600;
+
 export const metadata = {
   title: "المكتبة | فوج روضة الفيحاء",
   description:

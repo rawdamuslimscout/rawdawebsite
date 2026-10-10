@@ -293,8 +293,11 @@ export async function getBlogPost(slug: string): Promise<BlogPost | undefined> {
       content: row.content.split("\n\n"),
     };
   } catch (err) {
+    // Rethrow instead of returning undefined: "not found" would bake a 404 for
+    // a real post into the static cache. Throwing keeps the last good page
+    // (ISR) or fails the build so the previous deployment stays live.
     console.error("[data] getBlogPost failed", err);
-    return undefined;
+    throw err;
   }
 }
 
@@ -336,7 +339,7 @@ export type JoinScheduleItem = {
 
 export async function getJoinPricing(): Promise<JoinPricingItem[]> {
   try {
-    return prisma.joinPricing.findMany({ orderBy: { order: "asc" } });
+    return await prisma.joinPricing.findMany({ orderBy: { order: "asc" } });
   } catch (err) {
     console.error("[data] getJoinPricing failed", err);
     return [];
@@ -345,7 +348,7 @@ export async function getJoinPricing(): Promise<JoinPricingItem[]> {
 
 export async function getJoinSchedule(): Promise<JoinScheduleItem[]> {
   try {
-    return prisma.joinSchedule.findMany({ orderBy: { order: "asc" } });
+    return await prisma.joinSchedule.findMany({ orderBy: { order: "asc" } });
   } catch (err) {
     console.error("[data] getJoinSchedule failed", err);
     return [];

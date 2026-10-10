@@ -2,6 +2,8 @@ import PageHeader from "@/components/ui/PageHeader";
 import BlogCard from "@/components/ui/BlogCard";
 import { getBlogPosts } from "@/lib/data";
 
+export const revalidate = 3600;
+
 export const metadata = {
   title: "المدونة | فوج روضة الفيحاء",
   description: "مقالات ومنشورات فوج روضة الفيحاء حول الكشافة والقيادة والقيم.",

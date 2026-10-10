@@ -2,6 +2,8 @@ import { Calendar, Clock, MapPin, Users } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import { getJoinPricing, getJoinSchedule, getSiteSettings } from "@/lib/data";
 
+export const revalidate = 3600;
+
 export const metadata = {
   title: "انضم إلينا | فوج روضة الفيحاء",
   description:
