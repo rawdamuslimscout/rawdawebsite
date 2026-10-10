@@ -14,13 +14,13 @@ import { createPortal } from "react-dom";
 const links = [
   {
     label: "Instagram Profile",
-    href: "https://instagram.com/youssefmariam",
+    href: "https://www.instagram.com/youssefmariam.dev/",
     icon: Instagram,
     tone: "text-pink-400",
   },
   {
     label: "LinkedIn Connect",
-    href: "https://linkedin.com/in/youssefmariam",
+    href: "https://www.linkedin.com/in/youssef-mariam-7a3b4a249/",
     icon: Linkedin,
     tone: "text-blue-400",
   },

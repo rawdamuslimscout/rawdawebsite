@@ -19,7 +19,7 @@ export default function LibraryFilterGrid({
 
   return (
     <>
-      <div className="no-scrollbar flex gap-2 overflow-x-auto">
+      {/* <div className="no-scrollbar flex gap-2 overflow-x-auto">
         {libraryFilters.map((filter) => (
           <button
             key={filter.id}
@@ -40,15 +40,15 @@ export default function LibraryFilterGrid({
         <p className="mt-8 text-center text-brand-ink/60">
           لا توجد ملفات في هذا التصنيف بعد.
         </p>
-      ) : (
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          {filtered.map((resource) => (
-            <div key={resource.id} className="flex flex-col gap-2">
-              <ResourceCard resource={resource} />
-            </div>
-          ))}
-        </div>
-      )}
+      ) : ( */}
+      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        {filtered.map((resource) => (
+          <div key={resource.id} className="flex flex-col gap-2">
+            <ResourceCard resource={resource} />
+          </div>
+        ))}
+      </div>
+      {/* )} */}
     </>
   );
 }
