@@ -108,10 +108,9 @@ export default async function Hero() {
       {/* Content */}
       <div className="container-x relative z-10 w-full">
         <div
-          dir="rtl"
           className="
             mx-auto w-full
-            lg:ml-auto lg:mr-0
+            lg:me-auto lg:ms-0
             lg:max-w-[850px]
           "
         >
@@ -162,12 +161,12 @@ export default async function Hero() {
             className="
               font-display font-bold
               text-3xl leading-[1.4]
-              tracking-tight text-white
+              text-white
               drop-shadow-[0_3px_16px_rgba(0,0,0,0.45)]
               sm:text-5xl
               lg:text-6xl
               xl:text-7xl
-              text-center lg:text-right
+              text-center lg:text-start
             "
           >
             {siteInfo.name}
@@ -182,7 +181,7 @@ export default async function Hero() {
               drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]
               sm:mt-5 sm:text-2xl
               lg:mx-0 lg:max-w-none lg:text-3xl
-              text-center lg:text-right
+              text-center lg:text-start
             "
           >
             {siteInfo.tagline}
@@ -197,7 +196,7 @@ export default async function Hero() {
               drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]
               sm:mt-6 sm:text-lg sm:leading-9
               lg:mx-0
-              text-center lg:text-right
+              text-center lg:text-start
             "
           >
             نجمع بين الكشافة والتربية والقيم، ونبني القيادة عبر الخدمة والأخوة،
@@ -223,6 +222,7 @@ export default async function Hero() {
                 text-base
                 shadow-[0_6px_20px_rgba(0,0,0,0.12)]
                 sm:min-h-12
+                sm:min-w-[200px]
               "
             >
               تعرّف على الفوج
@@ -240,6 +240,7 @@ export default async function Hero() {
                 text-base text-white
                 hover:bg-white/15
                 sm:min-h-12
+                sm:min-w-[200px]
               "
             >
               استكشف أنشطتنا

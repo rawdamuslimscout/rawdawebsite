@@ -1,56 +1,87 @@
 "use client";
 
-import { Share2, Copy, Check } from "lucide-react";
-import { useState } from "react";
+import { Share2, Check } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 type SharePdfButtonProps = {
   url: string;
   title: string;
+  /**
+   * Try to share the file itself (PDF/DOCX) on devices that support it.
+   * Set to false to share a page link only (e.g. a blog article).
+   */
+  shareFile?: boolean;
+  /** Visible label; defaults to "مشاركة". */
+  label?: string;
+  /** Accessible name; defaults to "مشاركة الملف". */
+  ariaLabel?: string;
+  /** Text passed to the native share sheet with the link. */
+  shareText?: string;
+  className?: string;
 };
 
-export default function SharePdfButton({ url, title }: SharePdfButtonProps) {
+export default function SharePdfButton({
+  url,
+  title,
+  shareFile = true,
+  label = "مشاركة",
+  ariaLabel = "مشاركة الملف",
+  shareText,
+  className,
+}: SharePdfButtonProps) {
   const [copied, setCopied] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+    },
+    [],
+  );
 
   const getFullUrl = () => {
     return new URL(url, window.location.origin).href;
   };
 
-  const handleShare = async () => {
+  const share = async () => {
     const fullUrl = getFullUrl();
 
     // Try sharing the actual file, but only on devices that can share files —
     // otherwise the whole file would be downloaded just to be thrown away.
-    const isDocx = /\.docx(\?|$)/i.test(fullUrl);
-    const type = isDocx
-      ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-      : "application/pdf";
-    const fileName = `${title}.${isDocx ? "docx" : "pdf"}`;
-    const canShareFiles =
-      !!navigator.share &&
-      !!navigator.canShare?.({ files: [new File([""], fileName, { type })] });
+    if (shareFile) {
+      const isDocx = /\.docx(\?|$)/i.test(fullUrl);
+      const type = isDocx
+        ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        : "application/pdf";
+      const fileName = `${title}.${isDocx ? "docx" : "pdf"}`;
+      const canShareFiles =
+        !!navigator.share &&
+        !!navigator.canShare?.({ files: [new File([""], fileName, { type })] });
 
-    if (canShareFiles) {
-      try {
-        const response = await fetch(fullUrl);
+      if (canShareFiles) {
+        try {
+          const response = await fetch(fullUrl);
 
-        if (!response.ok) throw new Error("Could not fetch file");
+          if (!response.ok) throw new Error("Could not fetch file");
 
-        const blob = await response.blob();
-        const file = new File([blob], fileName, { type });
+          const blob = await response.blob();
+          const file = new File([blob], fileName, { type });
 
-        if (navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            title,
-            text: title,
-            files: [file],
-          });
-          return;
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title,
+              text: title,
+              files: [file],
+            });
+            return;
+          }
+        } catch (error) {
+          // The visitor closed the share sheet: don't open a second one.
+          if (error instanceof Error && error.name === "AbortError") return;
+          // Otherwise fall back to sharing the link
+          console.log("File sharing unavailable:", error);
         }
-      } catch (error) {
-        // The visitor closed the share sheet: don't open a second one.
-        if (error instanceof Error && error.name === "AbortError") return;
-        // Otherwise fall back to sharing the link
-        console.log("File sharing unavailable:", error);
       }
     }
 
@@ -59,7 +90,7 @@ export default function SharePdfButton({ url, title }: SharePdfButtonProps) {
       try {
         await navigator.share({
           title,
-          text: `شارك هذا الملف: ${title}`,
+          text: shareText ?? `شارك هذا الملف: ${title}`,
           url: fullUrl,
         });
         return;
@@ -74,9 +105,21 @@ export default function SharePdfButton({ url, title }: SharePdfButtonProps) {
     try {
       await navigator.clipboard.writeText(fullUrl);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+      resetTimer.current = setTimeout(() => setCopied(false), 2000);
     } catch {
-      window.prompt("انسخ رابط الملف:", fullUrl);
+      window.prompt("انسخ الرابط:", fullUrl);
+    }
+  };
+
+  const handleShare = async () => {
+    // Fetching the file for the share sheet can take a moment: block double taps.
+    if (busy) return;
+    setBusy(true);
+    try {
+      await share();
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -84,21 +127,33 @@ export default function SharePdfButton({ url, title }: SharePdfButtonProps) {
     <button
       type="button"
       onClick={handleShare}
-      aria-label="مشاركة الملف"
-      title={copied ? "تم نسخ الرابط" : "مشاركة الملف"}
-      className="inline-flex items-center justify-center gap-2 rounded-xl border border-brand-purple/15 px-4 py-2 text-sm font-semibold text-brand-ink transition-colors hover:bg-brand-purple-tint"
+      aria-label={ariaLabel}
+      aria-busy={busy || undefined}
+      title={copied ? "تم نسخ الرابط" : ariaLabel}
+      className={
+        className ??
+        "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-brand-purple/15 px-4 py-2 text-sm font-semibold text-brand-ink transition-colors hover:bg-brand-purple-tint disabled:opacity-60"
+      }
     >
       {copied ? (
         <>
-          <Check size={16} />
+          <Check
+            size={16}
+            aria-hidden="true"
+            className="text-brand-turquoise-dark"
+          />
           تم نسخ الرابط
         </>
       ) : (
         <>
-          <Share2 size={16} />
-          مشاركة
+          <Share2 size={16} aria-hidden="true" />
+          {label}
         </>
       )}
+      {/* Announce the copy confirmation to screen readers. */}
+      <span className="sr-only" aria-live="polite">
+        {copied ? "تم نسخ الرابط إلى الحافظة" : ""}
+      </span>
     </button>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { ScoutStage } from "@/data/content";
 import Reveal from "@/components/ui/Reveal";
 import ScoutCard from "@/components/ui/ScoutCard";
@@ -12,27 +12,36 @@ export default function ScoutSectionsClient({
   stages: ScoutStage[];
 }) {
   const [selectedStage, setSelectedStage] = useState<ScoutStage | null>(null);
-  const [trigger, setTrigger] = useState<HTMLButtonElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
 
-  const openStage = (stage: ScoutStage, source: HTMLButtonElement) => {
-    setTrigger(source);
-    setSelectedStage(stage);
-  };
+  const openStage = useCallback(
+    (stage: ScoutStage, source: HTMLButtonElement) => {
+      triggerRef.current = source;
+      setSelectedStage(stage);
+    },
+    [],
+  );
 
-  const closeStage = () => {
+  // Stable identity so the dialog's key/focus effect is not re-run, and
+  // focus returns to the card button that opened it.
+  const closeStage = useCallback(() => {
     setSelectedStage(null);
-    window.requestAnimationFrame(() => trigger?.focus());
-  };
+    window.requestAnimationFrame(() =>
+      triggerRef.current?.focus({ preventScroll: true }),
+    );
+  }, []);
+
+  if (!stages.length) return null;
 
   return (
     <>
-      <div className="mt-12 grid gap-6 sm:mt-14 lg:grid-cols-3 lg:gap-7">
+      <ul className="mt-12 grid gap-6 sm:mt-14 lg:grid-cols-3 lg:gap-7">
         {stages.map((stage, index) => (
-          <Reveal key={stage.id} delay={index * 90} className="h-full">
+          <Reveal as="li" key={stage.id} delay={index * 90} className="h-full">
             <ScoutCard stage={stage} index={index} onOpen={openStage} />
           </Reveal>
         ))}
-      </div>
+      </ul>
 
       {selectedStage && (
         <StageDetailModal stage={selectedStage} open onClose={closeStage} />

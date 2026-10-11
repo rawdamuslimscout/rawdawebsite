@@ -13,7 +13,10 @@ export default async function Values() {
       id="values"
       className="relative overflow-hidden bg-brand-purple-dark py-8 sm:py-12 lg:py-24"
     >
-      <div className="texture-canvas absolute inset-0 opacity-30" />
+      <div
+        aria-hidden="true"
+        className="texture-canvas absolute inset-0 opacity-30"
+      />
 
       <div className="container-x relative">
         <div className="grid gap-6 sm:gap-8 lg:grid-cols-12 lg:gap-16">
@@ -23,7 +26,7 @@ export default async function Values() {
               قيمنا
             </h2>
 
-            <p className="mt-2 max-w-md text-xs leading-6 text-white/75 sm:mt-5 sm:text-lg sm:leading-8">
+            <p className="mt-2 max-w-md text-sm leading-7 text-white/80 sm:mt-5 sm:text-lg sm:leading-8">
               قيم نعيشها في كل مخيم ورحلة ومهمة، ونبني عليها شخصية الكشاف
               والقائد.
             </p>
@@ -38,7 +41,10 @@ export default async function Values() {
                 delay={(i % 2) * 80}
                 className="value-row group relative flex min-w-0 items-center gap-3 border-b border-white/10 py-3 sm:gap-4 sm:py-5"
               >
-                <span className="shrink-0 font-display text-sm font-bold text-brand-yellow sm:text-xl">
+                <span
+                  aria-hidden="true"
+                  className="shrink-0 font-display text-sm font-bold text-brand-yellow sm:text-xl"
+                >
                   {ar(i + 1)}
                 </span>
 

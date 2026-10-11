@@ -8,7 +8,7 @@ export default function MapSkeleton({ label = "جارٍ تحميل الخريط�
     >
       <span
         aria-hidden="true"
-        className="h-8 w-8 animate-spin rounded-full border-2 border-brand-purple/20 border-t-brand-purple"
+        className="h-8 w-8 animate-spin rounded-full motion-reduce:animate-none border-2 border-brand-purple/20 border-t-brand-purple"
       />
       <span className="text-sm font-semibold text-brand-ink/60">{label}</span>
     </div>

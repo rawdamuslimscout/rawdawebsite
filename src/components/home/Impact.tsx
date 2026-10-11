@@ -29,14 +29,14 @@ export default async function Impact() {
     >
       <div className="container-x">
         <Reveal className="overflow-hidden rounded-xl border border-white/10 bg-brand-purple shadow-lift">
-          <div className="h-0.5 w-full bg-white/80" />
+          <div aria-hidden="true" className="h-0.5 w-full bg-white/80" />
 
-          <dl className="grid divide-y divide-white/10 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:divide-x-reverse">
+          <ul className="grid divide-y divide-white/10 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:divide-x-reverse">
             {stats.map((stat, i) => {
               const Icon = icons[i % icons.length];
 
               return (
-                <div
+                <li
                   key={`${stat.label}-${i}`}
                   className="flex items-center gap-3 px-4 py-4 sm:flex-col sm:items-start sm:gap-0 sm:px-5 sm:py-6 lg:px-7 lg:py-7"
                 >
@@ -48,23 +48,23 @@ export default async function Impact() {
                   </span>
 
                   <div className="flex min-w-0 flex-col sm:contents">
-                    <dt className="order-3 mt-1 text-sm font-medium text-white/80 sm:mt-2 sm:text-base">
+                    <p className="order-3 mt-1 text-sm font-medium text-white/85 sm:mt-2 sm:text-base">
                       {stat.label}
-                    </dt>
+                    </p>
 
                     <span
                       className={`order-2 mt-2 block h-0.5 w-7 rounded-full sm:mt-3 ${bars[i % bars.length]}`}
                       aria-hidden="true"
                     />
 
-                    <dd className="order-1 font-display text-3xl font-bold leading-none text-white sm:text-4xl lg:text-5xl">
+                    <p className="order-1 font-display text-3xl font-bold leading-none text-white sm:text-4xl lg:text-5xl">
                       <CountUp value={stat.value} />
-                    </dd>
+                    </p>
                   </div>
-                </div>
+                </li>
               );
             })}
-          </dl>
+          </ul>
         </Reveal>
       </div>
     </section>

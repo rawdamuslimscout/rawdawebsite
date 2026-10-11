@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { Check, ChevronDown, SlidersHorizontal } from "lucide-react";
 
 import GalleryCard from "@/components/ui/GalleryCard";
@@ -38,6 +38,7 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   /* ------------------------------------------------------------------------ */
   /* FILTERS                                                                  */
@@ -100,7 +101,9 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
   /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
-    const handlePointerDown = (event: MouseEvent) => {
+    if (!filterOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node)
@@ -116,16 +119,50 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
       }
     };
 
-    document.addEventListener("mousedown", handlePointerDown);
+    // Move focus to the selected option so arrow keys work straight away.
+    const raf = requestAnimationFrame(() => {
+      menuRef.current
+        ?.querySelector<HTMLButtonElement>('[aria-selected="true"]')
+        ?.focus();
+    });
 
+    document.addEventListener("pointerdown", handlePointerDown);
     document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-
+      cancelAnimationFrame(raf);
+      document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [filterOpen]);
+
+  /** Arrow / Home / End navigation between options; Tab closes the menu. */
+  const onMenuKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const options = Array.from(
+      menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="option"]') ??
+        [],
+    );
+    if (!options.length) return;
+    const current = options.indexOf(
+      document.activeElement as HTMLButtonElement,
+    );
+
+    let next: number | null = null;
+    if (event.key === "ArrowDown") next = (current + 1) % options.length;
+    else if (event.key === "ArrowUp")
+      next = (current - 1 + options.length) % options.length;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = options.length - 1;
+    else if (event.key === "Tab") {
+      setFilterOpen(false);
+      return;
+    }
+
+    if (next !== null) {
+      event.preventDefault();
+      options[next]?.focus();
+    }
+  };
 
   /* ------------------------------------------------------------------------ */
   /* EMPTY STATE                                                              */
@@ -143,6 +180,7 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
     setActive(filterId);
     setLightboxIndex(null);
     setFilterOpen(false);
+    triggerRef.current?.focus();
   };
 
   /* ------------------------------------------------------------------------ */
@@ -150,7 +188,7 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
   /* ------------------------------------------------------------------------ */
 
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       {/* ==================================================================== */}
       {/* FILTER                                                               */}
       {/* ==================================================================== */}
@@ -170,6 +208,7 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
             onClick={() => setFilterOpen((current) => !current)}
             aria-expanded={filterOpen}
             aria-haspopup="listbox"
+            aria-label={`تصنيف الصور: ${activeFilter?.label ?? ""} (${activeCount})`}
             whileTap={{ scale: 0.985 }}
             className="
               group
@@ -302,8 +341,10 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
                   duration: 0.16,
                   ease: [0.22, 1, 0.36, 1],
                 }}
+                ref={menuRef}
                 role="listbox"
                 aria-label="تصنيف الصور"
+                onKeyDown={onMenuKeyDown}
                 className="
                   absolute
                   left-0
@@ -333,7 +374,7 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
                       onClick={() => changeFilter(filter.id)}
                       className={`
                         flex
-                        min-h-[43px]
+                        min-h-[44px]
                         w-full
                         items-center
                         justify-between
@@ -344,6 +385,10 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
                         duration-150
                         sm:min-h-[45px]
                         sm:rounded-xl
+                        focus-visible:outline-none
+                        focus-visible:ring-2
+                        focus-visible:ring-inset
+                        focus-visible:ring-brand-purple/30
                         ${
                           isActive
                             ? "bg-brand-purple/[0.065] text-brand-purple"
@@ -407,37 +452,24 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
       {/* GALLERY                                                              */}
       {/* ==================================================================== */}
 
-      <AnimatePresence mode="wait">
-        {filtered.length > 0 && (
-          <motion.section
-            key={active}
-            aria-label={activeFilter?.label ?? "معرض الصور"}
-            initial={{
-              opacity: 0,
-              y: 7,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            exit={{
-              opacity: 0,
-              y: -5,
-            }}
-            transition={{
-              duration: 0.28,
-              ease: [0.22, 1, 0.36, 1],
-            }}
-            className="
+      {/* Announce the new result count to screen readers after filtering. */}
+      <p className="sr-only" aria-live="polite" aria-atomic="true">
+        {`${activeFilter?.label ?? ""}: ${filtered.length} صورة`}
+      </p>
+
+      {filtered.length > 0 && (
+        <section
+          aria-label={activeFilter?.label ?? "معرض الصور"}
+          className="
               mx-auto
               mt-5
               w-full
               max-w-[1500px]
               sm:mt-7
             "
-          >
-            <div
-              className="
+        >
+          <div
+            className="
                 grid
                 grid-cols-2
                 gap-2
@@ -449,30 +481,30 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
                 xl:auto-rows-[220px]
                 2xl:auto-rows-[235px]
               "
-            >
-              <AnimatePresence mode="popLayout">
-                {filtered.map((item, index) => (
-                  <motion.div
-                    key={item.id}
-                    layout
-                    initial={{
-                      opacity: 0,
-                      y: 12,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                    }}
-                    exit={{
-                      opacity: 0,
-                      scale: 0.985,
-                    }}
-                    transition={{
-                      duration: 0.3,
-                      delay: Math.min(index * 0.025, 0.15),
-                      ease: [0.22, 1, 0.36, 1],
-                    }}
-                    className={`
+          >
+            <AnimatePresence mode="popLayout">
+              {filtered.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  layout
+                  initial={{
+                    opacity: 0,
+                    y: 12,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    scale: 0.985,
+                  }}
+                  transition={{
+                    duration: 0.3,
+                    delay: Math.min(index * 0.025, 0.15),
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  className={`
                       group
                       min-w-0
                       min-h-0
@@ -481,18 +513,17 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
                       sm:rounded-2xl
                       ${DESKTOP_SPANS[item.size as string] ?? ""}
                     `}
-                  >
-                    <GalleryCard
-                      item={item}
-                      onClick={() => setLightboxIndex(index)}
-                    />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          </motion.section>
-        )}
-      </AnimatePresence>
+                >
+                  <GalleryCard
+                    item={item}
+                    onClick={() => setLightboxIndex(index)}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </section>
+      )}
 
       {/* ==================================================================== */}
       {/* LIGHTBOX                                                             */}
@@ -504,6 +535,6 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
         onClose={() => setLightboxIndex(null)}
         onNavigate={setLightboxIndex}
       />
-    </>
+    </MotionConfig>
   );
 }

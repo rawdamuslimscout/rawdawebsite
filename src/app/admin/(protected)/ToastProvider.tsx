@@ -71,7 +71,7 @@ export default function ToastProvider({
           <div
             key={toast.id}
             role={toast.kind === "error" ? "alert" : "status"}
-            className={`pointer-events-auto flex w-full max-w-sm items-start gap-2 rounded-xl border p-3 shadow-lg backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2 ${
+            className={`pointer-events-auto flex w-full max-w-sm items-start gap-2 rounded-xl border p-3 shadow-lg backdrop-blur-sm animate-hub-in ${
               toast.kind === "success"
                 ? "border-emerald-200 bg-emerald-50/95 text-emerald-800"
                 : "border-red-200 bg-red-50/95 text-red-700"

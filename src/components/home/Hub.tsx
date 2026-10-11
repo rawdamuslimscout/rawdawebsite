@@ -79,7 +79,10 @@ export default async function Hub() {
           id="activities"
           className="relative overflow-hidden bg-brand-purple py-10 sm:py-16"
         >
-          <div className="texture-canvas absolute inset-0 opacity-30" />
+          <div
+            aria-hidden="true"
+            className="texture-canvas absolute inset-0 opacity-30"
+          />
 
           <div className="container-x relative">
             <Reveal className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
@@ -93,13 +96,16 @@ export default async function Hub() {
                 const Icon = iconMap[a.icon];
 
                 return (
-                  <li key={a.id} className="bg-brand-purple">
+                  <li
+                    key={a.id}
+                    className="bg-brand-purple last:odd:col-span-2 lg:last:odd:col-span-1"
+                  >
                     <Reveal
                       delay={(i % 4) * 60}
-                      className="group flex h-full gap-3 p-4 transition-colors duration-300 hover:bg-white/[0.06] sm:gap-4 sm:p-6"
+                      className="flex h-full gap-3 p-4 sm:gap-4 sm:p-6"
                     >
                       <Icon
-                        className="mt-1 h-5 w-5 shrink-0 text-brand-yellow transition-transform duration-300 group-hover:scale-110 sm:h-6 sm:w-6"
+                        className="mt-1 h-5 w-5 shrink-0 text-brand-yellow sm:h-6 sm:w-6"
                         strokeWidth={1.75}
                         aria-hidden="true"
                       />
@@ -109,7 +115,7 @@ export default async function Hub() {
                           {a.title}
                         </h3>
 
-                        <p className="mt-1 text-xs leading-6 text-white/70 sm:mt-1.5 sm:text-sm sm:leading-7">
+                        <p className="mt-1 text-xs leading-6 text-white/80 sm:mt-1.5 sm:text-sm sm:leading-7">
                           {a.description}
                         </p>
                       </div>

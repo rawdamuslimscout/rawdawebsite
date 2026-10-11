@@ -11,10 +11,10 @@ import "leaflet.markercluster/dist/MarkerCluster.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type * as LeafletNS from "leaflet";
-import { Maximize2, Minus, Plus } from "lucide-react";
+import { Maximize2, Minus, Plus, RotateCw } from "lucide-react";
 
 import type { MapPlace } from "@/data/map";
-import { CATEGORY_META, formatNumber } from "./categories";
+import { CATEGORY_META, formatNumber, placesCountLabel } from "./categories";
 import MapSkeleton from "./MapSkeleton";
 
 type L = typeof LeafletNS;
@@ -29,6 +29,16 @@ const ATTRIBUTION =
 /* -------------------------------------------------------------------------- */
 
 const SCOUT_LOGO = "/images/logo.png";
+
+/**
+ * Focus ring + hover lift for pins and clusters. globals.css removes the outline
+ * on `.leaflet-marker-icon:focus`, so the ring is drawn on the inner element
+ * (the marker element itself carries the `group` class).
+ */
+const PIN_INTERACTION =
+  "transition-transform duration-200 group-hover:scale-110 group-focus-visible:outline group-focus-visible:outline-[3px] group-focus-visible:outline-offset-2 group-focus-visible:outline-[#f0b429] motion-reduce:transition-none";
+
+type GestureHint = "wheel" | "touch" | null;
 
 export default function LeafletMap({
   places,
@@ -65,6 +75,20 @@ export default function LeafletMap({
 
   const [tilesFailed, setTilesFailed] = useState(false);
 
+  const [hint, setHint] = useState<GestureHint>(null);
+
+  const [modKey, setModKey] = useState("Ctrl");
+
+  const hintTimerRef = useRef<number | undefined>(undefined);
+
+  const tileLayerRef = useRef<LeafletNS.TileLayer | null>(null);
+
+  const tileStatsRef = useRef({ loaded: 0, errors: 0 });
+
+  useEffect(() => {
+    if (/Mac|iPhone|iPad/.test(navigator.platform)) setModKey("⌘");
+  }, []);
+
   /* ------------------------------------------------------------------------ */
   /* CALLBACK REFS                                                           */
   /* ------------------------------------------------------------------------ */
@@ -84,10 +108,11 @@ export default function LeafletMap({
     const logoSize = active ? 42 : 34;
 
     return L.divIcon({
-      className: "scout-pin-wrap",
+      className: "scout-pin-wrap group",
 
       html: `
         <div
+          class="${PIN_INTERACTION}"
           style="
             width:${size}px;
             height:${size}px;
@@ -173,12 +198,19 @@ export default function LeafletMap({
 
         reducedRef.current = reduced;
 
+        const coarse = window.matchMedia("(pointer: coarse)").matches;
+
         map = L.map(elRef.current, {
           zoomControl: false,
           attributionControl: false,
 
           // Enabled only while the map is focused.
           scrollWheelZoom: false,
+
+          // Touch screens: one finger scrolls the page, two fingers move and
+          // zoom the map (Leaflet's pinch also pans). Stops the embedded map
+          // from trapping page scroll on phones.
+          dragging: !coarse,
 
           minZoom: 3,
           maxZoom: 18,
@@ -204,20 +236,19 @@ export default function LeafletMap({
         /* TILES                                                             */
         /* ---------------------------------------------------------------- */
 
-        let loaded = 0;
-        let errors = 0;
+        const stats = tileStatsRef.current;
 
-        L.tileLayer(TILE_URL, {
+        tileLayerRef.current = L.tileLayer(TILE_URL, {
           maxZoom: 19,
           attribution: ATTRIBUTION,
         })
           .on("tileload", () => {
-            loaded += 1;
+            stats.loaded += 1;
           })
           .on("tileerror", () => {
-            errors += 1;
+            stats.errors += 1;
 
-            if (loaded === 0 && errors >= 4) {
+            if (stats.loaded === 0 && stats.errors >= 4) {
               setTilesFailed(true);
             }
           })
@@ -238,14 +269,14 @@ export default function LeafletMap({
 
           iconCreateFunction: (c) =>
             L.divIcon({
-              className: "scout-pin-wrap",
+              className: "scout-pin-wrap group",
 
+              // Clusters are focusable buttons (keyboard: true), so they need
+              // a spoken name; the bare digit is hidden from screen readers.
               html: `
-                <span
-                  class="scout-cluster"
-                  aria-hidden="true"
-                >
-                  ${formatNumber(c.getChildCount())}
+                <span class="scout-cluster ${PIN_INTERACTION}">
+                  <span aria-hidden="true">${formatNumber(c.getChildCount())}</span>
+                  <span class="sr-only">${placesCountLabel(c.getChildCount())}، اضغط للتكبير</span>
                 </span>
               `,
 
@@ -278,6 +309,52 @@ export default function LeafletMap({
         });
 
         /* ---------------------------------------------------------------- */
+        /* GESTURE HINTS                                                    */
+        /* ---------------------------------------------------------------- */
+
+        const container = map.getContainer();
+
+        const showHint = (kind: Exclude<GestureHint, null>) => {
+          setHint(kind);
+
+          window.clearTimeout(hintTimerRef.current);
+
+          hintTimerRef.current = window.setTimeout(() => setHint(null), 1800);
+        };
+
+        // Plain wheel keeps scrolling the page (with a hint); Ctrl/⌘ + wheel
+        // switches wheel-zoom on, exactly like clicking the map does.
+        container.addEventListener(
+          "wheel",
+          (event) => {
+            if (!map || map.scrollWheelZoom.enabled()) return;
+
+            if (event.ctrlKey || event.metaKey) {
+              event.preventDefault();
+
+              map.scrollWheelZoom.enable();
+
+              setHint(null);
+
+              return;
+            }
+
+            showHint("wheel");
+          },
+          { passive: false },
+        );
+
+        if (coarse) {
+          container.addEventListener(
+            "touchmove",
+            (event) => {
+              if (event.touches.length === 1) showHint("touch");
+            },
+            { passive: true },
+          );
+        }
+
+        /* ---------------------------------------------------------------- */
         /* SAVE REFERENCES                                                  */
         /* ---------------------------------------------------------------- */
 
@@ -298,7 +375,11 @@ export default function LeafletMap({
     return () => {
       disposed = true;
 
+      window.clearTimeout(hintTimerRef.current);
+
       map?.remove();
+
+      tileLayerRef.current = null;
 
       mapRef.current = null;
 
@@ -495,8 +576,20 @@ export default function LeafletMap({
         padding: [48, 48],
 
         maxZoom: 12,
+
+        animate: !reducedRef.current,
       },
     );
+  };
+
+  const retryTiles = () => {
+    tileStatsRef.current.loaded = 0;
+
+    tileStatsRef.current.errors = 0;
+
+    setTilesFailed(false);
+
+    tileLayerRef.current?.redraw();
   };
 
   /* ------------------------------------------------------------------------ */
@@ -519,7 +612,8 @@ export default function LeafletMap({
         dir="ltr"
         role="region"
         aria-label="خريطة تفاعلية لأماكن أنشطة الفوج. استخدم مفاتيح الأسهم للتحريك، وزرّي + و − للتكبير والتصغير."
-        className="h-full w-full"
+        // inset focus ring: the rounded, overflow-hidden wrapper clips an outer one
+        className="h-full w-full focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[-3px] focus-visible:outline-[#f0b429]"
       />
 
       {!ready && <MapSkeleton />}
@@ -529,7 +623,7 @@ export default function LeafletMap({
       {/* ------------------------------------------------------------------ */}
 
       {ready && (
-        <div className="absolute left-3 top-3 z-[500] flex flex-col gap-2">
+        <div className="absolute left-3 top-3 z-[800] flex flex-col gap-2">
           <button
             type="button"
             onClick={zoomIn}
@@ -565,14 +659,62 @@ export default function LeafletMap({
       {/* TILE ERROR                                                         */}
       {/* ------------------------------------------------------------------ */}
 
+      {/* ------------------------------------------------------------------ */}
+      {/* GESTURE HINT (visual only; keyboard and list users don't need it)  */}
+      {/* ------------------------------------------------------------------ */}
+
+      <div
+        aria-hidden="true"
+        className={`
+          pointer-events-none
+          absolute
+          inset-0
+          z-[700]
+          flex
+          items-center
+          justify-center
+          bg-brand-ink/45
+          p-6
+          transition-opacity
+          duration-300
+          motion-reduce:transition-none
+          ${hint ? "opacity-100" : "opacity-0"}
+        `}
+      >
+        <p className="max-w-xs text-center text-base font-bold leading-7 text-white drop-shadow">
+          {hint === "touch" ? (
+            "استخدم إصبعين لتحريك الخريطة"
+          ) : (
+            <>
+              اضغط على الخريطة أو استخدم{" "}
+              <kbd
+                dir="ltr"
+                className="rounded-md bg-white/20 px-1.5 py-0.5 font-sans"
+              >
+                {modKey}
+              </kbd>{" "}
+              مع عجلة الفأرة للتكبير
+            </>
+          )}
+        </p>
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* TILE ERROR                                                         */}
+      {/* ------------------------------------------------------------------ */}
+
       {tilesFailed && (
-        <p
+        <div
           role="alert"
           className="
             absolute
             inset-x-3
             bottom-8
-            z-[500]
+            z-[800]
+            flex
+            flex-col
+            items-center
+            gap-1
             rounded-xl
             bg-white/95
             p-3
@@ -583,9 +725,20 @@ export default function LeafletMap({
             shadow-soft
           "
         >
-          تعذّر تحميل صور الخريطة، ربما بسبب ضعف الاتصال. ما زالت قائمة الأماكن
-          تعمل كاملة.
-        </p>
+          <p>
+            تعذّر تحميل صور الخريطة، ربما بسبب ضعف الاتصال. ما زالت قائمة
+            الأماكن تعمل كاملة.
+          </p>
+
+          <button
+            type="button"
+            onClick={retryTiles}
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-3 font-bold text-brand-purple transition-colors hover:bg-brand-purple-tint"
+          >
+            <RotateCw className="h-4 w-4" aria-hidden="true" />
+            إعادة المحاولة
+          </button>
+        </div>
       )}
     </div>
   );

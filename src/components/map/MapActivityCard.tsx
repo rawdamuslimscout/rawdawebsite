@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { forwardRef } from "react";
-import { ArrowRight, CalendarDays, ExternalLink, MapPin, Users } from "lucide-react";
+import { ArrowRight, CalendarDays, ExternalLink, Map as MapIcon, MapPin, Users } from "lucide-react";
 import type { MapPlace } from "@/data/map";
 import { CATEGORY_META, participantsLabel } from "./categories";
 import { thumbUrl } from "@/lib/image-url";
@@ -11,8 +11,14 @@ import { thumbUrl } from "@/lib/image-url";
 /** Shows only what is stored for the place — a missing field is simply not rendered. */
 const MapActivityCard = forwardRef<
   HTMLHeadingElement,
-  { place: MapPlace; onBack: () => void; onOpenDetails: () => void }
->(function MapActivityCard({ place, onBack, onOpenDetails }, headingRef) {
+  {
+    place: MapPlace;
+    onBack: () => void;
+    onOpenDetails: () => void;
+    /** Phones/tablets only: the map sits above the card, out of view. */
+    onShowOnMap?: () => void;
+  }
+>(function MapActivityCard({ place, onBack, onOpenDetails, onShowOnMap }, headingRef) {
   const { Icon, label } = CATEGORY_META[place.category];
   const directions = `https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`;
 
@@ -32,7 +38,7 @@ const MapActivityCard = forwardRef<
         <button
           type="button"
           onClick={onBack}
-          className="mb-4 inline-flex min-h-[44px] items-center gap-1.5 rounded-full text-sm font-bold text-brand-purple hover:underline"
+          className="-ms-2 mb-4 inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-2 text-sm font-bold text-brand-purple hover:underline"
         >
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
           كل الأماكن
@@ -96,6 +102,16 @@ const MapActivityCard = forwardRef<
             <ExternalLink className="h-4 w-4" aria-hidden="true" />
             <span className="sr-only">(يفتح في نافذة جديدة)</span>
           </a>
+          {onShowOnMap && (
+            <button
+              type="button"
+              onClick={onShowOnMap}
+              className="btn border border-brand-purple/20 text-brand-purple hover:bg-brand-purple-tint lg:hidden"
+            >
+              <MapIcon className="h-4 w-4" aria-hidden="true" />
+              عرض على الخريطة
+            </button>
+          )}
         </div>
       </div>
     </article>

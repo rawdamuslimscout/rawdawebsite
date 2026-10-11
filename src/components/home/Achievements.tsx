@@ -47,7 +47,9 @@ export default async function Achievements() {
                 className="tl-item"
               >
                 {/* year */}
-                <p className="tl-year font-display text-3xl font-bold leading-none text-brand-purple md:text-5xl md:pt-1">
+                <p
+                  aria-hidden="true"
+                  className="tl-year font-display text-3xl font-bold leading-none text-brand-purple md:text-5xl md:pt-1">
                   {m.year}
                 </p>
 
@@ -86,6 +88,7 @@ export default async function Achievements() {
                     </span>
                   )} */}
                   <h3 className="mt-3 font-display text-xl font-bold text-brand-ink sm:text-2xl">
+                    <span className="sr-only">{m.year}: </span>
                     {m.title}
                   </h3>
                   <p className="mt-2 max-w-xl text-base leading-8 text-brand-ink/70">

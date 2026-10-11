@@ -2,6 +2,8 @@
 
 /* eslint-disable @next/next/no-img-element */
 
+import { ImageIcon } from "lucide-react";
+
 import type { GalleryItem } from "@/data/content";
 import { responsiveImage } from "@/lib/image-url";
 
@@ -22,15 +24,22 @@ export default function GalleryCard({
       type="button"
       onClick={onClick}
       aria-label={`فتح صورة: ${item.title}`}
-      className="group relative h-full w-full overflow-hidden rounded-2xl bg-brand-purple-tint text-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple focus-visible:ring-offset-2"
+      className="group relative block aspect-[4/3] h-full w-full overflow-hidden rounded-2xl bg-brand-purple-tint text-right lg:aspect-auto focus-visible:outline-none"
     >
-      <img
-        sizes={item.size === "small" ? SMALL_TILE : WIDE_TILE}
-        alt={item.title}
-        loading="lazy"
-        {...responsiveImage(item.imageUrl)}
-        className="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-105"
-      />
+      {item.imageUrl ? (
+        <img
+          sizes={item.size === "small" ? SMALL_TILE : WIDE_TILE}
+          alt={item.title}
+          loading="lazy"
+          decoding="async"
+          {...responsiveImage(item.imageUrl)}
+          className="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-105"
+        />
+      ) : (
+        <span className="flex h-full w-full items-center justify-center text-brand-purple/30">
+          <ImageIcon className="h-8 w-8" strokeWidth={1.5} aria-hidden="true" />
+        </span>
+      )}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-brand-ink/80 via-brand-ink/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex translate-y-2 items-end justify-between gap-2 p-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
         <p className="truncate text-sm font-bold text-white">{item.title}</p>
@@ -41,6 +50,11 @@ export default function GalleryCard({
           فتح
         </span>
       </div>
+      {/* Focus ring drawn inside the tile: the grid cell clips anything outside. */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 rounded-[inherit] ring-inset ring-brand-yellow group-focus-visible:ring-4"
+      />
     </button>
   );
 }

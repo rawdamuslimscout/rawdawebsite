@@ -1,6 +1,6 @@
 import type { NewsItem } from "@/data/content";
 
-/** The five kinds of place shown on the map. Stored as plain strings in ScoutPlace.category. */
+/** The kinds of place shown on the map. Stored as plain strings in ScoutPlace.category. */
 export const MAP_CATEGORIES = [
   "camps",
   "trips",
@@ -22,7 +22,7 @@ export type MapFilterKey =
 export const FILTER_CATEGORIES: Record<MapFilterKey, readonly MapCategory[]> = {
   all: MAP_CATEGORIES,
   camps: ["camps"],
-  trips: ["trips"],
+  trips: ["trips", "hikes"],
   training: ["training"],
   activities: ["service", "events"],
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin } from "lucide-react";
+import { ChevronLeft, MapPin } from "lucide-react";
 import type { MapPlace } from "@/data/map";
 import { CATEGORY_META } from "./categories";
 
@@ -29,7 +29,7 @@ export default function MapActivityList({
               data-place-id={place.id}
               aria-current={active ? "true" : undefined}
               onClick={() => onSelect(place.id)}
-              className={`group flex w-full items-start gap-3 px-1 py-3.5 text-start transition-colors sm:px-2 ${
+              className={`group flex w-full items-start gap-3 rounded-xl px-1 py-3.5 text-start transition-colors focus-visible:outline-offset-[-2px] sm:px-2 ${
                 active ? "bg-brand-purple/[0.05]" : "hover:bg-brand-purple/[0.03]"
               }`}
             >
@@ -55,6 +55,10 @@ export default function MapActivityList({
                   </span>
                 )}
               </span>
+              <ChevronLeft
+                className="mt-3 h-4 w-4 shrink-0 text-brand-purple/40 transition-transform group-hover:-translate-x-0.5 group-hover:text-brand-purple motion-reduce:transition-none"
+                aria-hidden="true"
+              />
             </button>
           </li>
         );

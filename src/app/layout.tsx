@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { El_Messiri, Cairo } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import BackToTop from "@/components/layout/BackToTop";
 import { getSiteSettings } from "@/lib/data";
 import JsonLd from "@/components/ui/JsonLd";
 import { SITE_URL, SITE_NAME, ORG_NAME } from "@/lib/site";
@@ -45,6 +46,13 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: "#2C1750",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -78,9 +86,18 @@ export default async function RootLayout({
             },
           ]}
         />
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-brand-yellow focus:px-5 focus:py-3 focus:text-sm focus:font-bold focus:text-brand-purple-dark focus:shadow-lift"
+        >
+          تخطَّ إلى المحتوى
+        </a>
         <Navbar siteName={siteInfo.name} />
-        <main>{children}</main>
+        <main id="main-content" tabIndex={-1} className="outline-none">
+          {children}
+        </main>
         <Footer />
+        <BackToTop />
       </body>
     </html>
   );

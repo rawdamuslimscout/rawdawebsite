@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { Mountain } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -44,9 +44,13 @@ export default async function About() {
 
             <a
               href="#sections"
-              className="link-underline mt-8 inline-block pb-1 text-base font-bold text-brand-purple"
+              className="group mt-6 inline-flex min-h-11 items-center gap-2 text-base font-bold text-brand-purple"
             >
-              تعرّف على مراحلنا الكشفية
+              <span className="link-underline pb-1">تعرّف على مراحلنا الكشفية</span>
+              <ArrowLeft
+                className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-1 group-focus-visible:-translate-x-1"
+                aria-hidden="true"
+              />
             </a>
           </Reveal>
 
@@ -54,7 +58,7 @@ export default async function About() {
           <Reveal delay={120} className="lg:col-span-6">
             {photos.length > 0 ? (
               <div className="relative mx-auto grid max-w-xl grid-cols-12 gap-3 sm:gap-4">
-                <div className="col-span-7 aspect-[4/5] overflow-hidden rounded-2xl shadow-soft">
+                <div className="col-span-7 aspect-[4/5] overflow-hidden rounded-2xl bg-brand-purple-tint shadow-soft">
                   <img
                     sizes="(min-width: 640px) 340px, 58vw"
                     alt={photos[0].title}
@@ -68,7 +72,7 @@ export default async function About() {
                 </div>
                 <div className="col-span-5 flex flex-col gap-3 pt-10 sm:gap-4 sm:pt-14">
                   {photos[1] ? (
-                    <div className="aspect-[4/5] overflow-hidden rounded-2xl shadow-soft">
+                    <div className="aspect-[4/5] overflow-hidden rounded-2xl bg-brand-purple-tint shadow-soft">
                       <img
                         sizes="(min-width: 640px) 240px, 42vw"
                         alt={photos[1].title}
@@ -82,7 +86,7 @@ export default async function About() {
                     </div>
                   ) : null}
                   {/* <div className="rounded-2xl bg-brand-purple p-5 text-white shadow-soft">
-                    <Mountain
+                    <Mountain (import from lucide-react if restored)
                       className="h-6 w-6 text-brand-yellow"
                       aria-hidden="true"
                     />
@@ -94,7 +98,7 @@ export default async function About() {
               </div>
             ) : (
               <div className="relative mx-auto max-w-xl overflow-hidden rounded-2xl bg-brand-purple-dark p-8 shadow-soft sm:p-12">
-                <div className="texture-canvas absolute inset-0 opacity-40" />
+                <div aria-hidden="true" className="texture-canvas absolute inset-0 opacity-40" />
                 <svg
                   className="absolute inset-x-0 bottom-0 h-1/2 w-full text-brand-purple/70"
                   viewBox="0 0 400 200"

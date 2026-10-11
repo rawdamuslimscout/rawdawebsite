@@ -18,10 +18,16 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 section[id],
-footer[id] {
+footer[id],
+article[id],
+h2[id],
+h3[id] {
   scroll-margin-top: 6rem;
 }
 
@@ -53,7 +59,12 @@ body {
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
-textarea:focus-visible {
+textarea:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
   outline: 2px solid #f0b429;
   outline-offset: 3px;
   border-radius: 4px;
@@ -72,6 +83,21 @@ textarea:focus-visible {
 /* Badge / shield clip for scout-card icons */
 .badge-shield {
   clip-path: polygon(50% 0%, 100% 20%, 100% 65%, 50% 100%, 0% 65%, 0% 20%);
+}
+
+/* Images shouldn't be draggable ghosts or long-press-selectable on touch */
+img {
+  -webkit-user-drag: none;
+}
+
+/* Balanced, orphan-free headings for Arabic display type */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -109,7 +135,8 @@ textarea:focus-visible {
   .btn .btn-arrow {
     @apply transition-transform duration-200;
   }
-  .btn:hover .btn-arrow {
+  .btn:hover .btn-arrow,
+  .btn:focus-visible .btn-arrow {
     @apply -translate-x-1;
   }
 
@@ -150,6 +177,13 @@ textarea:focus-visible {
 .reveal.is-in {
   opacity: 1;
   transform: none;
+  will-change: auto;
+}
+@media print {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 /* ---- Timeline ---- */
@@ -241,7 +275,7 @@ textarea:focus-visible {
 .leaflet-marker-icon:focus {
   outline: none;
 }
-.leaflet-marker-icon:focus-visible .scout-pin {
+.leaflet-marker-icon:focus-visible > * {
   outline: 3px solid #f0b429;
   outline-offset: 2px;
 }

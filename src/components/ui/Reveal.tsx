@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode, type ElementType } from "react";
+import { flushSync } from "react-dom";
 
 type RevealProps = {
   as?: ElementType;
@@ -40,17 +41,29 @@ export default function Reveal({
     }
 
     setState("hidden");
+    const reveal = () => {
+      setState("in");
+      io.disconnect();
+      window.removeEventListener("beforeprint", revealForPrint);
+    };
     const io = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setState("in");
-          io.disconnect();
-        }
+        if (entry.isIntersecting) reveal();
       },
       { rootMargin: "0px 0px -8% 0px", threshold: 0.08 },
     );
     io.observe(el);
-    return () => io.disconnect();
+    // Printing (or "save as PDF") never scrolls, so show everything first,
+    // synchronously and without the fade, before the print snapshot.
+    const revealForPrint = () => {
+      el.style.transition = "none";
+      flushSync(reveal);
+    };
+    window.addEventListener("beforeprint", revealForPrint);
+    return () => {
+      io.disconnect();
+      window.removeEventListener("beforeprint", revealForPrint);
+    };
   }, []);
 
   const cls =

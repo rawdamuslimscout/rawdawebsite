@@ -9,7 +9,12 @@ export const metadata = {
   description:
     "أدلة تدريبية، متطلبات شارات، استمارات وأناشيد فوج روضة الفيحاء.",
   alternates: { canonical: "/library" },
-  openGraph: { title: "المكتبة | فوج روضة الفيحاء", url: "/library", locale: "ar_LB", type: "website" },
+  openGraph: {
+    title: "المكتبة | فوج روضة الفيحاء",
+    url: "/library",
+    locale: "ar_LB",
+    type: "website",
+  },
 };
 
 export default async function LibraryPage() {
@@ -17,7 +22,10 @@ export default async function LibraryPage() {
 
   return (
     <>
-      <PageHeader title="المكتبة" />
+      <PageHeader
+        title="المكتبة"
+        subtitle="أدلة تدريبية، متطلبات شارات، استمارات وأناشيد الفوج — للمعاينة والتحميل والمشاركة."
+      />
       <section className="bg-brand-cream py-16 sm:py-20">
         <div className="mx-auto max-w-5xl px-5 sm:px-8">
           <LibraryFilterGrid resources={resources} />

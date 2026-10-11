@@ -15,6 +15,8 @@ function toArabic(n: number) {
  * Animated impact number. Keeps the original numeral system (Latin or
  * Arabic-Indic) and any prefix/suffix such as "+". Server output is the
  * final value, so there is no hydration mismatch and no-JS is correct.
+ * Screen readers always get the final value (the ticking digits are hidden
+ * from them), and the box reserves the final width so nothing reflows.
  */
 export default function CountUp({ value }: { value: string }) {
   const match = value.match(/^(.*?)([0-9٠-٩]+)([\s\S]*)$/);
@@ -30,7 +32,6 @@ export default function CountUp({ value }: { value: string }) {
     if (!el) return;
 
     let raf = 0;
-    setShown(0);
     const run = () => {
       const start = performance.now();
       const duration = 1400;
@@ -43,6 +44,16 @@ export default function CountUp({ value }: { value: string }) {
       raf = requestAnimationFrame(tick);
     };
 
+    // Already on screen at hydration: count from 0 right away instead of
+    // showing the final number, dropping to 0, then waiting for the observer.
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      setShown(0);
+      run();
+      return () => cancelFrame(raf);
+    }
+
+    setShown(0);
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -55,7 +66,7 @@ export default function CountUp({ value }: { value: string }) {
     io.observe(el);
     return () => {
       io.disconnect();
-      cancelAffix(raf);
+      cancelFrame(raf);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
@@ -67,19 +78,26 @@ export default function CountUp({ value }: { value: string }) {
   const text = arabic ? toArabic(shown) : String(shown);
 
   return (
-    <span
-      ref={ref}
-      dir="ltr"
-      className="inline-flex items-baseline tabular-nums"
-      aria-label={value}
-    >
-      {prefix && <span className="text-brand-yellow">{prefix}</span>}
-      <span aria-hidden="true">{text}</span>
-      {suffix && <span className="text-brand-yellow">{suffix}</span>}
+    <span ref={ref} className="inline-flex">
+      <span className="sr-only">{value}</span>
+      <span
+        dir="ltr"
+        aria-hidden="true"
+        className="inline-flex items-baseline tabular-nums"
+      >
+        {prefix && <span className="text-brand-yellow">{prefix}</span>}
+        <span
+          className="inline-block text-end"
+          style={{ minWidth: `${match[2].length}ch` }}
+        >
+          {text}
+        </span>
+        {suffix && <span className="text-brand-yellow">{suffix}</span>}
+      </span>
     </span>
   );
 }
 
-function cancelAffix(id: number) {
+function cancelFrame(id: number) {
   if (id) cancelAnimationFrame(id);
 }

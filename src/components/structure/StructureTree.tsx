@@ -14,6 +14,7 @@ import {
   BookOpen,
   Briefcase,
   Building2,
+  ChevronLeft,
   Crown,
   Flag,
   GraduationCap,
@@ -100,7 +101,7 @@ function Avatar({
 }) {
   return url ? (
     <img
-      alt={name}
+      alt=""
       width={96}
       height={96}
       loading="lazy"
@@ -249,9 +250,9 @@ function ProfileDialog({
             type="button"
             onClick={onClose}
             aria-label="إغلاق"
-            className="absolute start-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
+            className="absolute start-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
           <div className="flex flex-col items-center gap-4 px-6 pb-6 pt-5 text-center sm:flex-row sm:items-center sm:gap-6 sm:px-8 sm:pb-8 sm:pt-8 sm:text-start">
             <Avatar
@@ -368,7 +369,8 @@ function PersonCard({
     <button
       type="button"
       onClick={() => onOpen(m.person)}
-      className={`group flex h-full w-full gap-4 rounded-2xl border border-brand-purple/10 bg-white text-start shadow-soft transition hover:-translate-y-0.5 hover:border-brand-purple/30 motion-reduce:transform-none ${
+      aria-haspopup="dialog"
+      className={`group flex h-full w-full gap-4 rounded-2xl border border-brand-purple/10 bg-white text-start shadow-soft transition hover:-translate-y-0.5 hover:border-brand-purple/30 hover:shadow-lift motion-reduce:transform-none ${
         big
           ? "flex-col items-center p-6 text-center sm:flex-row sm:items-center sm:p-8 sm:text-start"
           : "items-start p-4"
@@ -401,7 +403,7 @@ function PersonCard({
           </span>
         )}
         <span className="mt-2 inline-block text-xs font-bold text-brand-purple opacity-80 group-hover:opacity-100">
-          عرض الملف التعريفي ←
+          عرض الملف التعريفي <span aria-hidden="true">←</span>
         </span>
       </span>
     </button>
@@ -504,19 +506,24 @@ function UnitCard({
                 <button
                   type="button"
                   onClick={() => onOpen(m.person)}
-                  className="flex w-full items-center gap-3 rounded-xl p-1.5 text-start hover:bg-brand-purple-tint"
+                  aria-haspopup="dialog"
+                  className="group flex min-h-[52px] w-full items-center gap-3 rounded-xl p-1.5 text-start transition-colors hover:bg-brand-purple-tint"
                 >
                   <Avatar
                     name={m.person.name}
                     url={m.person.photoUrl}
                     size="h-10 w-10"
                   />
-                  <span className="text-sm">
+                  <span className="min-w-0 flex-1 text-sm">
                     <span className="block font-semibold text-brand-ink">
                       {m.person.name}
                     </span>
                     <span className="text-xs text-brand-purple">{m.title}</span>
                   </span>
+                  <ChevronLeft
+                    className="h-4 w-4 shrink-0 text-brand-purple/40 transition-colors group-hover:text-brand-purple"
+                    aria-hidden="true"
+                  />
                 </button>
               </li>
             ))}
@@ -555,6 +562,103 @@ function UnitCard({
   );
 }
 
+/* ---------- Lineage: association → governorate → troop ---------- */
+function Lineage({ chain }: { chain: TreeNode[] }) {
+  return (
+    <nav aria-label="التسلسل التنظيمي">
+      <ol className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-stretch sm:gap-0">
+        {chain.map((n, i) => {
+          const Icon = KIND_ICON[n.kind] ?? Building2;
+          const current = i === chain.length - 1;
+          return (
+            <Fragment key={n.id}>
+              {i > 0 && (
+                <li
+                  aria-hidden="true"
+                  className="flex items-center justify-center text-brand-purple/35 sm:px-2"
+                >
+                  <ChevronLeft className="h-5 w-5 -rotate-90 sm:rotate-0" />
+                </li>
+              )}
+              <li
+                aria-current={current ? "true" : undefined}
+                className={`flex min-w-0 items-center gap-3 rounded-2xl border p-3 sm:flex-1 ${
+                  current
+                    ? "border-brand-purple bg-brand-purple text-white shadow-soft"
+                    : "border-brand-purple/10 bg-white text-brand-ink"
+                }`}
+              >
+                {n.logoUrl ? (
+                  <img
+                    src={thumbUrl(n.logoUrl)}
+                    alt=""
+                    width={44}
+                    height={44}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-11 w-11 shrink-0 rounded-xl bg-white object-contain p-1"
+                  />
+                ) : (
+                  <span
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                      current
+                        ? "bg-white/15 text-brand-yellow"
+                        : "bg-brand-purple-tint text-brand-purple"
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                )}
+                <span className="min-w-0">
+                  {KIND_LABEL[n.kind] && (
+                    <span
+                      className={`block text-[11px] font-semibold ${current ? "text-white/70" : "text-brand-ink/50"}`}
+                    >
+                      {KIND_LABEL[n.kind]}
+                    </span>
+                  )}
+                  <span className="block font-display text-sm font-bold leading-6 sm:text-base">
+                    {n.title}
+                  </span>
+                </span>
+              </li>
+            </Fragment>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
+
+/* ---------- In-page jump links (the page is long on phones) ---------- */
+function JumpNav({ links }: { links: { id: string; label: string }[] }) {
+  if (links.length < 2) return null;
+  return (
+    <nav aria-label="أقسام الصفحة">
+      <ul className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+        {links.map((l) => (
+          <li key={l.id} className="shrink-0">
+            <a
+              href={`#${l.id}`}
+              className="inline-flex min-h-[44px] items-center whitespace-nowrap rounded-full bg-white px-4 text-sm font-semibold text-brand-ink/75 ring-1 ring-brand-purple/15 transition-colors hover:bg-brand-purple-tint hover:text-brand-purple"
+            >
+              {l.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+function EmptyNote({ children }: { children: ReactNode }) {
+  return (
+    <p className="rounded-2xl border border-dashed border-brand-purple/20 bg-white/60 p-5 text-center text-sm text-brand-ink/55">
+      {children}
+    </p>
+  );
+}
+
 /* ---------- Page body ---------- */
 function Branch({
   root,
@@ -581,12 +685,29 @@ function Branch({
     (c) => !["dean", "council", "unit"].includes(c.kind),
   );
 
+  const links = [
+    ...deans.map((d) => ({ id: `dean-${d.id}`, label: d.title || "عميد الفوج" })),
+    ...(last.members.length > 0
+      ? [{ id: `team-${root.id}`, label: "القيادة" }]
+      : []),
+    ...councils.map((c) => ({ id: `c-${c.id}`, label: c.title || "مجلس الفوج" })),
+    ...(units.length > 0 ? [{ id: `units-${root.id}`, label: "وحدات الفوج" }] : []),
+    ...(others.length > 0 ? [{ id: `more-${root.id}`, label: "فروع أخرى" }] : []),
+  ];
+
   return (
     <div className="space-y-12">
+      {(chain.length > 1 || links.length > 1) && (
+        <div className="space-y-5">
+          {chain.length > 1 && <Lineage chain={chain} />}
+          <JumpNav links={links} />
+        </div>
+      )}
+
       {deans.map((d) => (
         <Section
           key={d.id}
-          id={`dean-${root.id}`}
+          id={`dean-${d.id}`}
           icon={Crown}
           title={d.title || "عميد الفوج"}
           hint={d.description || undefined}
@@ -599,7 +720,9 @@ function Branch({
                 </li>
               ))}
             </ul>
-          ) : null}
+          ) : (
+            <EmptyNote>سيتم الإعلان عن ذلك قريبًا.</EmptyNote>
+          )}
         </Section>
       ))}
 
@@ -620,7 +743,9 @@ function Branch({
             >
               {c.members.length ? (
                 <MemberGrid members={c.members} onOpen={onOpen} />
-              ) : null}
+              ) : (
+                <EmptyNote>سيتم الإعلان عن الأعضاء قريبًا.</EmptyNote>
+              )}
             </Section>
           ))}
         </div>

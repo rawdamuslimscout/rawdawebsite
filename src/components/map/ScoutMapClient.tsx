@@ -2,7 +2,13 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, MapPinOff, SearchX } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  MapPinOff,
+  RotateCw,
+  SearchX,
+} from "lucide-react";
 
 import NewsModal from "@/components/ui/NewsModal";
 
@@ -16,7 +22,7 @@ import MapFilters from "./MapFilters";
 import MapActivityCard from "./MapActivityCard";
 import MapActivityList from "./MapActivityList";
 import MapSkeleton from "./MapSkeleton";
-import { placesCountLabel } from "./categories";
+import { formatNumber, placesCountLabel } from "./categories";
 
 /* -------------------------------------------------------------------------- */
 /*                                    MAP                                     */
@@ -26,6 +32,19 @@ const LeafletMap = dynamic(() => import("./LeafletMap"), {
   ssr: false,
   loading: () => <MapSkeleton />,
 });
+
+/**
+ * One fixed page size for every screen: the server HTML and the first client
+ * render match (no list jump after hydration), and phones are not reduced to
+ * one place per page.
+ */
+const ITEMS_PER_PAGE = 6;
+
+const LIST_ID = "map-places-list";
+
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
 
 /* -------------------------------------------------------------------------- */
 /*                                 COMPONENT                                  */
@@ -44,9 +63,11 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
 
   const [page, setPage] = useState(1);
 
-  const [itemsPerPage, setItemsPerPage] = useState(6);
+  const itemsPerPage = ITEMS_PER_PAGE;
 
   const mapBoxRef = useRef<HTMLDivElement>(null);
+
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -57,32 +78,6 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
   const lastSelectedRef = useRef<string | null>(null);
 
   const wasSelectedRef = useRef(false);
-
-  /* ------------------------------------------------------------------------ */
-  /* RESPONSIVE PAGINATION                                                   */
-  /* ------------------------------------------------------------------------ */
-
-  useEffect(() => {
-    const updateItemsPerPage = () => {
-      const width = window.innerWidth;
-
-      if (width < 640) {
-        setItemsPerPage(1);
-      } else if (width < 1024) {
-        setItemsPerPage(3);
-      } else {
-        setItemsPerPage(6);
-      }
-    };
-
-    updateItemsPerPage();
-
-    window.addEventListener("resize", updateItemsPerPage);
-
-    return () => {
-      window.removeEventListener("resize", updateItemsPerPage);
-    };
-  }, []);
 
   /* ------------------------------------------------------------------------ */
   /* COUNTS                                                                  */
@@ -195,10 +190,21 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
   /* SELECT                                                                  */
   /* ------------------------------------------------------------------------ */
 
-  const select = useCallback((id: string) => {
-    lastSelectedRef.current = id;
-    setSelectedId(id);
-  }, []);
+  const select = useCallback(
+    (id: string) => {
+      lastSelectedRef.current = id;
+      setSelectedId(id);
+
+      // A pin picked on the map may live on another list page. Move the list
+      // there so «كل الأماكن» returns to (and focuses) that same place.
+      const index = filtered.findIndex((place) => place.id === id);
+
+      if (index >= 0) {
+        setPage(Math.floor(index / itemsPerPage) + 1);
+      }
+    },
+    [filtered, itemsPerPage],
+  );
 
   /* ------------------------------------------------------------------------ */
   /* BACK                                                                    */
@@ -215,13 +221,12 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
   useEffect(() => {
     if (!selected) return;
 
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
+    const reduceMotion = prefersReducedMotion();
 
     /**
      * Mobile / tablet:
-     * Bring selected content into view.
+     * Bring the top of the selected card into view
+     * (it sits below the map).
      *
      * Desktop:
      * No automatic scroll because the card
@@ -230,7 +235,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
     if (window.innerWidth < 1024) {
       requestAnimationFrame(() => {
         cardRef.current?.scrollIntoView({
-          block: "nearest",
+          block: "start",
           behavior: reduceMotion ? "auto" : "smooth",
         });
       });
@@ -252,11 +257,21 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
       const id = lastSelectedRef.current;
 
       requestAnimationFrame(() => {
-        listRef.current
-          ?.querySelector<HTMLElement>(`[data-place-id="${CSS.escape(id)}"]`)
-          ?.focus({
-            preventScroll: false,
+        const item = listRef.current?.querySelector<HTMLElement>(
+          `[data-place-id="${CSS.escape(id)}"]`,
+        );
+
+        if (item) {
+          item.focus({ preventScroll: true });
+
+          item.scrollIntoView({
+            block: "nearest",
+            behavior: prefersReducedMotion() ? "auto" : "smooth",
           });
+        } else {
+          // e.g. the filter changed while the card was open
+          panelRef.current?.focus({ preventScroll: true });
+        }
       });
     }
 
@@ -295,14 +310,36 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
     setPage(newPage);
 
     /**
-     * On mobile/tablet, move the user back to the beginning
-     * of the map/list instead of leaving them halfway down.
+     * Show the new page from its first item:
+     * - desktop: the list box scrolls internally → reset it to the top;
+     * - mobile/tablet: if the list's top is above the viewport, bring it back
+     *   (the map is NOT scrolled to — the user is reading the list).
      */
     requestAnimationFrame(() => {
-      mapBoxRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+      const list = listRef.current;
+
+      if (!list) return;
+
+      const behavior: ScrollBehavior = prefersReducedMotion()
+        ? "auto"
+        : "smooth";
+
+      list.scrollTo({ top: 0, behavior });
+
+      if (list.getBoundingClientRect().top < 0) {
+        list.scrollIntoView({ block: "start", behavior });
+      }
+    });
+  };
+
+  /* ------------------------------------------------------------------------ */
+  /* SHOW SELECTED ON MAP (mobile: the map is above the card)               */
+  /* ------------------------------------------------------------------------ */
+
+  const showOnMap = () => {
+    mapBoxRef.current?.scrollIntoView({
+      block: "center",
+      behavior: prefersReducedMotion() ? "auto" : "smooth",
     });
   };
 
@@ -342,7 +379,6 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
         mt-5
         w-full
         min-w-0
-        overflow-hidden
         sm:mt-7
         lg:mt-9
       "
@@ -362,18 +398,8 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
           sm:justify-between
         "
       >
-        {/* Filters */}
-        <div
-          className="
-            min-w-0
-            max-w-full
-            overflow-x-auto
-            overscroll-x-contain
-            pb-1
-            [scrollbar-width:none]
-            [&::-webkit-scrollbar]:hidden
-          "
-        >
+        {/* Filters (MapFilters scrolls sideways itself, edge to edge on phones) */}
+        <div className="min-w-0 max-w-full">
           <MapFilters value={filter} counts={counts} onChange={changeFilter} />
         </div>
 
@@ -383,10 +409,10 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
           aria-live="polite"
           className="
             shrink-0
-            text-[11px]
+            text-xs
             font-semibold
-            text-brand-ink/45
-            sm:text-xs
+            text-brand-ink/55
+            sm:text-sm
           "
         >
           {placesCountLabel(filtered.length)}
@@ -417,15 +443,45 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
 
         <div
           className="
+            relative
             min-w-0
             lg:col-span-8
           "
         >
+          {/* Keyboard users can jump past the map and its pins to the list. */}
+          {filtered.length > 0 && !mapFailed && (
+            <a
+              href={`#${LIST_ID}`}
+              onClick={(event) => {
+                event.preventDefault();
+                panelRef.current?.focus();
+              }}
+              className="
+                sr-only
+                focus:not-sr-only
+                focus:absolute
+                focus:right-3
+                focus:top-3
+                focus:z-[1000]
+                focus:rounded-xl
+                focus:bg-white
+                focus:px-4
+                focus:py-3
+                focus:text-sm
+                focus:font-bold
+                focus:text-brand-purple
+                focus:shadow-soft
+              "
+            >
+              تخطَّ الخريطة إلى قائمة الأماكن
+            </a>
+          )}
+
           <div
             ref={mapBoxRef}
             className="
               relative
-              h-[260px]
+              h-[300px]
               w-full
               overflow-hidden
               rounded-2xl
@@ -492,6 +548,31 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                 >
                   تعذّر عرض الخريطة الآن. يمكنك الاطلاع على الأماكن من القائمة.
                 </p>
+
+                <button
+                  type="button"
+                  onClick={() => setMapFailed(false)}
+                  className="
+                    inline-flex
+                    min-h-[44px]
+                    items-center
+                    gap-1.5
+                    rounded-xl
+                    border
+                    border-brand-purple/15
+                    bg-white
+                    px-4
+                    text-sm
+                    font-bold
+                    text-brand-purple
+                    shadow-sm
+                    transition
+                    hover:bg-brand-purple-tint
+                  "
+                >
+                  <RotateCw className="h-4 w-4" aria-hidden="true" />
+                  إعادة المحاولة
+                </button>
               </div>
             ) : filtered.length === 0 ? (
               /* ========================================================== */
@@ -547,19 +628,18 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                   type="button"
                   onClick={() => changeFilter("all")}
                   className="
-                    rounded-lg
+                    min-h-[44px]
+                    rounded-xl
                     border
                     border-brand-purple/15
                     bg-white
-                    px-3.5
-                    py-2
-                    text-[11px]
+                    px-4
+                    text-sm
                     font-bold
                     text-brand-purple
                     shadow-sm
                     transition
                     hover:bg-brand-purple-tint
-                    sm:text-xs
                   "
                 >
                   عرض كل الأماكن
@@ -596,8 +676,13 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
         {/* ================================================================= */}
 
         <div
+          ref={panelRef}
+          id={LIST_ID}
+          tabIndex={-1}
           className="
             min-w-0
+            scroll-mt-24
+            outline-none
             lg:col-span-4
           "
           onKeyDown={(event) => {
@@ -624,9 +709,12 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                 shadow-soft
                 sm:rounded-3xl
                 sm:p-2.5
-                lg:max-h-[580px]
+                lg:max-h-[540px]
                 lg:overflow-y-auto
+                lg:overscroll-contain
                 lg:p-2
+                xl:max-h-[580px]
+                2xl:max-h-[620px]
               "
             >
               <MapActivityCard
@@ -634,6 +722,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                 place={selected}
                 onBack={back}
                 onOpenDetails={() => setOpenNewsFor(selected.id)}
+                onShowOnMap={mapFailed ? undefined : showOnMap}
               />
             </div>
           ) : (
@@ -652,11 +741,15 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                 p-3
                 shadow-soft
                 sm:rounded-3xl
+                scroll-mt-24
                 sm:p-4
-                lg:max-h-[580px]
+                lg:max-h-[540px]
                 lg:overflow-y-auto
+                lg:overscroll-contain
                 lg:p-4
+                xl:max-h-[580px]
                 xl:p-5
+                2xl:max-h-[620px]
               "
             >
               {/* -------------------------------------------------------- */}
@@ -690,10 +783,9 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                     className="
                       mt-1
                       max-w-sm
-                      text-[11px]
+                      text-xs
                       leading-5
-                      text-brand-ink/45
-                      sm:text-xs
+                      text-brand-ink/55
                       sm:leading-6
                     "
                   >
@@ -709,13 +801,18 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                       rounded-lg
                       bg-brand-purple/[0.06]
                       px-2
-                      py-1.5
-                      text-[9px]
+                      py-1
+                      text-xs
                       font-bold
                       text-brand-purple
                     "
                   >
-                    {page} / {totalPages}
+                    <span className="sr-only">
+                      الصفحة {formatNumber(page)} من {formatNumber(totalPages)}
+                    </span>
+                    <span aria-hidden="true">
+                      {formatNumber(page)} / {formatNumber(totalPages)}
+                    </span>
                   </span>
                 )}
               </div>
@@ -741,9 +838,8 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                     px-3
                     py-4
                     text-center
-                    text-[11px]
-                    text-brand-ink/55
-                    sm:text-xs
+                    text-sm
+                    text-brand-ink/60
                   "
                 >
                   لا توجد أماكن من هذا النوع بعد.
@@ -783,12 +879,12 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                       aria-label="الصفحة السابقة"
                       className="
                         flex
-                        h-8
-                        w-8
+                        h-11
+                        w-11
                         shrink-0
                         items-center
                         justify-center
-                        rounded-lg
+                        rounded-xl
                         border
                         border-brand-purple/[0.09]
                         bg-white
@@ -797,13 +893,12 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                         hover:bg-brand-purple-tint
                         disabled:pointer-events-none
                         disabled:opacity-25
-                        sm:h-9
-                        sm:w-9
-                        sm:rounded-xl
+                        lg:h-10
+                        lg:w-10
                       "
                     >
                       <ChevronRight
-                        className="h-3.5 w-3.5"
+                        className="h-4 w-4"
                         aria-hidden="true"
                       />
                     </button>
@@ -836,10 +931,11 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                           >
                             {showDots && (
                               <span
+                                aria-hidden="true"
                                 className="
                                   px-0.5
-                                  text-[10px]
-                                  text-brand-ink/30
+                                  text-xs
+                                  text-brand-ink/40
                                 "
                               >
                                 …
@@ -852,26 +948,28 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                               aria-current={
                                 pageNumber === page ? "page" : undefined
                               }
+                              aria-label={`الصفحة ${formatNumber(pageNumber)}`}
                               className={`
                                 flex
-                                h-8
-                                min-w-8
+                                h-11
+                                min-w-[2.25rem]
                                 items-center
                                 justify-center
-                                rounded-lg
+                                rounded-xl
                                 px-1.5
-                                text-[10px]
+                                text-sm
                                 font-bold
                                 transition
-                                sm:text-[11px]
+                                lg:h-10
+                                lg:min-w-[2.5rem]
                                 ${
                                   pageNumber === page
                                     ? "bg-brand-purple text-white shadow-sm"
-                                    : "text-brand-ink/50 hover:bg-brand-purple/[0.05] hover:text-brand-purple"
+                                    : "text-brand-ink/60 hover:bg-brand-purple/[0.05] hover:text-brand-purple"
                                 }
                               `}
                             >
-                              {pageNumber}
+                              {formatNumber(pageNumber)}
                             </button>
                           </div>
                         );
@@ -886,12 +984,12 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                       aria-label="الصفحة التالية"
                       className="
                         flex
-                        h-8
-                        w-8
+                        h-11
+                        w-11
                         shrink-0
                         items-center
                         justify-center
-                        rounded-lg
+                        rounded-xl
                         border
                         border-brand-purple/[0.09]
                         bg-white
@@ -900,12 +998,11 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                         hover:bg-brand-purple-tint
                         disabled:pointer-events-none
                         disabled:opacity-25
-                        sm:h-9
-                        sm:w-9
-                        sm:rounded-xl
+                        lg:h-10
+                        lg:w-10
                       "
                     >
-                      <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
+                      <ChevronLeft className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </div>
                 </nav>
