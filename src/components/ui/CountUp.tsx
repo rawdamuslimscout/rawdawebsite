@@ -86,8 +86,10 @@ export default function CountUp({ value }: { value: string }) {
         className="inline-flex items-baseline tabular-nums"
       >
         {prefix && <span className="text-brand-yellow">{prefix}</span>}
+        {/* Hug the "+" sign: digits like "1" are narrower than 1ch, so the
+            spare reserved width must sit on the outer side, not inside "+ 100" */}
         <span
-          className="inline-block text-end"
+          className={`inline-block ${prefix && !suffix ? "text-start" : "text-end"}`}
           style={{ minWidth: `${match[2].length}ch` }}
         >
           {text}

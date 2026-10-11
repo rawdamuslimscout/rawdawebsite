@@ -42,8 +42,10 @@ export default function MapFilters({
       role="group"
       aria-label="تصفية الأماكن حسب النوع"
       // scrolls sideways on narrow phones instead of wrapping into several rows;
-      // the vertical padding leaves room for the focus ring inside the scroller
-      className="no-scrollbar -mx-5 -my-1 flex gap-2 overflow-x-auto overscroll-x-contain px-5 py-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+      // the vertical padding leaves room for the focus ring inside the scroller;
+      // `relative` keeps the absolutely-positioned sr-only labels clipped by it,
+      // otherwise off-screen chips widen the whole page on phones
+      className="no-scrollbar relative -mx-5 -my-1 flex gap-2 overflow-x-auto overscroll-x-contain px-5 py-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
     >
       {FILTERS.map(({ key, label }) => {
         const active = value === key;
