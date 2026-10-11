@@ -1,6 +1,7 @@
 import Image, { getImageProps } from "next/image";
 import { ArrowLeft } from "lucide-react";
 import { getSiteSettings } from "@/lib/data";
+import SalawatButton from "./SalawatButton";
 
 const heroImage = { alt: "", fill: true, priority: true, sizes: "100vw" } as const;
 const { props: heroDesktop } = getImageProps({ ...heroImage, src: "/images/hero-purple.png" });
@@ -214,8 +215,7 @@ export default async function Hero() {
               lg:justify-start
             "
           >
-            <a
-              href="#about"
+            <SalawatButton
               className="
                 btn-gold justify-center
                 min-h-14
@@ -224,13 +224,10 @@ export default async function Hero() {
                 sm:min-h-12
                 sm:min-w-[200px]
               "
-            >
-              تعرّف على الفوج
-              <ArrowLeft className="btn-arrow h-4 w-4" aria-hidden="true" />
-            </a>
+            />
 
             <a
-              href="#activities"
+              href="#about"
               className="
                 btn-outline-light justify-center
                 min-h-14
@@ -243,7 +240,8 @@ export default async function Hero() {
                 sm:min-w-[200px]
               "
             >
-              استكشف أنشطتنا
+              تعرّف على الفوج
+              <ArrowLeft className="btn-arrow h-4 w-4" aria-hidden="true" />
             </a>
           </div>
         </div>
