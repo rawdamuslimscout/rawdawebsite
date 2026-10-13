@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X, ChevronRight, ChevronLeft, ImageOff, Loader2 } from "lucide-react";
 
 import type { GalleryItem } from "@/data/content";
-import { thumbUrl } from "@/lib/image-url";
+import { FULL_WIDTH, THUMB_WIDTH, optimizedImageUrl, thumbUrl } from "@/lib/image-url";
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -150,7 +150,8 @@ export default function GalleryLightbox({
       new Set(
         [index, index + 1, index - 1]
           .map((i) => items[(i + n) % n]?.imageUrl)
-          .filter((url): url is string => !!url),
+          .filter((url): url is string => !!url)
+          .map((url) => optimizedImageUrl(url, FULL_WIDTH)),
       ),
     );
 
@@ -213,9 +214,14 @@ export default function GalleryLightbox({
     }
   };
 
-  const fullSrc = item?.imageUrl || undefined;
-  const thumbSrc = fullSrc ? thumbUrl(fullSrc) : undefined;
-  const hasThumb = !!fullSrc && thumbSrc !== fullSrc;
+  // Optimized copies first; if the optimizer fails, the stored file itself.
+  const storedSrc = item?.imageUrl || undefined;
+  const storedThumb = storedSrc ? thumbUrl(storedSrc) : undefined;
+  const optimizedFull = storedSrc ? optimizedImageUrl(storedSrc, FULL_WIDTH) : undefined;
+  const optimizedThumb = storedThumb ? optimizedImageUrl(storedThumb, THUMB_WIDTH) : undefined;
+  const fullSrc = optimizedFull && failed[optimizedFull] ? storedSrc : optimizedFull;
+  const thumbSrc = optimizedThumb && failed[optimizedThumb] ? storedThumb : optimizedThumb;
+  const hasThumb = !!storedSrc && storedThumb !== storedSrc;
   const isLoaded = !!fullSrc && !!loaded[fullSrc];
   const fullFailed = !!fullSrc && !!failed[fullSrc];
   const thumbUsable = hasThumb && !!thumbSrc && !failed[thumbSrc];

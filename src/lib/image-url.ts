@@ -12,6 +12,8 @@
  */
 
 export const THUMB_WIDTH = 640;
+/** Width full-size images are optimized to (lightbox, modals, wide tiles). */
+export const FULL_WIDTH = 1920;
 
 const FULL_IMAGE =
   /\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/full\.(jpe?g|png|webp|avif)$/i;
@@ -52,6 +54,18 @@ export function thumbUrl(url: string): string {
 }
 
 /**
+ * `url` resized and re-encoded by the Next.js image optimizer, which caches the
+ * result, so Supabase serves each file about once instead of once per visitor.
+ * Only for this site's own Storage (the host allowed in next.config.js); any
+ * other URL is returned unchanged. `width` must be one of Next's image sizes.
+ */
+export function optimizedImageUrl(url: string, width: number): string {
+  const prefix = ownPublicStoragePrefix();
+  if (!prefix || !url.startsWith(prefix)) return url;
+  return `/_next/image?url=${encodeURIComponent(url)}&w=${width}&q=75`;
+}
+
+/**
  * src/srcSet for an <img>: the thumbnail by default, the original only when
  * the browser needs more pixels (wide tiles, high-density screens).
  * Spread these props after `sizes` and `loading` (React 18 sets attributes in
@@ -61,7 +75,7 @@ export function responsiveImage(url: string | undefined): { srcSet?: string; src
   if (!url) return { src: url };
   const thumb = thumbUrl(url);
   if (thumb === url) return { src: url };
-  return { srcSet: `${thumb} ${THUMB_WIDTH}w, ${url} 1920w`, src: thumb };
+  return { srcSet: `${thumb} ${THUMB_WIDTH}w, ${url} ${FULL_WIDTH}w`, src: thumb };
 }
 
 /**
@@ -100,13 +114,23 @@ export function imageSources(
   const full = usableImageUrl(url);
   if (!full) return [];
   const thumb = thumbUrl(full);
+  const direct = sourceChain(full, thumb, variant);
+  const optimizedFull = optimizedImageUrl(full, FULL_WIDTH);
+  if (optimizedFull === full) return direct;
+  // Optimized copies first; the Storage files themselves stay as a last resort
+  // in case the optimizer is unavailable (e.g. a hosting plan limit). Without
+  // a thumbnail file the optimizer still makes a small version of the original.
+  return [...sourceChain(optimizedFull, optimizedImageUrl(thumb, THUMB_WIDTH), variant), ...direct];
+}
+
+function sourceChain(full: string, thumb: string, variant: ImageVariant): ImageSource[] {
   if (thumb === full) return [{ src: full }];
   if (variant === "original") return [{ src: full }, { src: thumb }];
   if (variant === "thumb") return [{ src: thumb }, { src: full }];
   // The browser picks either file from the srcset; whichever one fails, the
   // next entries offer the other one on its own.
   return [
-    { srcSet: `${thumb} ${THUMB_WIDTH}w, ${full} 1920w`, src: thumb },
+    { srcSet: `${thumb} ${THUMB_WIDTH}w, ${full} ${FULL_WIDTH}w`, src: thumb },
     { src: full },
     { src: thumb },
   ];
