@@ -25,7 +25,7 @@ export const FILTERS: { key: MapFilterKey; label: string }[] = [
   { key: "all", label: "الكل" },
   { key: "camps", label: "مخيمات" },
   { key: "trips", label: "رحلات" },
-  { key: "training", label: "تدريب" },
+  { key: "training", label: "تدريبات" },
   { key: "activities", label: "أنشطة" },
 ];
 

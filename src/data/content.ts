@@ -20,9 +20,9 @@ export const siteInfo = {
 export const navLinks = [
   { href: "/", label: "الرئيسية", primary: true },
   { href: "/about", label: "من نحن", primary: true },
-  { href: "/#sections", label: "المراحل الكشفية", primary: true },
+  // { href: "/#sections", label: "المراحل الكشفية", primary: true },
   { href: "/news", label: "الأخبار", primary: true },
-  { href: "/faq", label: "الأسئلة الشائعة", primary: true },
+  { href: "/faq", label: "الأسئلة الشائعة", primary: false },
   { href: "/structure", label: "الهيكل التنظيمي", primary: false },
   { href: "/gallery", label: "معرض الصور", primary: false },
   { href: "/library", label: "المكتبة", primary: false },

@@ -26,6 +26,9 @@ export default async function Activities() {
           >
             أنشطتنا
           </h2>
+          <p className="text-sm leading-7 text-white/80 sm:text-base">
+            ما نقوم به على مدار السنة، ولكلّ نشاط غايته التربوية.
+          </p>
         </Reveal>
 
         <ul className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-white/10 sm:mt-8 sm:grid-cols-2 lg:grid-cols-4">

@@ -36,20 +36,39 @@ export default async function About({
         <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
           {/* ---------- Editorial text (start / right in RTL) ---------- */}
           <Reveal className="lg:col-span-6 xl:col-span-6">
+            {/* On /about the affiliation is spelled out by OrgChain right
+                below, so the intro doesn't repeat it. */}
             <SectionHeading
               title="عن الفوج"
-              subtitle={`${siteInfo.parent} — ${siteInfo.name}`}
+              subtitle={isHome ? `${siteInfo.parent} — ${siteInfo.name}` : undefined}
             />
 
-            <p className="mt-8 max-w-xl text-lg leading-[2.1] text-brand-ink/80 sm:text-xl">
-              فوج روضة الفيحاء هو أحد أفواج جمعية الكشاف المسلم في لبنان ضمن
-              مفوضية الشمال.
-            </p>
-            <p className="mt-4 max-w-xl text-base leading-[2.1] text-brand-ink/70 sm:text-lg">
-              نُقيم ونُنظّم مغامرات وتحديات وأوقاتًا كشفية مميزة للأشبال
-              والزهرات والكشافة والمرشدات، ضمن رحلة تربوية متكاملة تجمع بين
-              القيم الإسلامية وروح القيادة والخدمة.
-            </p>
+            {isHome ? (
+              <>
+                <p className="mt-8 max-w-xl text-lg leading-[2.1] text-brand-ink/80 sm:text-xl">
+                  فوج روضة الفيحاء هو أحد أفواج جمعية الكشاف المسلم في لبنان ضمن
+                  مفوضية الشمال.
+                </p>
+                <p className="mt-4 max-w-xl text-base leading-[2.1] text-brand-ink/70 sm:text-lg">
+                  نُقيم ونُنظّم مغامرات وتحديات وأوقاتًا كشفية مميزة للأشبال
+                  والزهرات والكشافة والمرشدات، ضمن رحلة تربوية متكاملة تجمع بين
+                  القيم الإسلامية وروح القيادة والخدمة.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="mt-8 max-w-xl text-lg leading-[2.1] text-brand-ink/80 sm:text-xl">
+                  فوج روضة الفيحاء مساحةٌ تربوية تجمع بين التعلّم والمغامرة
+                  والعمل الجماعي، للأشبال والزهرات والكشافة والمرشدات.
+                </p>
+                <p className="mt-4 max-w-xl text-base leading-[2.1] text-brand-ink/70 sm:text-lg">
+                  ومن خلال الاجتماعات الأسبوعية والمخيمات والرحلات والمبادرات
+                  المجتمعية، نخوض معًا تجربةً كشفية تنمّي الاعتماد على النفس
+                  وروح القيادة والأخوّة، وتُرسّخ القيم الإسلامية في الممارسة
+                  والسلوك.
+                </p>
+              </>
+            )}
 
             <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-2">
               {isHome && (

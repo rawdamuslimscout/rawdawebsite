@@ -26,7 +26,7 @@ export default function OrgChain({ troopName }: { troopName: string }) {
         <Reveal>
           <SectionHeading
             title="إلى من ننتمي"
-            subtitle={`${troopName} أحد أفواج ${ORG_NAME} ضمن مفوضية الشمال.`}
+            subtitle="موقع الفوج في التسلسل التنظيمي، من الجمعية إلى الفوج."
           />
         </Reveal>
 

@@ -34,7 +34,7 @@ export default async function Achievements() {
           <Reveal className="lg:sticky lg:top-28 lg:col-span-4 lg:self-start">
             <SectionHeading
               title="محطات من مسيرة الفوج"
-              subtitle="من البدايات إلى اليوم — مسيرة تُبنى عامًا بعد عام."
+              subtitle="أبرز المحطات في مسيرة الفوج منذ تأسيسه."
             />
           </Reveal>
 

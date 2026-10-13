@@ -1,6 +1,22 @@
 import Reveal from "@/components/ui/Reveal";
 import { getValues } from "@/lib/data";
 
+/**
+ * What each value looks like in practice, keyed by ValueItem.slug (the `id`
+ * getValues() returns). The table has no description column; a value added
+ * in the admin without an entry here simply shows its title.
+ */
+const VALUE_MEANING: Record<string, string> = {
+  faith: "نستمدّ منه أخلاقنا وسلوكنا في كل نشاط.",
+  brotherhood: "نعيش في الفرقة والمخيم كعائلة واحدة.",
+  leadership: "نتدرّب على المبادرة وتحمّل مسؤولية المجموعة.",
+  service: "نخدم محيطنا بمبادرات عملية.",
+  discipline: "نحترم الوقت والنظام والكلمة التي نعطيها.",
+  cooperation: "ننجز المهام معًا، ولكلٍّ دوره في الفريق.",
+  responsibility: "نتحمّل نتائج أفعالنا ونحفظ ما يُعهد إلينا.",
+  giving: "نقدّم أفضل ما لدينا دون انتظار مقابل.",
+};
+
 export default async function Values() {
   const values = await getValues();
   if (!values.length) return null;
@@ -36,16 +52,23 @@ export default async function Values() {
                 as="li"
                 key={v.id}
                 delay={(i % 2) * 80}
-                className="value-row group relative flex min-w-0 items-center gap-3 border-b border-white/10 py-3 sm:gap-4 sm:py-5"
+                className="value-row group relative flex min-w-0 items-start gap-3 border-b border-white/10 py-3 sm:gap-4 sm:py-5"
               >
                 {/* Values are not ranked, so a plain marker instead of a number. */}
                 <span
                   aria-hidden="true"
-                  className="h-2 w-2 shrink-0 rounded-full bg-brand-yellow sm:h-2.5 sm:w-2.5"
+                  className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-yellow sm:mt-2.5 sm:h-2.5 sm:w-2.5 lg:mt-3"
                 />
 
-                <span className="min-w-0 font-display text-sm font-semibold leading-snug text-white transition-transform duration-300 group-hover:-translate-x-1 sm:text-lg lg:text-2xl">
-                  {v.title}
+                <span className="min-w-0 transition-transform duration-300 group-hover:-translate-x-1">
+                  <span className="block font-display text-sm font-semibold leading-snug text-white sm:text-lg lg:text-2xl">
+                    {v.title}
+                  </span>
+                  {VALUE_MEANING[v.id] && (
+                    <span className="mt-1 block text-xs leading-5 text-white/70 sm:text-sm sm:leading-6">
+                      {VALUE_MEANING[v.id]}
+                    </span>
+                  )}
                 </span>
 
                 <span

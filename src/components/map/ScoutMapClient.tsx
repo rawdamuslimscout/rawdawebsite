@@ -403,18 +403,9 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
           <MapFilters value={filter} counts={counts} onChange={changeFilter} />
         </div>
 
-        {/* Results count */}
-        <p
-          role="status"
-          aria-live="polite"
-          className="
-            shrink-0
-            text-xs
-            font-semibold
-            text-brand-ink/65
-            sm:text-sm
-          "
-        >
+        {/* Results count: the active chip already shows it, so it is only
+            announced to screen readers when the filter changes. */}
+        <p role="status" aria-live="polite" className="sr-only">
           {placesCountLabel(filtered.length)}
         </p>
       </div>
@@ -807,12 +798,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                       text-brand-purple
                     "
                   >
-                    <span className="sr-only">
-                      الصفحة {formatNumber(page)} من {formatNumber(totalPages)}
-                    </span>
-                    <span aria-hidden="true">
-                      {formatNumber(page)} / {formatNumber(totalPages)}
-                    </span>
+                    صفحة {formatNumber(page)} من {formatNumber(totalPages)}
                   </span>
                 )}
               </div>

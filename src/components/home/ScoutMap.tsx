@@ -22,7 +22,7 @@ export default async function ScoutMap() {
         <Reveal>
           <SectionHeading
             title={TITLE}
-            subtitle="المخيمات والرحلات والدورات والأنشطة التي أقمناها، على الخريطة."
+            subtitle="مخيمات ورحلات ودورات نظّمناها أو شاركنا فيها، على الخريطة."
           />
         </Reveal>
 

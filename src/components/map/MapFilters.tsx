@@ -50,6 +50,9 @@ export default function MapFilters({
       {FILTERS.map(({ key, label }) => {
         const active = value === key;
         const empty = counts[key] === 0;
+        // A filter with no places would only lead to an empty map; it comes
+        // back by itself as soon as a place of that kind is published.
+        if (empty && key !== "all" && !active) return null;
         return (
           <button
             key={key}

@@ -27,8 +27,15 @@ export default async function CTA() {
           كن جزءًا من الحكاية
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/80 sm:text-lg">
-          انضم إلى رحلة كشفية تجمع بين القيم والمغامرة والأخوّة، وابدأ فصلك
-          الخاص في مسيرة {siteInfo.name}.
+          أبواب الفوج مفتوحة للفتيان والفتيات. راسلنا عبر واتساب للاستفسار عن
+          الانتساب، وتعرّف على{" "}
+          <Link
+            href="/#sections"
+            className="font-bold text-brand-yellow underline decoration-brand-yellow/40 underline-offset-4 hover:decoration-brand-yellow"
+          >
+            مراحلنا الكشفية
+          </Link>
+          {siteInfo.instagramUrl ? "، وتابع أخبار الفوج على إنستغرام." : "."}
         </p>
         <div className="mx-auto mt-9 flex max-w-md flex-col items-stretch justify-center gap-3 sm:max-w-none sm:flex-row">
           <Link href="/join" className="btn-gold">
