@@ -5,11 +5,70 @@ import {
   getDelegate,
   getResourceConfig,
   resourceHasOrderField,
+  type ResourceConfig,
 } from "@/lib/admin-resources";
 import { requireAdminPage } from "@/lib/session";
-import ResourceManager from "./ResourceManager";
+import ResourceManager, { type ChildSection, type Option } from "./ResourceManager";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * Fields that point at another section (e.g. a leader's unit) are shown as
+ * a normal drop-down list of names — never as a technical id.
+ */
+async function loadRelations(
+  config: ResourceConfig,
+): Promise<Record<string, Option[]>> {
+  const relations: Record<string, Option[]> = {};
+  for (const field of config.fields) {
+    if (field.type !== "relation" || !field.relation) continue;
+    const relConfig = getResourceConfig(field.relation);
+    const relDelegate = getDelegate(field.relation);
+    if (!relConfig || !relDelegate) continue;
+    try {
+      const relRows: Record<string, unknown>[] = await relDelegate.findMany({
+        where: relConfig.scope,
+        orderBy: relConfig.orderBy,
+      });
+      relations[field.name] = relRows.map((r) => ({
+        value: String(r.id),
+        label: String(r[relConfig.titleField] ?? r.id),
+      }));
+    } catch (err) {
+      console.error(`[admin] loading options for ${field.name} failed`, err);
+      relations[field.name] = [];
+    }
+  }
+  return relations;
+}
+
+/** Rows of each child section (e.g. a unit's leaders), grouped by parent id. */
+async function loadChildren(config: ResourceConfig): Promise<ChildSection[]> {
+  const sections: ChildSection[] = [];
+  for (const child of config.children ?? []) {
+    const childConfig = getResourceConfig(child.resource);
+    const childDelegate = getDelegate(child.resource);
+    if (!childConfig || !childDelegate) continue;
+    const rows: Record<string, unknown>[] = await childDelegate.findMany({
+      where: childConfig.scope,
+      orderBy: childConfig.orderBy,
+    });
+    const rowsByParent: Record<string, Record<string, unknown>[]> = {};
+    for (const row of rows) {
+      const parentId = String(row[child.foreignKey] ?? "");
+      (rowsByParent[parentId] ??= []).push(row);
+    }
+    sections.push({
+      config: childConfig,
+      label: child.label,
+      foreignKey: child.foreignKey,
+      rowsByParent,
+      hasOrder: resourceHasOrderField(childConfig),
+      relations: await loadRelations(childConfig),
+    });
+  }
+  return sections;
+}
 
 export default async function ResourceAdminPage({
   params: paramsPromise,
@@ -24,37 +83,20 @@ export default async function ResourceAdminPage({
 
   // A database hiccup must show a clear message here — never a crash.
   let rows: Record<string, unknown>[] = [];
+  let relations: Record<string, Option[]> = {};
+  let children: ChildSection[] = [];
   let dbError: string | null = null;
   try {
-    rows = await delegate.findMany({ orderBy: config.orderBy });
+    rows = await delegate.findMany({
+      where: config.scope,
+      orderBy: config.orderBy,
+    });
+    children = await loadChildren(config);
+    relations = await loadRelations(config);
   } catch (err) {
     console.error(`[admin] loading ${config.key} failed`, err);
     dbError =
       "تعذّر تحميل هذا القسم الآن بسبب مشكلة في الاتصال بقاعدة البيانات. حدّث الصفحة بعد قليل، وإن استمرت المشكلة تواصل مع المطوّر.";
-  }
-
-  // Fields that point at another section (e.g. a leader's stage) are shown as
-  // a normal drop-down list of names — never as a technical id.
-  const relations: Record<string, { value: string; label: string }[]> = {};
-  if (!dbError) {
-    for (const field of config.fields) {
-      if (field.type !== "relation" || !field.relation) continue;
-      const relConfig = getResourceConfig(field.relation);
-      const relDelegate = getDelegate(field.relation);
-      if (!relConfig || !relDelegate) continue;
-      try {
-        const relRows: Record<string, unknown>[] = await relDelegate.findMany({
-          orderBy: relConfig.orderBy,
-        });
-        relations[field.name] = relRows.map((r) => ({
-          value: String(r.id),
-          label: String(r[relConfig.titleField] ?? r.id),
-        }));
-      } catch (err) {
-        console.error(`[admin] loading options for ${field.name} failed`, err);
-        relations[field.name] = [];
-      }
-    }
   }
 
   return (
@@ -90,6 +132,7 @@ export default async function ResourceAdminPage({
             rows={rows}
             hasOrder={resourceHasOrderField(config)}
             relations={relations}
+            childSections={children}
           />
         </div>
       )}

@@ -251,13 +251,14 @@ export default function FieldInput({
     <input
       id={id}
       aria-describedby={describedBy}
-      type={field.type === "number" ? "number" : "text"}
+      type={field.type === "number" ? "number" : field.email ? "email" : "text"}
       inputMode={field.type === "number" ? "numeric" : undefined}
       name={field.name}
       defaultValue={defaultValue as string | number}
       required={required}
       placeholder={field.placeholder}
-      className={inputClass}
+      dir={field.email ? "ltr" : undefined}
+      className={field.email ? `${inputClass} text-right` : inputClass}
     />
   );
 }

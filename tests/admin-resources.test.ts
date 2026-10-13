@@ -37,3 +37,20 @@ test("event dates are optional, and invalid dates are rejected", () => {
     assert.throws(() => coerceValues(events, getter({ startDate: bad })), bad);
   }
 });
+
+test("units are always saved as units, whatever the form sends", () => {
+  const units = getResourceConfig("troop-units")!;
+  assert.equal(coerceValues(units, getter({ title: "قطيع الكوالا", kind: "council" })).kind, "unit");
+});
+
+test("a role's contact email must be a valid address, or empty", () => {
+  const positions = getResourceConfig("org-assignments")!;
+  assert.equal(
+    coerceValues(positions, getter({ contactEmail: "secretary@rawdamuslimscout.org" })).contactEmail,
+    "secretary@rawdamuslimscout.org",
+  );
+  assert.equal(coerceValues(positions, getter({ contactEmail: "" })).contactEmail, "");
+  for (const bad of ["secretary", "a@b", "x@y.z", "<script>@x.org"]) {
+    assert.throws(() => coerceValues(positions, getter({ contactEmail: bad })), bad);
+  }
+});

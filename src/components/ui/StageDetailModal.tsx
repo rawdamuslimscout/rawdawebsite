@@ -461,11 +461,13 @@ export default function StageDetailModal({
                       {leader.name}
                     </p>
                     <p className="text-xs text-brand-turquoise-dark">
-                      {leader.rank} · {leader.role}
+                      {[leader.rank, leader.role].filter(Boolean).join(" · ")}
                     </p>
-                    <p className="mt-1 text-xs leading-relaxed text-brand-ink/70">
-                      {leader.bio}
-                    </p>
+                    {leader.bio && (
+                      <p className="mt-1 text-xs leading-relaxed text-brand-ink/70">
+                        {leader.bio}
+                      </p>
+                    )}
                   </div>
                 </li>
               ))}

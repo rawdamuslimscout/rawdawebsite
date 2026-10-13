@@ -306,8 +306,9 @@ export async function saveItem(formData: FormData): Promise<ActionResult> {
       // The previous unconditional `if (id) return ...`
       // incorrectly rejected every update.
       const columns = uploadColumns(config);
-      const existing = await delegate.findUnique({
-        where: { id },
+      // Scoped: a section can only edit its own rows (e.g. units, not other levels).
+      const existing = await delegate.findFirst({
+        where: { ...config.scope, id },
         select: Object.fromEntries([
           ["id", true],
           ...columns.map((column) => [column, true]),
@@ -390,12 +391,17 @@ export async function deleteItem(formData: FormData): Promise<ActionResult> {
 
     // Remember the row's files so they can be removed once the row is gone.
     const columns = uploadColumns(config);
-    const existing = columns.length
-      ? await delegate.findUnique({
-          where: { id },
-          select: Object.fromEntries(columns.map((column) => [column, true])),
-        })
-      : null;
+    const existing = await delegate.findFirst({
+      where: { ...config.scope, id },
+      select: Object.fromEntries([
+        ["id", true],
+        ...columns.map((column) => [column, true]),
+      ]),
+    });
+
+    if (!existing) {
+      return { ok: false, error: "العنصر غير موجود أو تم حذفه." };
+    }
 
     await delegate.delete({
       where: { id },
@@ -448,7 +454,20 @@ export async function reorderItem(
       return { ok: false, error: "طلب غير صالح" };
     }
 
+    // Only rows of this section, and of the same parent when it has one
+    // (e.g. a unit's leaders are reordered among themselves).
+    let where: Record<string, unknown> = { ...config.scope };
+    if (config.orderScope) {
+      const row = await delegate.findFirst({
+        where: { ...where, id },
+        select: { [config.orderScope]: true },
+      });
+      if (!row) return { ok: false, error: "العنصر غير موجود" };
+      where = { ...where, [config.orderScope]: row[config.orderScope] };
+    }
+
     const rows: { id: string; order: number }[] = await delegate.findMany({
+      where,
       orderBy: { order: "asc" },
       select: { id: true, order: true },
     });
@@ -554,8 +573,8 @@ export async function removeUploadedFile(
       };
     }
 
-    const existing = await delegate.findUnique({
-      where: { id },
+    const existing = await delegate.findFirst({
+      where: { ...config.scope, id },
       select: { [fieldKey]: true },
     });
 

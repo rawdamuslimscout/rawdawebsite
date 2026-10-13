@@ -18,11 +18,13 @@ export default async function AdminLayout({
     redirect("/admin/login");
   }
 
-  const resources = Object.values(resourceRegistry).map((r) => ({
-    key: r.key,
-    label: r.label,
-    group: r.group,
-  }));
+  const resources = Object.values(resourceRegistry)
+    .filter((r) => !r.navHidden)
+    .map((r) => ({
+      key: r.key,
+      label: r.label,
+      group: r.group,
+    }));
   const groups = Object.entries(resourceGroups).map(([key, label]) => ({
     key,
     label,

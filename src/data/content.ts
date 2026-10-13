@@ -500,64 +500,6 @@ export const joinPricing: JoinPricingTier[] = [
   },
 ];
 
-export type JoinScheduleGroup = {
-  id: string;
-  stage: string;
-  ageRange: string;
-  day: string;
-  time: string;
-  location: string;
-  leaders: number;
-};
-
-export const joinSchedule: JoinScheduleGroup[] = [
-  {
-    id: "js1",
-    stage: "البراعم",
-    ageRange: "٦ – ٨ سنوات",
-    day: "السبت",
-    time: "٣:٠٠ – ٤:٣٠ م",
-    location: "مركز الفوج — طرابلس",
-    leaders: 2,
-  },
-  {
-    id: "js2",
-    stage: "الأشبال والزهرات",
-    ageRange: "٩ – ١١ سنة",
-    day: "السبت",
-    time: "٣:٠٠ – ٥:٠٠ م",
-    location: "مركز الفوج — طرابلس",
-    leaders: 3,
-  },
-  {
-    id: "js3",
-    stage: "الكشافة والمرشدات",
-    ageRange: "١٢ – ١٤ سنة",
-    day: "الأحد",
-    time: "١٠:٠٠ – ١٢:٠٠ ظ",
-    location: "مركز الفوج — طرابلس",
-    leaders: 3,
-  },
-  {
-    id: "js4",
-    stage: "فرقة المتقدم",
-    ageRange: "١٥ – ١٦ سنة",
-    day: "الأحد",
-    time: "١٢:٣٠ – ٢:٣٠ م",
-    location: "مركز الفوج — طرابلس",
-    leaders: 2,
-  },
-  {
-    id: "js5",
-    stage: "الجوّالة",
-    ageRange: "١٧ سنة فما فوق",
-    day: "الأحد",
-    time: "٥:٠٠ – ٧:٠٠ م",
-    location: "مركز الفوج — طرابلس",
-    leaders: 2,
-  },
-];
-
 // ============================================================
 // LIBRARY — downloadable resources (guides, badge requirements,
 // forms). `fileUrl` is a placeholder path; point it at real PDFs

@@ -30,7 +30,17 @@ import {
 import FieldInput, { toDateInputValue } from "./FieldInput";
 import { useToast } from "../ToastProvider";
 
-type Option = { value: string; label: string };
+export type Option = { value: string; label: string };
+
+/** A section edited inside each row of its parent (e.g. a unit's leaders). */
+export type ChildSection = {
+  config: ResourceConfig;
+  label: string;
+  foreignKey: string;
+  rowsByParent: Record<string, Record<string, unknown>[]>;
+  hasOrder: boolean;
+  relations: Record<string, Option[]>;
+};
 
 function isImageUrl(url: string): boolean {
   return /\.(png|jpe?g|gif|webp|svg|avif)(\?.*)?$/i.test(url);
@@ -48,16 +58,24 @@ export default function ResourceManager({
   rows,
   hasOrder,
   relations,
+  childSections = [],
+  fixedValues = {},
+  embedded = false,
 }: {
   config: ResourceConfig;
   rows: Record<string, unknown>[];
   hasOrder: boolean;
   relations: Record<string, Option[]>;
+  childSections?: ChildSection[];
+  /** Saved with every item and not shown in the form (e.g. the parent unit). */
+  fixedValues?: Record<string, string>;
+  /** Shown inside a parent row: no search, and the add form starts closed. */
+  embedded?: boolean;
 }) {
   const router = useRouter();
   const { showSuccess, showError } = useToast();
   const [query, setQuery] = useState("");
-  const [createOpen, setCreateOpen] = useState(rows.length === 0);
+  const [createOpen, setCreateOpen] = useState(!embedded && rows.length === 0);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [progress, setProgress] = useState<string | null>(null);
   // Bumped after each successful save so file pickers are cleared (and a file is never uploaded twice).
@@ -167,7 +185,7 @@ export default function ResourceManager({
         after: () => {
           form.reset();
           setCreateOpen(false);
-          window.scrollTo({ top: 0, behavior: "smooth" });
+          if (!embedded) window.scrollTo({ top: 0, behavior: "smooth" });
         },
       },
     );
@@ -380,6 +398,12 @@ export default function ResourceManager({
   }
 
   const addLabel = `إضافة ${config.singular}`;
+  const formFields = config.fields.filter(
+    (f) => isShownInForm(f) && !(f.name in fixedValues),
+  );
+  const fixedInputs = Object.entries(fixedValues).map(([name, value]) => (
+    <input key={name} type="hidden" name={name} value={value} />
+  ));
 
   return (
     <div>
@@ -391,17 +415,19 @@ export default function ResourceManager({
       )}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-ink/60" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="ابحث في هذا القسم…"
-            className="w-full rounded-full border border-brand-purple/15 bg-white py-2.5 pl-3 pr-10 text-base outline-none transition-colors focus:border-brand-purple sm:text-sm"
-          />
-        </div>
-        <div className="flex items-center justify-between gap-3 sm:justify-end">
+        {!embedded && (
+          <div className="relative w-full sm:max-w-xs">
+            <Search className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-ink/60" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="ابحث في هذا القسم…"
+              className="w-full rounded-full border border-brand-purple/15 bg-white py-2.5 pl-3 pr-10 text-base outline-none transition-colors focus:border-brand-purple sm:text-sm"
+            />
+          </div>
+        )}
+        <div className="flex items-center justify-between gap-3 sm:ms-auto sm:justify-end">
           <span className="text-xs text-brand-ink/70">
             {query ? `${filteredRows.length} من ${rows.length}` : `${rows.length} عنصر`}
           </span>
@@ -432,9 +458,8 @@ export default function ResourceManager({
             className="mt-4 grid gap-5 sm:grid-cols-2"
           >
             <input type="hidden" name="_resource" value={config.key} />
-            {config.fields
-              .filter(isShownInForm)
-              .map((field) => renderField(field, null, 0))}
+            {fixedInputs}
+            {formFields.map((field) => renderField(field, null, 0))}
             {renderSaveBar(busyKey === "create", "إضافة")}
           </form>
         </section>
@@ -443,7 +468,9 @@ export default function ResourceManager({
       <section className="mt-6 space-y-3">
         {rows.length === 0 && !createOpen && (
           <p className="rounded-2xl border border-dashed border-brand-purple/20 bg-white/60 p-6 text-center text-sm text-brand-ink/70">
-            لا توجد عناصر في هذا القسم بعد. اضغط «{addLabel}» للبدء.
+            {embedded
+              ? "لم يُضف أحد بعد."
+              : `لا توجد عناصر في هذا القسم بعد. اضغط «${addLabel}» للبدء.`}
           </p>
         )}
         {rows.length > 0 && filteredRows.length === 0 && (
@@ -549,11 +576,29 @@ export default function ResourceManager({
                 >
                   <input type="hidden" name="_resource" value={config.key} />
                   <input type="hidden" name="_id" value={id} />
-                  {config.fields
-                    .filter(isShownInForm)
-                    .map((field) => renderField(field, row, version))}
+                  {fixedInputs}
+                  {formFields.map((field) => renderField(field, row, version))}
                   {renderSaveBar(busyKey === `update-${id}`, "حفظ التعديلات")}
                 </form>
+
+                {childSections.map((child) => (
+                  <section
+                    key={child.config.key}
+                    className="mt-6 rounded-2xl bg-brand-purple-tint/40 p-4 sm:p-5"
+                  >
+                    <h3 className="mb-3 font-display text-base font-semibold text-brand-ink">
+                      {child.label}
+                    </h3>
+                    <ResourceManager
+                      config={child.config}
+                      rows={child.rowsByParent[id] ?? []}
+                      hasOrder={child.hasOrder}
+                      relations={child.relations}
+                      fixedValues={{ [child.foreignKey]: id }}
+                      embedded
+                    />
+                  </section>
+                ))}
               </div>
             </details>
           );

@@ -115,11 +115,38 @@ const legacySlugs = new Set([
   "qiyada",
 ]);
 
+/** Units shown publicly: published, under a published parent (as on /structure). */
+const publicUnit = {
+  kind: "unit",
+  isPublished: true,
+  parent: { isPublished: true },
+} as const;
+
 export const getScoutStages = cache(async (): Promise<ScoutStage[]> => {
   const rows = await query("getScoutStages", () =>
     prisma.scoutStage.findMany({
       orderBy: { order: "asc" },
-      include: { leaders: { orderBy: { order: "asc" } } },
+      include: {
+        // A stage's leaders are the leaders of its units (edited per unit in the admin).
+        orgNodes: {
+          where: publicUnit,
+          orderBy: [{ order: "asc" }, { title: "asc" }],
+          select: {
+            title: true,
+            assignments: {
+              where: { isPublished: true, person: { isPublic: true } },
+              orderBy: { order: "asc" },
+              select: {
+                id: true,
+                title: true,
+                person: {
+                  select: { fullName: true, rank: true, bio: true, photoUrl: true },
+                },
+              },
+            },
+          },
+        },
+      },
     }),
   );
 
@@ -134,14 +161,16 @@ export const getScoutStages = cache(async (): Promise<ScoutStage[]> => {
         icon: r.icon as ScoutStage["icon"],
         imageUrl: r.imageUrl,
         fileUrl: safeHref(r.fileUrl),
-        leaders: r.leaders.map((leader) => ({
-          id: leader.id,
-          name: leader.name,
-          rank: leader.rank,
-          role: leader.role,
-          bio: leader.bio,
-          photoUrl: leader.photoUrl,
-        })),
+        leaders: r.orgNodes.flatMap((unit) =>
+          unit.assignments.map((a) => ({
+            id: a.id,
+            name: a.person.fullName,
+            rank: a.person.rank,
+            role: `${a.title} — ${unit.title}`,
+            bio: a.person.bio,
+            photoUrl: safeHref(a.person.photoUrl),
+          })),
+        ),
       }),
     );
 });
@@ -368,9 +397,32 @@ export const getJoinPricing = cache(
     ),
 );
 
+/** The weekly meetings, one per unit that has a meeting day (edited per unit in the admin). */
 export const getJoinSchedule = cache(
-  async (): Promise<JoinScheduleItem[]> =>
-    query("getJoinSchedule", () =>
-      prisma.joinSchedule.findMany({ orderBy: { order: "asc" } }),
-    ),
+  async (): Promise<JoinScheduleItem[]> => {
+    const units = await query("getJoinSchedule", () =>
+      prisma.orgNode.findMany({
+        where: { ...publicUnit, meetingDay: { not: "" } },
+        orderBy: [{ order: "asc" }, { title: "asc" }],
+        select: {
+          id: true,
+          title: true,
+          section: true,
+          ageRange: true,
+          meetingDay: true,
+          meetingTime: true,
+          meetingLocation: true,
+          stage: { select: { ageRange: true } },
+        },
+      }),
+    );
+    return units.map((u) => ({
+      id: u.id,
+      stage: u.section ? `${u.title} — ${u.section}` : u.title,
+      ageRange: u.ageRange || u.stage?.ageRange || "",
+      day: u.meetingDay,
+      time: u.meetingTime,
+      location: u.meetingLocation,
+    }));
+  },
 );

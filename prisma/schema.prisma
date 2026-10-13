@@ -90,6 +90,8 @@ model ScoutStage {
   orgNodes    OrgNode[]
 }
 
+/// Legacy: stage leaders are now the leaders of the units linked to the stage
+/// (OrgAssignment on unit OrgNodes). No longer edited or read; kept so no data is lost.
 model ScoutLeader {
   id        String     @id @default(cuid())
   stageId   String
@@ -235,6 +237,8 @@ model JoinPricing {
   order       Int    @default(0)
 }
 
+/// Legacy: each unit's meeting now lives on the unit itself (OrgNode.meeting*).
+/// No longer edited or read; kept so no data is lost.
 model JoinSchedule {
   id       String @id @default(cuid())
   stage    String // e.g. "البراعم"
@@ -277,6 +281,15 @@ model OrgNode {
   logoUrl     String   @default("")
   stageId     String?  // optional link to an existing ScoutStage (for unit nodes)
   stage       ScoutStage? @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  // Units only — a unit is the single record for a troop group: its stage,
+  // ages, weekly meeting and (through its assignments) its leaders.
+  /// Shown after the unit name on the meeting schedule, e.g. «الأشبال (ذكور)».
+  section         String @default("")
+  /// Overrides the linked stage's age range when set.
+  ageRange        String @default("")
+  meetingDay      String @default("")
+  meetingTime     String @default("")
+  meetingLocation String @default("")
   order       Int      @default(0)
   isPublished Boolean  @default(false)
   assignments OrgAssignment[]
@@ -310,6 +323,8 @@ model OrgAssignment {
   person           OrgPerson @relation(fields: [personId], references: [id], onDelete: Cascade)
   title            String
   responsibilities String    @default("") @db.Text
+  /// Public contact address of the role itself (e.g. the troop leader, the secretary).
+  contactEmail     String    @default("")
   order            Int       @default(0)
   isPublished      Boolean   @default(true)
 

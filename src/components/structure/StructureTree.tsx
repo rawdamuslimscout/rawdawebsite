@@ -19,6 +19,7 @@ import {
   GraduationCap,
   Landmark,
   Layers,
+  Mail,
   MapPin,
   ShieldCheck,
   Tent,
@@ -46,20 +47,20 @@ type Person = {
   occupation: string;
   bio: string;
   qualifications: Qualification[];
-  positions: { title: string; nodeTitle: string; responsibilities?: string }[];
+  positions: {
+    title: string;
+    nodeTitle: string;
+    responsibilities?: string;
+    contactEmail?: string;
+  }[];
 };
 type Member = {
   assignmentId: string;
   title: string;
   responsibilities?: string;
+  /** The role's own public address (e.g. the secretary's). */
+  contactEmail?: string;
   person: Person;
-};
-type StageLeader = {
-  id: string;
-  name: string;
-  rank: string;
-  role: string;
-  photoUrl: string;
 };
 export type TreeNode = {
   id: string;
@@ -68,7 +69,6 @@ export type TreeNode = {
   description: string;
   logoUrl: string;
   stage: { title: string; ageRange: string } | null;
-  stageLeaders: StageLeader[];
   members: Member[];
   children: TreeNode[];
 };
@@ -211,6 +211,7 @@ function ProfileDialog({
     { icon: Briefcase, label: "المهنة", value: person.occupation },
   ].filter((f) => f.value);
   const duties = person.positions.filter((p) => p.responsibilities);
+  const contacts = person.positions.filter((p) => p.contactEmail);
   const courses = person.qualifications.filter((q) => q.kind === "course");
   const education = person.qualifications.filter((q) => q.kind === "education");
 
@@ -320,6 +321,19 @@ function ProfileDialog({
                   </li>
                 ))}
               </ul>
+              {contacts.length > 0 && (
+                <ul className="mt-3 flex flex-col items-center gap-1.5 sm:items-start">
+                  {contacts.map((p, i) => (
+                    <li key={i}>
+                      <ContactEmail
+                        email={p.contactEmail!}
+                        label={p.title}
+                        className="text-white/90 hover:text-white"
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         </div>
@@ -395,6 +409,30 @@ function ProfileDialog({
 }
 
 /* ---------- Building blocks ---------- */
+/** A role's public email, e.g. «للتواصل مع أمين السر: secretary@…». */
+function ContactEmail({
+  email,
+  label,
+  className = "text-brand-purple hover:text-brand-purple-dark",
+}: {
+  email: string;
+  label: string;
+  className?: string;
+}) {
+  return (
+    <a
+      href={`mailto:${email}`}
+      aria-label={`مراسلة ${label}: ${email}`}
+      className={`inline-flex min-h-11 items-center gap-2 text-sm font-semibold underline-offset-4 hover:underline ${className}`}
+    >
+      <Mail className="h-4 w-4 shrink-0" aria-hidden="true" />
+      <span dir="ltr" className="break-all">
+        {email}
+      </span>
+    </a>
+  );
+}
+
 function PersonCard({
   m,
   onOpen,
@@ -405,47 +443,60 @@ function PersonCard({
   big?: boolean;
 }) {
   return (
-    <button
-      type="button"
-      onClick={() => onOpen(m.person)}
-      aria-haspopup="dialog"
-      className={`group flex h-full w-full gap-4 rounded-2xl border border-brand-purple/10 bg-white text-start shadow-soft transition hover:-translate-y-0.5 hover:border-brand-purple/30 hover:shadow-lift motion-reduce:transform-none ${
-        big
-          ? "flex-col items-center p-6 text-center sm:flex-row sm:items-center sm:p-8 sm:text-start"
-          : "items-start p-4"
+    <div
+      className={`flex h-full flex-col rounded-2xl border border-brand-purple/10 bg-white shadow-soft transition hover:-translate-y-0.5 hover:border-brand-purple/30 hover:shadow-lift motion-reduce:transform-none ${
+        big ? "items-center sm:items-stretch" : ""
       }`}
     >
-      <Avatar
-        name={m.person.name}
-        url={m.person.photoUrl}
-        size={big ? "h-24 w-24 sm:h-28 sm:w-28" : "h-14 w-14"}
-      />
-      <span className="min-w-0 flex-1">
-        <span
-          className={`block font-display font-bold text-brand-ink ${big ? "text-xl sm:text-2xl" : "text-base"}`}
-        >
-          {m.person.name}
-        </span>
-        <span className="mt-0.5 block text-sm font-semibold text-brand-purple">
-          {m.title}
-        </span>
-        {/* {m.person.rank && (
+      <button
+        type="button"
+        onClick={() => onOpen(m.person)}
+        aria-haspopup="dialog"
+        className={`group flex w-full flex-1 gap-4 rounded-2xl text-start ${
+          big
+            ? "flex-col items-center p-6 text-center sm:flex-row sm:items-center sm:p-8 sm:text-start"
+            : "items-start p-4"
+        }`}
+      >
+        <Avatar
+          name={m.person.name}
+          url={m.person.photoUrl}
+          size={big ? "h-24 w-24 sm:h-28 sm:w-28" : "h-14 w-14"}
+        />
+        <span className="min-w-0 flex-1">
+          <span
+            className={`block font-display font-bold text-brand-ink ${big ? "text-xl sm:text-2xl" : "text-base"}`}
+          >
+            {m.person.name}
+          </span>
+          <span className="mt-0.5 block text-sm font-semibold text-brand-purple">
+            {m.title}
+          </span>
+          {/* {m.person.rank && (
           <span className="block text-xs text-brand-ink/70">
             {m.person.rank}
           </span>
         )} */}
-        {m.responsibilities && (
-          <span
-            className={`mt-2 block text-xs leading-6 text-brand-ink/65 ${big ? "" : "border-t border-brand-purple/10 pt-2"}`}
-          >
-            {m.responsibilities}
+          {m.responsibilities && (
+            <span
+              className={`mt-2 block text-xs leading-6 text-brand-ink/65 ${big ? "" : "border-t border-brand-purple/10 pt-2"}`}
+            >
+              {m.responsibilities}
+            </span>
+          )}
+          <span className="mt-2 inline-block text-xs font-bold text-brand-purple opacity-80 group-hover:opacity-100">
+            عرض الملف التعريفي <span aria-hidden="true">←</span>
           </span>
-        )}
-        <span className="mt-2 inline-block text-xs font-bold text-brand-purple opacity-80 group-hover:opacity-100">
-          عرض الملف التعريفي <span aria-hidden="true">←</span>
         </span>
-      </span>
-    </button>
+      </button>
+      {m.contactEmail && (
+        <div
+          className={`border-t border-brand-purple/10 ${big ? "px-6 py-2 sm:px-8" : "px-4 py-1"}`}
+        >
+          <ContactEmail email={m.contactEmail} label={m.title} />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -509,7 +560,7 @@ function UnitCard({
   node: TreeNode;
   onOpen: (p: Person) => void;
 }) {
-  const hasPeople = node.members.length > 0 || node.stageLeaders.length > 0;
+  const hasPeople = node.members.length > 0;
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-brand-purple/10 bg-white shadow-soft">
       <div
@@ -564,19 +615,6 @@ function UnitCard({
                     aria-hidden="true"
                   />
                 </button>
-              </li>
-            ))}
-            {node.stageLeaders.map((l) => (
-              <li key={l.id} className="flex items-center gap-3 p-1.5">
-                <Avatar name={l.name} url={l.photoUrl} size="h-10 w-10" />
-                <span className="text-sm">
-                  <span className="block font-semibold text-brand-ink">
-                    {l.name}
-                  </span>
-                  <span className="text-xs text-brand-ink/70">
-                    {l.role || l.rank}
-                  </span>
-                </span>
               </li>
             ))}
           </ul>
@@ -747,8 +785,13 @@ function Branch({
     ...(last.members.length > 0
       ? [{ id: anchor("leadership"), label: "القيادة" }]
       : []),
-    ...councils.map((c) => ({ id: councilId(c), label: c.title || "مجلس الفوج" })),
-    ...(units.length > 0 ? [{ id: anchor("units"), label: "وحدات الفوج" }] : []),
+    ...councils.map((c) => ({
+      id: councilId(c),
+      label: c.title || "مجلس الفوج",
+    })),
+    ...(units.length > 0
+      ? [{ id: anchor("units"), label: "وحدات الفوج" }]
+      : []),
     ...(others.length > 0 ? [{ id: anchor("more"), label: "فروع أخرى" }] : []),
   ];
 

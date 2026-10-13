@@ -38,11 +38,20 @@ export type FieldConfig = {
   maxLength?: number;
   /** Rendered as a link on the site: only http(s) or site-relative URLs are accepted. */
   url?: boolean;
+  /** Must be an email address (or empty when optional). */
+  email?: boolean;
 };
 
-export type ResourceGroup = "home" | "join" | "content" | "faq" | "structure";
+export type ResourceGroup =
+  | "troop"
+  | "home"
+  | "join"
+  | "content"
+  | "faq"
+  | "structure";
 
 export const resourceGroups: Record<ResourceGroup, string> = {
+  troop: "وحدات الفوج",
   home: "الصفحة الرئيسية",
   join: "صفحة «انضم إلينا»",
   content: "المدونة والمكتبة",
@@ -67,6 +76,16 @@ export type ResourceConfig = {
   /** When set, the site orders items itself, so manual ordering is hidden. */
   autoSortNote?: string;
   orderBy: Record<string, "asc" | "desc">;
+  /** Prisma `where` limiting which rows of the model belong to this section. */
+  scope?: Record<string, unknown>;
+  /** Values always written on create/update (e.g. a unit's kind). */
+  fixed?: Record<string, string>;
+  /** Reordering only swaps rows sharing this column's value (e.g. leaders of one unit). */
+  orderScope?: string;
+  /** Not listed in the nav or dashboard; edited inside its parent section. */
+  navHidden?: boolean;
+  /** Sections edited inside each row of this one, linked by `foreignKey`. */
+  children?: { resource: string; foreignKey: string; label: string }[];
 };
 
 const scoutIconOptions = [
@@ -118,13 +137,172 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
       { name: "order", label: "الترتيب", type: "number", optional: true },
     ],
   },
+  "troop-units": {
+    key: "troop-units",
+    label: "الوحدات: الأعمار والاجتماعات والقادة",
+    group: "troop",
+    singular: "وحدة",
+    description:
+      "المكان الوحيد لكل وحدة في الفوج: اسمها ومرحلتها وفئتها العمرية وموعد اجتماعها الأسبوعي وقادتها. تظهر في «وحدات الفوج» بصفحة «الهيكل التنظيمي»، وفي جدول الاجتماعات بصفحة «انضم إلينا» والصفحة الرئيسية، ويظهر قادتها في تبويب «القادة» داخل مرحلتها الكشفية.",
+    siteHref: "/structure#units",
+    titleField: "title",
+    subtitleField: "stageId",
+    thumbField: "logoUrl",
+    orderBy: { order: "asc" },
+    scope: { kind: "unit" },
+    fixed: { kind: "unit" },
+    children: [
+      { resource: "unit-leaders", foreignKey: "nodeId", label: "قادة الوحدة" },
+    ],
+    fields: [
+      {
+        name: "title",
+        label: "اسم الوحدة",
+        type: "text",
+        maxLength: 200,
+        placeholder: "مثال: قطيع الكوالا",
+      },
+      {
+        name: "section",
+        label: "القسم",
+        type: "text",
+        optional: true,
+        placeholder: "مثال: الأشبال (ذكور)",
+        help: "يظهر بعد اسم الوحدة في جدول الاجتماعات.",
+      },
+      {
+        name: "stageId",
+        label: "المرحلة الكشفية",
+        type: "relation",
+        relation: "scout-stages",
+        help: "يظهر قادة الوحدة في تبويب «القادة» داخل هذه المرحلة.",
+      },
+      {
+        name: "ageRange",
+        label: "الفئة العمرية",
+        type: "text",
+        optional: true,
+        placeholder: "مثال: من ٩ إلى ١١ سنة",
+        help: "اتركها فارغة لاستخدام الفئة العمرية للمرحلة الكشفية.",
+      },
+      {
+        name: "meetingDay",
+        label: "يوم الاجتماع",
+        type: "text",
+        optional: true,
+        placeholder: "مثال: السبت",
+        help: "الوحدة التي لها يوم اجتماع تظهر في جدول الاجتماعات الأسبوعية.",
+      },
+      {
+        name: "meetingTime",
+        label: "وقت الاجتماع",
+        type: "text",
+        optional: true,
+        placeholder: "مثال: ٣:٠٠ – ٥:٠٠ م",
+      },
+      {
+        name: "meetingLocation",
+        label: "مكان الاجتماع",
+        type: "text",
+        optional: true,
+        placeholder: "مثال: مدرسة روضة الفيحاء — المعرض",
+      },
+      {
+        name: "parentId",
+        label: "يتبع لـ",
+        type: "relation",
+        relation: "org-nodes",
+        help: "الفوج الذي تتبع له الوحدة.",
+      },
+      {
+        name: "description",
+        label: "نبذة (اختياري)",
+        type: "textarea",
+        optional: true,
+        maxLength: 2000,
+      },
+      {
+        name: "logoUpload",
+        label: "الشعار (اختياري)",
+        type: "file",
+        uploadTo: "logoUrl",
+        accept: "image/*",
+        optional: true,
+      },
+      {
+        name: "isPublished",
+        label: "الحالة",
+        type: "select",
+        valueType: "boolean",
+        options: [
+          { value: "true", label: "ظاهر في الموقع" },
+          { value: "false", label: "مخفي (مسودة)" },
+        ],
+      },
+      { name: "order", label: "الترتيب", type: "number", optional: true },
+    ],
+  },
+  "unit-leaders": {
+    key: "unit-leaders",
+    label: "قادة الوحدات",
+    group: "troop",
+    singular: "قائد",
+    description: "قادة كل وحدة، ويُدارون من داخل صفحة الوحدات.",
+    siteHref: "/structure#units",
+    titleField: "title",
+    subtitleField: "personId",
+    orderBy: { order: "asc" },
+    scope: { node: { kind: "unit" } },
+    orderScope: "nodeId",
+    navHidden: true,
+    fields: [
+      {
+        name: "nodeId",
+        label: "الوحدة",
+        type: "relation",
+        relation: "troop-units",
+      },
+      {
+        name: "personId",
+        label: "الشخص",
+        type: "relation",
+        relation: "org-people",
+        help: "إن لم تجد الشخص، أضف ملفه أولًا من «الأشخاص» في قسم «الهيكل التنظيمي».",
+      },
+      {
+        name: "title",
+        label: "الدور في الوحدة",
+        type: "text",
+        maxLength: 150,
+        placeholder: "مثال: قائد القطيع",
+      },
+      {
+        name: "responsibilities",
+        label: "المهام والمسؤوليات (اختياري)",
+        type: "textarea",
+        optional: true,
+        maxLength: 2000,
+      },
+      {
+        name: "isPublished",
+        label: "الحالة",
+        type: "select",
+        valueType: "boolean",
+        options: [
+          { value: "true", label: "ظاهر" },
+          { value: "false", label: "مخفي" },
+        ],
+      },
+      { name: "order", label: "الترتيب", type: "number", optional: true },
+    ],
+  },
   "scout-stages": {
     key: "scout-stages",
     label: "المراحل الكشفية",
-    group: "home",
+    group: "troop",
     singular: "مرحلة",
     description:
-      "بطاقات «المراحل الكشفية» في الصفحة الرئيسية، وتفاصيل كل مرحلة تظهر عند الضغط على البطاقة.",
+      "بطاقات «المراحل الكشفية» في الصفحة الرئيسية، وتفاصيل كل مرحلة تظهر عند الضغط على البطاقة. قادة المرحلة هم قادة الوحدات المرتبطة بها، ويُضافون من صفحة الوحدات.",
     siteHref: "/#sections",
     titleField: "title",
     subtitleField: "ageRange",
@@ -163,52 +341,6 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
         accept: ".pdf,.doc,.docx",
         optional: true,
         help: "اختياري. ملف PDF أو Word لمنهج المرحلة أو مطالبها (حتى 4 ميغابايت).",
-      },
-      { name: "order", label: "الترتيب", type: "number", optional: true },
-    ],
-  },
-  "scout-leaders": {
-    key: "scout-leaders",
-    label: "قادة المراحل الكشفية",
-    group: "home",
-    singular: "قائد",
-    description:
-      "تظهر داخل نافذة كل مرحلة كشفية (تبويب «القادة») عند الضغط على بطاقة المرحلة في الصفحة الرئيسية.",
-    siteHref: "/#sections",
-    titleField: "name",
-    subtitleField: "stageId",
-    thumbField: "photoUrl",
-    orderBy: { order: "asc" },
-    fields: [
-      {
-        name: "stageId",
-        label: "المرحلة",
-        type: "relation",
-        relation: "scout-stages",
-        help: "اختر المرحلة التي يقودها هذا القائد. أضف المرحلة أولًا من قسم «المراحل الكشفية» إن لم تجدها.",
-      },
-      { name: "name", label: "اسم القائد/ة", type: "text" },
-      {
-        name: "rank",
-        label: "الرتبة الكشفية",
-        type: "text",
-        placeholder: "مثال: قائد فوج",
-      },
-      {
-        name: "role",
-        label: "الدور في الفوج",
-        type: "text",
-        placeholder: "مثال: قائد مرحلة الأشبال",
-      },
-      { name: "bio", label: "نبذة قصيرة", type: "textarea" },
-      {
-        name: "photoUpload",
-        label: "الصورة الشخصية",
-        type: "file",
-        uploadTo: "photoUrl",
-        accept: "image/*",
-        optional: true,
-        help: "اختيارية. صورة واضحة للوجه.",
       },
       { name: "order", label: "الترتيب", type: "number", optional: true },
     ],
@@ -674,32 +806,6 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
       { name: "order", label: "الترتيب", type: "number", optional: true },
     ],
   },
-  "join-schedule": {
-    key: "join-schedule",
-    label: "جدول الاجتماعات الأسبوعية",
-    group: "join",
-    singular: "اجتماع",
-    description: "جدول الاجتماعات الأسبوعية لكل مرحلة في صفحة «انضم إلينا».",
-    siteHref: "/join",
-    titleField: "stage",
-    subtitleField: "day",
-    orderBy: { order: "asc" },
-    fields: [
-      { name: "stage", label: "المرحلة الكشفية", type: "text" },
-      { name: "ageRange", label: "الفئة العمرية", type: "text" },
-      { name: "day", label: "اليوم", type: "text", placeholder: "مثال: السبت" },
-      {
-        name: "time",
-        label: "الوقت",
-        type: "text",
-        placeholder: "مثال: ٣:٠٠ – ٥:٠٠ م",
-      },
-      { name: "location", label: "المكان", type: "text" },
-      { name: "leaders", label: "عدد القادة", type: "number" },
-      { name: "order", label: "الترتيب", type: "number", optional: true },
-    ],
-  },
-
   faqs: {
     key: "faqs",
     label: "الأسئلة الشائعة",
@@ -741,16 +847,17 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
   },
   "org-nodes": {
     key: "org-nodes",
-    label: "مستويات الهيكل (جمعية، مفوضية، فوج، وحدات…)",
+    label: "مستويات الهيكل (جمعية، مفوضية، فوج، مجلس…)",
     group: "structure",
     singular: "مستوى",
     description:
-      "صفحة «الهيكل التنظيمي». كل مستوى يتبع مستوى أعلى منه. لا يظهر للزوار إلا المستوى الذي حالته «ظاهر» وكل ما فوقه ظاهر أيضًا.",
+      "صفحة «الهيكل التنظيمي». كل مستوى يتبع مستوى أعلى منه. لا يظهر للزوار إلا المستوى الذي حالته «ظاهر» وكل ما فوقه ظاهر أيضًا. الوحدات تُدار من صفحة «الوحدات» في قسم «وحدات الفوج».",
     siteHref: "/structure",
     titleField: "title",
     subtitleField: "kind",
     thumbField: "logoUrl",
     orderBy: { order: "asc" },
+    scope: { kind: { not: "unit" } },
     fields: [
       {
         name: "kind",
@@ -762,7 +869,6 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
           { value: "troop", label: "الفوج" },
           { value: "dean", label: "عميد الفوج" },
           { value: "council", label: "مجلس الفوج" },
-          { value: "unit", label: "وحدة" },
           { value: "other", label: "أخرى" },
         ],
       },
@@ -782,14 +888,6 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
         optional: true,
         maxLength: 2000,
         help: "اكتب معلومات صحيحة فقط. إن لم تكن لديك معلومات اتركه فارغًا.",
-      },
-      {
-        name: "stageId",
-        label: "المرحلة الكشفية المرتبطة (للوحدات)",
-        type: "relation",
-        relation: "scout-stages",
-        optional: true,
-        help: "اختياري. عند الربط تظهر قيادة المرحلة المسجّلة في الموقع ضمن هذه الوحدة.",
       },
       {
         name: "logoUpload",
@@ -896,11 +994,13 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     group: "structure",
     singular: "منصب",
     description:
-      "هنا تربط الشخص بمستوى (عميد، عضو مجلس، قائد وحدة…). يمكن للشخص الواحد أن يكون له أكثر من منصب.",
+      "هنا تربط الشخص بمستوى (عميد، أمين سر، عضو مجلس…). يمكن للشخص الواحد أن يكون له أكثر من منصب. قادة الوحدات يُضافون من صفحة «الوحدات».",
     siteHref: "/structure",
     titleField: "title",
     subtitleField: "personId",
     orderBy: { order: "asc" },
+    scope: { node: { kind: { not: "unit" } } },
+    orderScope: "nodeId",
     fields: [
       {
         name: "personId",
@@ -927,6 +1027,16 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
         type: "textarea",
         optional: true,
         maxLength: 2000,
+      },
+      {
+        name: "contactEmail",
+        label: "بريد التواصل الخاص بالمنصب (اختياري)",
+        type: "text",
+        optional: true,
+        email: true,
+        maxLength: 200,
+        placeholder: "مثال: secretary@rawdamuslimscout.org",
+        help: "بريد المنصب نفسه (لا البريد الشخصي)، ويظهر للزوار على بطاقة صاحب المنصب.",
       },
       {
         name: "isPublished",
@@ -1002,8 +1112,6 @@ export function getDelegate(resource: string): GenericDelegate | null {
       return prisma.siteStat;
     case "scout-stages":
       return prisma.scoutStage;
-    case "scout-leaders":
-      return prisma.scoutLeader;
     case "activities":
       return prisma.activity;
     case "events":
@@ -1026,15 +1134,15 @@ export function getDelegate(resource: string): GenericDelegate | null {
       return prisma.libraryResource;
     case "join-pricing":
       return prisma.joinPricing;
-    case "join-schedule":
-      return prisma.joinSchedule;
     case "faqs":
       return prisma.faq;
     case "org-nodes":
+    case "troop-units":
       return prisma.orgNode;
     case "org-people":
       return prisma.orgPerson;
     case "org-assignments":
+    case "unit-leaders":
       return prisma.orgAssignment;
     case "org-qualifications":
       return prisma.orgQualification;
@@ -1046,12 +1154,12 @@ export function getDelegate(resource: string): GenericDelegate | null {
 export type CoercedValue = string | number | boolean | Date | null;
 
 const ID_PATTERN = /^[a-z0-9_-]{8,40}$/i;
+const EMAIL_PATTERN = /^[^\s@<>"']+@[^\s@<>"']+\.[a-z]{2,}$/i;
 
 /** Resources whose rows are all public content and may be listed by the public JSON API. */
 export const PUBLIC_API_RESOURCES = new Set([
   "site-stats",
   "scout-stages",
-  "scout-leaders",
   "activities",
   "events",
   "camps",
@@ -1062,7 +1170,6 @@ export const PUBLIC_API_RESOURCES = new Set([
   "blog",
   "library",
   "join-pricing",
-  "join-schedule",
 ]);
 
 /**
@@ -1162,6 +1269,8 @@ export function coerceValues(
     }
     if (!text && !field.optional && !field.hidden)
       throw new Error(`الحقل «${field.label}» مطلوب.`);
+    if (field.email && text && !EMAIL_PATTERN.test(text))
+      throw new Error(`«${field.label}» يجب أن يكون بريدًا إلكترونيًا صحيحًا.`);
     // Stored XSS guard: a `javascript:` (or any non-http) link must never reach an href.
     if (field.url && text && !safeHref(text))
       throw new Error(
@@ -1169,7 +1278,7 @@ export function coerceValues(
       );
     data[field.name] = text;
   }
-  return data;
+  return { ...data, ...config.fixed };
 }
 
 const ARABIC_DIGITS = "٠١٢٣٤٥٦٧٨٩";

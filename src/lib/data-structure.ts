@@ -17,11 +17,17 @@ export type PublicPerson = {
   bio: string;
   qualifications: PublicQualification[];
   /** Every published position this person holds (so a profile can show all of them). */
-  positions: { title: string; nodeTitle: string }[];
+  positions: { title: string; nodeTitle: string; contactEmail: string }[];
 };
 
-export type PublicMember = { assignmentId: string; title: string; responsibilities: string; person: PublicPerson };
-export type StageLeader = { id: string; name: string; rank: string; role: string; photoUrl: string };
+export type PublicMember = {
+  assignmentId: string;
+  title: string;
+  responsibilities: string;
+  /** The role's own public address (e.g. the secretary's), not the person's. */
+  contactEmail: string;
+  person: PublicPerson;
+};
 
 export type PublicNode = {
   id: string;
@@ -30,7 +36,6 @@ export type PublicNode = {
   description: string;
   logoUrl: string;
   stage: { title: string; ageRange: string } | null;
-  stageLeaders: StageLeader[];
   members: PublicMember[];
   children: PublicNode[];
 };
@@ -60,19 +65,15 @@ export const getPublicStructure = cache(async (): Promise<{ roots: PublicNode[];
         orderBy: [{ order: "asc" }, { title: "asc" }],
         select: {
           id: true, parentId: true, kind: true, title: true, description: true, logoUrl: true,
-          stage: {
-            select: {
-              title: true, ageRange: true,
-              leaders: { orderBy: { order: "asc" }, select: { id: true, name: true, rank: true, role: true, photoUrl: true } },
-            },
-          },
+          ageRange: true,
+          stage: { select: { title: true, ageRange: true } },
         },
       }),
       prisma.orgAssignment.findMany({
         where: { isPublished: true, node: { isPublished: true }, person: { isPublic: true } },
         orderBy: [{ order: "asc" }],
         select: {
-          id: true, nodeId: true, title: true, responsibilities: true,
+          id: true, nodeId: true, title: true, responsibilities: true, contactEmail: true,
           node: { select: { title: true } },
           person: {
             select: {
@@ -90,10 +91,10 @@ export const getPublicStructure = cache(async (): Promise<{ roots: PublicNode[];
     ]));
 
     // Positions per person across all published assignments.
-    const positionsByPerson = new Map<string, { title: string; nodeTitle: string }[]>();
+    const positionsByPerson = new Map<string, PublicPerson["positions"]>();
     for (const a of assignments) {
       const list = positionsByPerson.get(a.person.id) ?? [];
-      list.push({ title: a.title, nodeTitle: a.node.title });
+      list.push({ title: a.title, nodeTitle: a.node.title, contactEmail: a.contactEmail });
       positionsByPerson.set(a.person.id, list);
     }
 
@@ -116,7 +117,13 @@ export const getPublicStructure = cache(async (): Promise<{ roots: PublicNode[];
         positions: positionsByPerson.get(p.id) ?? [],
       };
       const list = membersByNode.get(a.nodeId) ?? [];
-      list.push({ assignmentId: a.id, title: a.title, responsibilities: a.responsibilities, person });
+      list.push({
+        assignmentId: a.id,
+        title: a.title,
+        responsibilities: a.responsibilities,
+        contactEmail: a.contactEmail,
+        person,
+      });
       membersByNode.set(a.nodeId, list);
     }
 
@@ -128,8 +135,8 @@ export const getPublicStructure = cache(async (): Promise<{ roots: PublicNode[];
         title: n.title,
         description: n.description,
         logoUrl: safeHref(n.logoUrl),
-        stage: n.stage ? { title: n.stage.title, ageRange: n.stage.ageRange } : null,
-        stageLeaders: (n.stage?.leaders ?? []).map((l) => ({ ...l, photoUrl: safeHref(l.photoUrl) })),
+        // A unit's own age range (e.g. «من ٩ إلى ١١ سنة») takes precedence over its stage's.
+        stage: n.stage ? { title: n.stage.title, ageRange: n.ageRange || n.stage.ageRange } : null,
         members: membersByNode.get(n.id) ?? [],
         children: [],
       });

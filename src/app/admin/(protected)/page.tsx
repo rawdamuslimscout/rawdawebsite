@@ -11,13 +11,14 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
   await requireAdminPage();
-  const entries = Object.values(resourceRegistry);
+  const entries = Object.values(resourceRegistry).filter((r) => !r.navHidden);
 
   const counts = await Promise.all(
     entries.map(async (r) => {
       try {
         const delegate = getDelegate(r.key);
-        const count: number = (await delegate?.count?.()) ?? 0;
+        const count: number =
+          (await delegate?.count?.({ where: r.scope })) ?? 0;
         return { key: r.key, count, error: false };
       } catch (err) {
         console.error(`[admin] counting ${r.key} failed`, err);

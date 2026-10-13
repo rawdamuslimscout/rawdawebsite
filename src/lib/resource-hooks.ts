@@ -20,8 +20,9 @@ export async function validateResourceWrite(
   id: string,
   data: Record<string, CoercedValue>,
 ): Promise<string | null> {
-  if (resource === "org-nodes") return validateNode(id, data);
-  if (resource === "org-assignments") return validateAssignment(data);
+  if (resource === "org-nodes" || resource === "troop-units") return validateNode(id, data);
+  if (resource === "org-assignments") return validateAssignment(data, false);
+  if (resource === "unit-leaders") return validateAssignment(data, true);
   if (resource === "places") return validateExists("newsItem", data.newsId, "الخبر المختار غير موجود.");
   if (resource === "org-qualifications") return validateExists("orgPerson", data.personId, "الشخص المختار غير موجود.");
   if (resource === "events") return validateEventDates(id, data);
@@ -84,9 +85,13 @@ async function validateNode(id: string, data: Record<string, CoercedValue>): Pro
   return null;
 }
 
-async function validateAssignment(data: Record<string, CoercedValue>): Promise<string | null> {
-  return (
-    (await validateExists("orgNode", data.nodeId, "المستوى المختار غير موجود.")) ||
-    (await validateExists("orgPerson", data.personId, "الشخص المختار غير موجود."))
-  );
+/** Unit leaders are edited only on the units page, every other position only on the positions page. */
+async function validateAssignment(data: Record<string, CoercedValue>, unit: boolean): Promise<string | null> {
+  const invalid = await validateExists("orgPerson", data.personId, "الشخص المختار غير موجود.");
+  if (invalid || typeof data.nodeId !== "string") return invalid;
+  const node = await prisma.orgNode.findUnique({ where: { id: data.nodeId }, select: { kind: true } });
+  if (!node) return "المستوى المختار غير موجود.";
+  if (unit && node.kind !== "unit") return "اختر وحدة من وحدات الفوج.";
+  if (!unit && node.kind === "unit") return "قادة الوحدات يُضافون من صفحة «الوحدات».";
+  return null;
 }
