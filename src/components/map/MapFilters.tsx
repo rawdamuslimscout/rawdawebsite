@@ -60,7 +60,7 @@ export default function MapFilters({
               active
                 ? "border-brand-purple bg-brand-purple text-white"
                 : `border-brand-purple/15 bg-white hover:border-brand-purple/40 hover:text-brand-purple ${
-                    empty ? "text-brand-ink/45" : "text-brand-ink/75"
+                    empty ? "text-brand-ink/65" : "text-brand-ink/80"
                   }`
             }`}
           >
@@ -68,7 +68,7 @@ export default function MapFilters({
             <span
               aria-hidden="true"
               className={`rounded-full px-2 py-0.5 text-xs ${
-                active ? "bg-white/20 text-white" : "bg-brand-purple/[0.07] text-brand-ink/55"
+                active ? "bg-white/20 text-white" : "bg-brand-purple/[0.07] text-brand-ink/70"
               }`}
             >
               {formatNumber(counts[key])}

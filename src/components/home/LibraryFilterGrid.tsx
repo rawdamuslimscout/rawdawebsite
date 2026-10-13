@@ -142,7 +142,7 @@ export default function LibraryFilterGrid({
                       className={`min-w-[22px] rounded-full px-1.5 py-0.5 text-center text-[11px] font-bold tabular-nums ${
                         isActive
                           ? "bg-white/20 text-white"
-                          : "bg-brand-purple/[0.06] text-brand-ink/50"
+                          : "bg-brand-purple/[0.06] text-brand-ink/70"
                       }`}
                     >
                       {counts.get(filter.id) ?? 0}
@@ -156,7 +156,7 @@ export default function LibraryFilterGrid({
           {showSearch && (
             <div className="relative w-full sm:max-w-xs">
               <Search
-                className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-ink/40"
+                className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-ink/60"
                 aria-hidden="true"
               />
               <input
@@ -166,14 +166,14 @@ export default function LibraryFilterGrid({
                 placeholder="ابحث في المكتبة…"
                 aria-label="ابحث في ملفات المكتبة"
                 enterKeyHint="search"
-                className="min-h-11 w-full rounded-full border border-brand-purple/10 bg-white py-2 pe-10 ps-10 text-sm text-brand-ink placeholder:text-brand-ink/40 focus:border-brand-purple/30 [&::-webkit-search-cancel-button]:hidden"
+                className="min-h-11 w-full rounded-full border border-brand-purple/10 bg-white py-2 pe-10 ps-10 text-sm text-brand-ink placeholder:text-brand-ink/60 focus:border-brand-purple/30 [&::-webkit-search-cancel-button]:hidden"
               />
               {query && (
                 <button
                   type="button"
                   onClick={() => changeQuery("")}
                   aria-label="مسح البحث"
-                  className="absolute left-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-brand-ink/45 transition-colors hover:bg-brand-purple-tint hover:text-brand-ink"
+                  className="absolute left-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-brand-ink/65 transition-colors hover:bg-brand-purple-tint hover:text-brand-ink"
                 >
                   <X className="h-4 w-4" aria-hidden="true" />
                 </button>

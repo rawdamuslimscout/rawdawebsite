@@ -100,6 +100,8 @@ model ScoutLeader {
   bio       String     @db.Text
   photoUrl  String     @default("")
   order     Int        @default(0)
+
+  @@index([stageId, order])
 }
 
 model Activity {
@@ -114,7 +116,10 @@ model Activity {
 model EventItem {
   id          String @id @default(cuid())
   title       String
-  date        String
+  date        String // free-text display label, e.g. «١٥ تشرين الأول»
+  /// Optional real dates. An event whose endDate (or startDate) has passed is treated as past.
+  startDate   DateTime?
+  endDate     DateTime?
   location    String
   groupName   String
   description String @db.Text
@@ -175,10 +180,14 @@ model NewsItem {
   category String
   date     String
   excerpt  String @db.Text
+  body     String @default("") @db.Text // full article: paragraphs separated by blank lines
+  publishedAt DateTime?
   imageUrl String @default("")
   imageUrls String @default("[]")
   order    Int    @default(0)
   places   ScoutPlace[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 model GalleryItem {
@@ -199,6 +208,7 @@ model BlogPost {
   author    String
   excerpt   String   @db.Text
   content   String   @db.Text // paragraphs separated by blank lines
+  publishedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -239,7 +249,9 @@ model JoinSchedule {
 // الأسئلة الشائعة
 // ---------------------------------------------------------------
 model Faq {
-  id          String  @id @default(dbgenerated("gen_random_uuid()::text"))
+  // Written exactly as Postgres stores it (pg_get_expr adds the parentheses);
+  // otherwise every `migrate dev` re-emits ALTER COLUMN "id" SET DEFAULT.
+  id          String  @id @default(dbgenerated("(gen_random_uuid())::text"))
   question    String
   answer      String  @db.Text
   category    String  @default("about")

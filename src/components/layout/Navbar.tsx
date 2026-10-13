@@ -5,12 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, ChevronDown } from "lucide-react";
 import Logo from "@/components/ui/Logo";
+import LinkPending from "@/components/layout/LinkPending";
 import { navLinks } from "@/data/content";
 
 // Main links visible on desktop; the rest go under "المزيد".
-const PRIMARY_HREFS = ["/#home", "/#about", "/#activities", "/blog"];
-const primaryLinks = navLinks.filter((l) => PRIMARY_HREFS.includes(l.href));
-const moreLinks = navLinks.filter((l) => !PRIMARY_HREFS.includes(l.href));
+const primaryLinks = navLinks.filter((l) => l.primary);
+const moreLinks = navLinks.filter((l) => !l.primary);
 
 // The footer carries id="contact" on every page, so this works site-wide.
 const contactLink = { href: "#contact", label: "تواصل معنا" };
@@ -25,7 +25,8 @@ function prefersReducedMotion() {
 }
 
 export default function Navbar({ siteName }: { siteName: string }) {
-  const pathname = usePathname();
+  // Never null in the App Router; typed nullable because pages/500.tsx exists.
+  const pathname = usePathname() ?? "";
   const isHome = pathname === "/";
 
   const [scrolled, setScrolled] = useState(false);
@@ -57,22 +58,45 @@ export default function Navbar({ siteName }: { siteName: string }) {
     mobilePanelRef.current?.toggleAttribute("inert", !open);
   }, [open]);
 
-  // Mobile menu: lock scroll, move focus in, Esc closes and restores focus.
+  // Mobile menu: lock scroll, move focus in, trap Tab between the toggle and
+  // the panel, Esc closes; focus returns to the toggle when it closes.
   useEffect(() => {
     if (!open) return;
     document.body.style.overflow = "hidden";
     mobileNavRef.current?.querySelector<HTMLElement>("a")?.focus();
+    const panel = mobilePanelRef.current;
+    const toggle = menuButtonRef.current;
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setOpen(false);
-        menuButtonRef.current?.focus();
+        return;
+      }
+      if (event.key !== "Tab" || !panel || !toggle) return;
+      const items = [toggle, ...panel.querySelectorAll<HTMLElement>("a[href], button")];
+      const first = items[0];
+      const last = items[items.length - 1];
+      const current = document.activeElement as HTMLElement | null;
+      if (!current || !items.includes(current)) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && current === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && current === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.style.overflow = "";
       window.removeEventListener("keydown", onKeyDown);
+      // The panel turns inert on close, so don't leave focus stranded in it.
+      const active = document.activeElement;
+      if (!active || active === document.body || panel?.contains(active)) {
+        toggle?.focus({ preventScroll: true });
+      }
     };
   }, [open]);
 
@@ -135,6 +159,9 @@ export default function Navbar({ siteName }: { siteName: string }) {
     (href: string) => {
       if (href.startsWith("/#")) return isHome && activeSection === href.slice(2);
       if (href.startsWith("#")) return false;
+      if (href === "/") return pathname === "/";
+      // Blog posts are listed in the combined news feed.
+      if (href === "/news" && pathname.startsWith("/blog")) return true;
       return pathname === href || pathname.startsWith(`${href}/`);
     },
     [isHome, activeSection, pathname],
@@ -173,19 +200,27 @@ export default function Navbar({ siteName }: { siteName: string }) {
       }`}
     >
       <div
-        className={`mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 transition-all duration-300 sm:px-8 ${
+        className={`mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 transition-all duration-300 sm:gap-4 sm:px-8 ${
           scrolled ? "py-2.5" : "py-4"
         }`}
       >
         {/* Logo and site name */}
         <Link
-          href="/#home"
-          onClick={(e) => handleNavigation(e, "/#home")}
-          className="flex shrink-0 items-center gap-2.5 rounded-full"
+          href="/"
+          onClick={(e) => {
+            setOpen(false);
+            setMoreOpen(false);
+            // Already home: just scroll back to the top.
+            if (!isHome) return;
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+            history.replaceState(null, "", "/");
+          }}
+          className="flex min-w-0 items-center gap-2 rounded-full sm:gap-2.5"
           aria-label={`${siteName} — الصفحة الرئيسية`}
         >
-          <Logo size={scrolled ? 38 : 44} dark />
-          <span className="font-display whitespace-nowrap text-sm font-bold text-white sm:text-base">
+          <Logo size={scrolled ? 38 : 44} dark alt="" />
+          <span className="font-display truncate whitespace-nowrap text-sm font-bold text-white sm:text-base">
             {siteName}
           </span>
         </Link>
@@ -203,12 +238,21 @@ export default function Navbar({ siteName }: { siteName: string }) {
                 className={desktopLinkClass(active)}
               >
                 {link.label}
+                <LinkPending />
               </Link>
             );
           })}
 
           {moreLinks.length > 0 && (
-            <div ref={moreRef} className="relative">
+            <div
+              ref={moreRef}
+              className="relative"
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                  setMoreOpen(false);
+                }
+              }}
+            >
               <button
                 ref={moreButtonRef}
                 type="button"
@@ -238,11 +282,12 @@ export default function Navbar({ siteName }: { siteName: string }) {
                       href={link.href}
                       onClick={(e) => handleNavigation(e, link.href)}
                       aria-current={active ? (link.href.startsWith("/#") ? "location" : "page") : undefined}
-                      className={`block rounded-lg px-4 py-3 text-sm transition-colors hover:bg-white/10 hover:text-brand-yellow ${
+                      className={`flex items-center rounded-lg px-4 py-3 text-sm transition-colors hover:bg-white/10 hover:text-brand-yellow ${
                         active ? "bg-white/10 text-brand-yellow" : "text-white/85"
                       }`}
                     >
                       {link.label}
+                      <LinkPending variant="dot" />
                     </Link>
                   );
                 })}
@@ -259,14 +304,15 @@ export default function Navbar({ siteName }: { siteName: string }) {
           </a>
         </nav>
 
-        <div className="flex items-center gap-2">
-          {/* Join CTA — visible from small tablets up */}
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          {/* Join CTA — compact on phones, so it's always one tap away */}
           <Link
             href="/join"
             aria-current={pathname === "/join" ? "page" : undefined}
-            className="hidden min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-full bg-brand-yellow px-4 text-sm font-bold text-brand-purple-dark transition-colors hover:bg-white sm:inline-flex 2xl:px-5"
+            className="relative inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-full bg-brand-yellow px-3 text-xs font-bold text-brand-purple-dark transition-colors hover:bg-white sm:px-4 sm:text-sm 2xl:px-5"
           >
             انضم إلينا
+            <LinkPending />
           </Link>
 
           {/* Mobile / tablet menu button */}
@@ -314,6 +360,7 @@ export default function Navbar({ siteName }: { siteName: string }) {
                   }`}
                 >
                   {link.label}
+                  <LinkPending variant="dot" />
                 </Link>
               );
             })}

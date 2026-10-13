@@ -1,15 +1,15 @@
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { getMilestones } from "@/lib/data";
+import { latinDigits } from "@/components/news/format";
 
-const toNum = (s: string) =>
-  parseInt(
-    s.replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))),
-    10,
-  );
+const toNum = (s: string) => parseInt(latinDigits(s), 10);
 
 export default async function Achievements() {
-  const raw = await getMilestones();
+  const raw = (await getMilestones()).map((m) => ({
+    ...m,
+    year: latinDigits(m.year),
+  }));
   if (!raw.length) return null;
 
   // Past → present (oldest first) when years are numeric; otherwise keep order.

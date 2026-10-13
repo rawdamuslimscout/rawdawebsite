@@ -3,6 +3,9 @@ import { getSessionAdminId } from "@/lib/session";
 import { resourceGroups, resourceRegistry } from "@/lib/admin-resources";
 import ToastProvider from "./ToastProvider";
 import AdminNav from "./AdminNav";
+import SkipLink from "@/components/layout/SkipLink";
+
+export const metadata = { robots: { index: false, follow: false } };
 
 export default async function AdminLayout({
   children,
@@ -27,6 +30,7 @@ export default async function AdminLayout({
 
   return (
     <ToastProvider>
+      <SkipLink />
       <div
         dir="rtl"
         className="min-h-screen w-full overflow-x-hidden bg-brand-cream"
@@ -34,7 +38,13 @@ export default async function AdminLayout({
         <div className="flex min-h-screen w-full flex-col md:flex-row">
           <AdminNav resources={resources} groups={groups} />
 
-          <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+          <main
+            id="main-content"
+            tabIndex={-1}
+            className="min-w-0 flex-1 p-4 outline-none sm:p-6 lg:p-8"
+          >
+            {children}
+          </main>
         </div>
       </div>
     </ToastProvider>

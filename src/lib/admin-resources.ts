@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/prisma";
+import { safeHref } from "@/lib/safe-url";
 
 export type FieldType =
   | "text"
   | "textarea"
   | "number"
+  | "date" // calendar day (<input type="date">), stored as a DateTime at 00:00 UTC
   | "select"
   | "relation" // pick one item from another section (e.g. a leader's stage)
   | "location" // map picker: fills the two columns latitude + longitude
@@ -34,6 +36,8 @@ export type FieldConfig = {
   valueType?: "boolean";
   /** Longest accepted text (characters). Defaults: 300 for text, 8000 for textarea. */
   maxLength?: number;
+  /** Rendered as a link on the site: only http(s) or site-relative URLs are accepted. */
+  url?: boolean;
 };
 
 export type ResourceGroup = "home" | "join" | "content" | "faq" | "structure";
@@ -92,7 +96,7 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     group: "home",
     singular: "رقم",
     description:
-      "الشريط الذي يحمل الأرقام تحت الصورة الرئيسية. يُنصح بثلاثة أرقام فقط ليبقى الشكل مرتبًا.",
+      "شريط الأرقام تحت الصورة الرئيسية. لا يظهر حاليًا في الموقع إلى حين تأكيد الأرقام من قيادة الفوج.",
     siteHref: "/",
     titleField: "label",
     subtitleField: "value",
@@ -215,8 +219,8 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     group: "home",
     singular: "نشاط",
     description:
-      "الشريط البنفسجي «الأنشطة» في الصفحة الرئيسية، كل نشاط ببطاقة صغيرة وأيقونة.",
-    siteHref: "/#activities",
+      "قسم «أنشطتنا» في صفحة «من نحن»، كل نشاط ببطاقة صغيرة وأيقونة.",
+    siteHref: "/about",
     titleField: "title",
     orderBy: { order: "asc" },
     fields: [
@@ -234,12 +238,12 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
   },
   events: {
     key: "events",
-    label: "المناسبات القادمة",
+    label: "المناسبات",
     group: "home",
     singular: "مناسبة",
     description:
-      "تظهر في قسم «آخر ما يحدث في الفوج» مع الأخبار والمخيمات (وسمها: مناسبة).",
-    siteHref: "/#news",
+      "تظهر في قسم «آخر الأخبار» في الصفحة الرئيسية تحت عنوان «المناسبات القادمة»، فقط إذا أُدخل لها تاريخ بداية أو نهاية لم يمرّ بعد، وتختفي تلقائيًا بعد انتهائه. المناسبة بلا تاريخ لا تظهر.",
+    siteHref: "/",
     titleField: "title",
     subtitleField: "date",
     orderBy: { order: "asc" },
@@ -250,6 +254,21 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
         label: "التاريخ",
         type: "text",
         placeholder: "مثال: ١٥ تشرين الأول",
+        help: "النص الذي يظهر للزوار كما تكتبه.",
+      },
+      {
+        name: "startDate",
+        label: "تاريخ البداية",
+        type: "date",
+        optional: true,
+        help: "يُستخدم لمعرفة إن كانت المناسبة قادمة أم انتهت. المناسبة التي مرّ تاريخ نهايتها (أو تاريخ بدايتها إن لم يوجد تاريخ نهاية) تُعتبر سابقة تلقائيًا. إن تُرك فارغًا تظهر المناسبة بلا وسم «قادمة».",
+      },
+      {
+        name: "endDate",
+        label: "تاريخ النهاية",
+        type: "date",
+        optional: true,
+        help: "اختياري، للمناسبات التي تمتد أكثر من يوم. يجب ألا يسبق تاريخ البداية.",
       },
       { name: "location", label: "المكان", type: "text" },
       {
@@ -268,8 +287,8 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     group: "home",
     singular: "مخيم",
     description:
-      "تظهر في قسم «آخر ما يحدث في الفوج» مع الأخبار والمناسبات (وسمها: مخيم).",
-    siteHref: "/#camps",
+      "تظهر في صفحة «من نحن» في قسم «من مخيماتنا ورحلاتنا».",
+    siteHref: "/about#camps",
     titleField: "title",
     subtitleField: "year",
     orderBy: { order: "asc" },
@@ -287,8 +306,8 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     group: "home",
     singular: "مكان",
     description:
-      "قسم «أماكن من رحلتنا الكشفية» في الصفحة الرئيسية: خريطة بالمخيمات والرحلات والدورات والأنشطة. لا يظهر على الخريطة إلا المكان الذي حُدّد موقعه وحالته «ظاهر».",
-    siteHref: "/#map",
+      "قسم «أماكن من رحلتنا الكشفية» في صفحة «من نحن»: خريطة بالمخيمات والرحلات والدورات والأنشطة. لا يظهر على الخريطة إلا المكان الذي حُدّد موقعه وحالته «ظاهر».",
+    siteHref: "/about#map",
     titleField: "title",
     subtitleField: "locationName",
     thumbField: "imageUrl",
@@ -381,8 +400,8 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     label: "محطات مسيرة الفوج",
     group: "home",
     singular: "محطة",
-    description: "الخط الزمني «محطات من مسيرة الفوج» في الصفحة الرئيسية.",
-    siteHref: "/#history",
+    description: "الخط الزمني «محطات من مسيرة الفوج» في صفحة «من نحن».",
+    siteHref: "/about",
     titleField: "title",
     subtitleField: "year",
     autoSortNote:
@@ -412,8 +431,8 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     label: "القيم",
     group: "home",
     singular: "قيمة",
-    description: "قائمة «قيمنا» المرقّمة في الصفحة الرئيسية.",
-    siteHref: "/#values",
+    description: "قائمة «قيمنا» في صفحة «من نحن».",
+    siteHref: "/about",
     titleField: "title",
     orderBy: { order: "asc" },
     fields: [
@@ -433,8 +452,8 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     group: "home",
     singular: "خبر",
     description:
-      "قسم «آخر ما يحدث في الفوج» في الصفحة الرئيسية. الصورة الأولى تظهر على البطاقة وباقي الصور داخل الخبر.",
-    siteHref: "/#news",
+      "لكل خبر صفحة خاصة، ويظهر في صفحة «الأخبار والمقالات»، وتظهر أحدث ثلاثة أخبار لها تاريخ في قسم «آخر الأخبار» في الصفحة الرئيسية (يُخفى القسم إذا قلّ عددها عن خبرين). الصورة الأولى تظهر على البطاقة وباقي الصور داخل الخبر.",
+    siteHref: "/news",
     titleField: "title",
     subtitleField: "date",
     thumbField: "imageUrls",
@@ -453,7 +472,21 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
         type: "text",
         placeholder: "مثال: ١٢ أيلول ٢٠٢٦",
       },
+      {
+        name: "publishedAt",
+        label: "تاريخ النشر",
+        type: "date",
+        optional: true,
+      },
       { name: "excerpt", label: "نص الخبر", type: "textarea" },
+      {
+        name: "body",
+        label: "نص الخبر الكامل",
+        type: "textarea",
+        optional: true,
+        maxLength: 60000,
+        help: "اختياري. اترك سطرًا فارغًا بين كل فقرة وأخرى.",
+      },
       {
         name: "imageUploads",
         label: "صور الخبر",
@@ -472,8 +505,8 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     group: "home",
     singular: "صورة",
     description:
-      "قسم «معرض الصور» في الصفحة الرئيسية. يمكنك أيضًا اختيار صورتين منها لقسم «عن الفوج» من الإعدادات العامة.",
-    siteHref: "/#gallery",
+      "صفحة «معرض الصور»، وتظهر أول ثماني صور منها في الصفحة الرئيسية. يمكنك أيضًا اختيار صورتين منها لقسم «عن الفوج» من الإعدادات العامة.",
+    siteHref: "/gallery",
     titleField: "title",
     subtitleField: "category",
     thumbField: "imageUrl",
@@ -520,8 +553,8 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
     label: "المدونة",
     group: "content",
     singular: "مقال",
-    description: "صفحة «المدونة» ومقالاتها. المقالات الأحدث تظهر أولًا.",
-    siteHref: "/blog",
+    description: "مقالات المدونة، وتظهر مع الأخبار في صفحة «الأخبار والمقالات». المقالات الأحدث تظهر أولًا.",
+    siteHref: "/news",
     titleField: "title",
     subtitleField: "date",
     orderBy: { createdAt: "desc" },
@@ -539,6 +572,13 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
         label: "التاريخ",
         type: "text",
         placeholder: "مثال: ٣ تشرين الأول ٢٠٢٦",
+      },
+      {
+        name: "publishedAt",
+        label: "تاريخ النشر",
+        type: "date",
+        optional: true,
+        help: "اختياري. تُرتَّب المقالات حسبه، والأحدث أولًا.",
       },
       { name: "author", label: "الكاتب", type: "text" },
       { name: "excerpt", label: "مقتطف قصير", type: "textarea" },
@@ -601,6 +641,7 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
         type: "text",
         optional: true,
         hidden: true,
+        url: true,
       },
       { name: "order", label: "الترتيب", type: "number", optional: true },
     ],
@@ -1002,7 +1043,7 @@ export function getDelegate(resource: string): GenericDelegate | null {
   }
 }
 
-export type CoercedValue = string | number | boolean | null;
+export type CoercedValue = string | number | boolean | Date | null;
 
 const ID_PATTERN = /^[a-z0-9_-]{8,40}$/i;
 
@@ -1070,6 +1111,21 @@ export function coerceValues(
       continue;
     }
 
+    if (field.type === "date") {
+      const text = String(raw).trim();
+      if (!text) {
+        if (field.optional) {
+          data[field.name] = null;
+          continue;
+        }
+        throw new Error(`الحقل «${field.label}» مطلوب.`);
+      }
+      const date = parseDate(text);
+      if (!date) throw new Error(`«${field.label}» ليس تاريخًا صحيحًا.`);
+      data[field.name] = date;
+      continue;
+    }
+
     const text = String(raw)
       .replace(/\u0000/g, "")
       .trim();
@@ -1106,12 +1162,32 @@ export function coerceValues(
     }
     if (!text && !field.optional && !field.hidden)
       throw new Error(`الحقل «${field.label}» مطلوب.`);
+    // Stored XSS guard: a `javascript:` (or any non-http) link must never reach an href.
+    if (field.url && text && !safeHref(text))
+      throw new Error(
+        `«${field.label}» يجب أن يكون رابطًا يبدأ بـ https:// أو http://.`,
+      );
     data[field.name] = text;
   }
   return data;
 }
 
 const ARABIC_DIGITS = "٠١٢٣٤٥٦٧٨٩";
+
+/** «2026-10-15» (from <input type="date">) → that day at 00:00 UTC; full ISO strings are also accepted. */
+function parseDate(text: string): Date | null {
+  const day = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+  const date = day
+    ? new Date(Date.UTC(Number(day[1]), Number(day[2]) - 1, Number(day[3])))
+    : /^\d{4}-\d{2}-\d{2}T/.test(text)
+      ? new Date(text)
+      : null;
+  if (!date || Number.isNaN(date.getTime())) return null;
+  // Reject overflowed days like 2026-02-31, and absurd years.
+  if (day && date.toISOString().slice(0, 10) !== text) return null;
+  const year = date.getUTCFullYear();
+  return year >= 1900 && year <= 2200 ? date : null;
+}
 
 /** Accepts «34.4367», «٣٤٫٤٣٦٧» or «34,4367»; returns null when empty or not a number. */
 function parseCoordinate(raw: unknown): number | null {

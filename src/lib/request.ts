@@ -1,10 +1,16 @@
 import type { NextRequest } from "next/server";
 import { SITE_HOST } from "@/lib/site";
 
+/**
+ * Client IP for rate limiting. Vercel sets x-real-ip / x-vercel-forwarded-for
+ * itself (a client can't spoof them), while the first X-Forwarded-For entry is
+ * client-controlled, so XFF is only the fallback for other hosts / local dev.
+ */
 export function getClientIp(req: Pick<NextRequest, "headers">): string {
-  const fwd = req.headers.get("x-forwarded-for");
-  const ip = (fwd ? fwd.split(",")[0] : req.headers.get("x-real-ip")) || "unknown";
-  return ip.trim().slice(0, 64);
+  const first = (name: string) => req.headers.get(name)?.split(",")[0]?.trim() || "";
+  const ip =
+    first("x-real-ip") || first("x-vercel-forwarded-for") || first("x-forwarded-for") || "unknown";
+  return ip.slice(0, 64);
 }
 
 /** CSRF defence in depth for cookie-authenticated JSON endpoints (on top of SameSite=Strict). */

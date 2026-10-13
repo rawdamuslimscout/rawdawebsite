@@ -53,7 +53,7 @@ function ResourceLinks({
         if (items.length === 0) return null;
         return (
           <div key={group.key} className="pt-3">
-            <p className="px-3 pb-1 text-[11px] font-bold tracking-wide text-brand-ink/40">
+            <p className="px-3 pb-1 text-[11px] font-bold tracking-wide text-brand-ink/60">
               {group.label}
             </p>
             {items.map((r) => (
@@ -80,7 +80,8 @@ export default function AdminNav({
   resources: NavResource[];
   groups: NavGroup[];
 }) {
-  const pathname = usePathname();
+  // Never null in the App Router; typed nullable because pages/500.tsx exists.
+  const pathname = usePathname() ?? "";
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Close the mobile drawer whenever the route changes.

@@ -1,12 +1,10 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-
 import { forwardRef } from "react";
 import { ArrowRight, CalendarDays, ExternalLink, Map as MapIcon, MapPin, Users } from "lucide-react";
 import type { MapPlace } from "@/data/map";
 import { CATEGORY_META, participantsLabel } from "./categories";
-import { thumbUrl } from "@/lib/image-url";
+import SafeImage from "@/components/ui/SafeImage";
 
 /** Shows only what is stored for the place — a missing field is simply not rendered. */
 const MapActivityCard = forwardRef<
@@ -24,15 +22,16 @@ const MapActivityCard = forwardRef<
 
   return (
     <article className="animate-hub-in overflow-hidden rounded-2xl border border-brand-purple/10 bg-white shadow-soft">
-      {place.imageUrl && (
-        <img
-          alt={`صورة من ${place.title}`}
-          loading="lazy"
-          decoding="async"
-          src={thumbUrl(place.imageUrl)}
-          className="aspect-[16/10] w-full object-cover"
-        />
-      )}
+      {/* A photo that fails to load is dropped; the place's details stay. */}
+      <SafeImage
+        src={place.imageUrl}
+        variant="thumb"
+        alt={`صورة من ${place.title}`}
+        loading="lazy"
+        decoding="async"
+        className="aspect-[16/10] w-full object-cover"
+        fallback={null}
+      />
 
       <div className="p-5 sm:p-6">
         <button

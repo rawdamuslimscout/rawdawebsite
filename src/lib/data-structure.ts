@@ -1,4 +1,6 @@
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
+import { retryRead } from "@/lib/db-retry";
 import { safeHref } from "@/lib/safe-url";
 
 export type PublicQualification = { id: string; kind: "course" | "education"; title: string; issuer: string; year: string };
@@ -47,10 +49,12 @@ export const KIND_LABELS: Record<string, string> = {
  * Builds the public tree. Only published nodes reachable through published
  * ancestors are included; only published assignments of public people are
  * included; no private columns are ever selected.
+ * A failing query is logged and rethrown so ISR keeps the last good page;
+ * `failed` stays in the shape for the page but is always false.
  */
-export async function getPublicStructure(): Promise<{ roots: PublicNode[]; failed: boolean }> {
+export const getPublicStructure = cache(async (): Promise<{ roots: PublicNode[]; failed: boolean }> => {
   try {
-    const [nodes, assignments] = await Promise.all([
+    const [nodes, assignments] = await retryRead("getPublicStructure", () => Promise.all([
       prisma.orgNode.findMany({
         where: { isPublished: true },
         orderBy: [{ order: "asc" }, { title: "asc" }],
@@ -83,7 +87,7 @@ export async function getPublicStructure(): Promise<{ roots: PublicNode[]; faile
           },
         },
       }),
-    ]);
+    ]));
 
     // Positions per person across all published assignments.
     const positionsByPerson = new Map<string, { title: string; nodeTitle: string }[]>();
@@ -141,6 +145,6 @@ export async function getPublicStructure(): Promise<{ roots: PublicNode[]; faile
     return { roots, failed: false };
   } catch (err) {
     console.error("[data] getPublicStructure failed", err instanceof Error ? err.message : err);
-    return { roots: [], failed: true };
+    throw err;
   }
-}
+});

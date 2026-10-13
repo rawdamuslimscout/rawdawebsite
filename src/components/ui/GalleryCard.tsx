@@ -1,11 +1,9 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-
 import { ImageIcon } from "lucide-react";
 
+import SafeImage from "@/components/ui/SafeImage";
 import type { GalleryItem } from "@/data/content";
-import { responsiveImage } from "@/lib/image-url";
 
 // Mirrors GalleryFilterGrid: 2 cols on phones, 3 on tablets, 4 on desktop,
 // where every size except "small" spans two columns.
@@ -15,33 +13,41 @@ const WIDE_TILE = "(min-width: 1024px) 50vw, (min-width: 640px) 33vw, 50vw";
 export default function GalleryCard({
   item,
   onClick,
+  priority = false,
+  aspectClassName = "aspect-[4/3] lg:aspect-auto",
 }: {
   item: GalleryItem;
   onClick?: () => void;
+  /** Only for an image that is visible without scrolling (e.g. an article's lead photo). */
+  priority?: boolean;
+  /** The tile's ratio; grids with fixed desktop rows switch to lg:aspect-auto. */
+  aspectClassName?: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={`فتح صورة: ${item.title}`}
-      className="group relative block aspect-[4/3] h-full w-full overflow-hidden rounded-2xl bg-brand-purple-tint text-right lg:aspect-auto focus-visible:outline-none"
+      className={`group relative block h-full w-full overflow-hidden rounded-2xl bg-brand-purple-tint text-right focus-visible:outline-none ${aspectClassName}`}
     >
-      {item.imageUrl ? (
-        <img
-          sizes={item.size === "small" ? SMALL_TILE : WIDE_TILE}
-          alt={item.title}
-          loading="lazy"
-          decoding="async"
-          {...responsiveImage(item.imageUrl)}
-          className="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-105"
-        />
-      ) : (
-        <span className="flex h-full w-full items-center justify-center text-brand-purple/30">
-          <ImageIcon className="h-8 w-8" strokeWidth={1.5} aria-hidden="true" />
-        </span>
-      )}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-brand-ink/80 via-brand-ink/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex translate-y-2 items-end justify-between gap-2 p-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
+      <SafeImage
+        src={item.imageUrl}
+        alt={item.title}
+        sizes={item.size === "small" ? SMALL_TILE : WIDE_TILE}
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : undefined}
+        decoding="async"
+        className="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-105"
+        fallback={
+          <span className="flex h-full w-full flex-col items-center justify-center gap-2 px-3 text-center text-brand-purple/35">
+            <ImageIcon className="h-8 w-8" strokeWidth={1.5} aria-hidden="true" />
+            <span className="sr-only">الصورة غير متاحة: {item.title}</span>
+          </span>
+        }
+      />
+      {/* Caption: on hover/focus with a mouse; always shown on touch screens, which have no hover. */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-brand-ink/80 via-brand-ink/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 [@media(hover:none)]:opacity-100" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex translate-y-2 items-end justify-between gap-2 p-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100">
         <p className="truncate text-sm font-bold text-white">{item.title}</p>
         <span
           aria-hidden="true"

@@ -1,16 +1,25 @@
-/* eslint-disable @next/next/no-img-element */
+import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { getGalleryItems, getSiteSettings } from "@/lib/data";
-import { responsiveImage } from "@/lib/image-url";
+import SafeImage from "@/components/ui/SafeImage";
 
-export default async function About() {
+/**
+ * "عن الفوج". On the homepage (`variant="home"`) it is a short teaser that
+ * links to /about; on /about (`variant="page"`) it opens the page.
+ */
+export default async function About({
+  variant = "home",
+}: {
+  variant?: "home" | "page";
+}) {
   const [siteInfo, gallery] = await Promise.all([
     getSiteSettings(),
-    getGalleryItems().catch(() => []),
+    getGalleryItems(),
   ]);
+  const isHome = variant === "home";
 
   const selectedPhotos = siteInfo.aboutImageIds
     .map((id) => gallery.find((item) => item.id === id))
@@ -20,7 +29,7 @@ export default async function About() {
 
   return (
     <section
-      id="about"
+      id={isHome ? "about" : "intro"}
       className="section-y relative overflow-hidden bg-brand-cream"
     >
       <div className="container-x">
@@ -37,21 +46,35 @@ export default async function About() {
               مفوضية الشمال.
             </p>
             <p className="mt-4 max-w-xl text-base leading-[2.1] text-brand-ink/70 sm:text-lg">
-              نُقيم ونُنظّم مغامرات وتحديات وأوقاتًا كشفية مميزة للاشبال
+              نُقيم ونُنظّم مغامرات وتحديات وأوقاتًا كشفية مميزة للأشبال
               والزهرات والكشافة والمرشدات، ضمن رحلة تربوية متكاملة تجمع بين
               القيم الإسلامية وروح القيادة والخدمة.
             </p>
 
-            <a
-              href="#sections"
-              className="group mt-6 inline-flex min-h-11 items-center gap-2 text-base font-bold text-brand-purple"
-            >
-              <span className="link-underline pb-1">تعرّف على مراحلنا الكشفية</span>
-              <ArrowLeft
-                className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-1 group-focus-visible:-translate-x-1"
-                aria-hidden="true"
-              />
-            </a>
+            <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-2">
+              {isHome && (
+                <Link
+                  href="/about"
+                  className="group inline-flex min-h-11 items-center gap-2 text-base font-bold text-brand-purple"
+                >
+                  <span className="link-underline pb-1">اعرف المزيد عنّا</span>
+                  <ArrowLeft
+                    className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-1 group-focus-visible:-translate-x-1"
+                    aria-hidden="true"
+                  />
+                </Link>
+              )}
+              <Link
+                href="/#sections"
+                className="group inline-flex min-h-11 items-center gap-2 text-base font-bold text-brand-purple"
+              >
+                <span className="link-underline pb-1">تعرّف على مراحلنا الكشفية</span>
+                <ArrowLeft
+                  className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-1 group-focus-visible:-translate-x-1"
+                  aria-hidden="true"
+                />
+              </Link>
+            </div>
           </Reveal>
 
           {/* ---------- Visual composition ---------- */}
@@ -59,28 +82,28 @@ export default async function About() {
             {photos.length > 0 ? (
               <div className="relative mx-auto grid max-w-xl grid-cols-12 gap-3 sm:gap-4">
                 <div className="col-span-7 aspect-[4/5] overflow-hidden rounded-2xl bg-brand-purple-tint shadow-soft">
-                  <img
-                    sizes="(min-width: 640px) 340px, 58vw"
+                  <SafeImage
+                    src={photos[0].imageUrl}
                     alt={photos[0].title}
+                    sizes="(min-width: 640px) 340px, 58vw"
                     width={640}
                     height={800}
                     loading="lazy"
                     decoding="async"
-                    {...responsiveImage(photos[0].imageUrl)}
                     className="h-full w-full object-cover"
                   />
                 </div>
                 <div className="col-span-5 flex flex-col gap-3 pt-10 sm:gap-4 sm:pt-14">
                   {photos[1] ? (
                     <div className="aspect-[4/5] overflow-hidden rounded-2xl bg-brand-purple-tint shadow-soft">
-                      <img
-                        sizes="(min-width: 640px) 240px, 42vw"
+                      <SafeImage
+                        src={photos[1].imageUrl}
                         alt={photos[1].title}
+                        sizes="(min-width: 640px) 240px, 42vw"
                         width={480}
                         height={600}
                         loading="lazy"
                         decoding="async"
-                        {...responsiveImage(photos[1].imageUrl)}
                         className="h-full w-full object-cover"
                       />
                     </div>

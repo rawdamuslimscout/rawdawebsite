@@ -7,7 +7,7 @@ import LocationPicker from "@/components/map/LocationPicker";
 import { iconMap } from "@/lib/icons";
 
 export const inputClass =
-  "w-full rounded-xl border border-brand-purple/15 bg-white px-3.5 py-2.5 text-base text-brand-ink outline-none transition-colors placeholder:text-brand-ink/30 focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/10 sm:text-sm";
+  "w-full rounded-xl border border-brand-purple/15 bg-white px-3.5 py-2.5 text-base text-brand-ink outline-none transition-colors placeholder:text-brand-ink/60 focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/10 sm:text-sm";
 
 /** Fields that are genuinely optional (files, the auto-managed order field, or fields marked optional). */
 function isOptional(field: FieldConfig): boolean {
@@ -16,12 +16,23 @@ function isOptional(field: FieldConfig): boolean {
   return field.name === "order";
 }
 
+/** A saved DateTime (Date object or ISO string) as the «YYYY-MM-DD» value <input type="date"> expects. */
+export function toDateInputValue(value: unknown): string {
+  if (!value) return "";
+  const date = value instanceof Date ? value : new Date(String(value));
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
+}
+
 function FilePicker({
   field,
   isCreate,
+  id,
+  describedBy,
 }: {
   field: FieldConfig;
   isCreate: boolean;
+  id?: string;
+  describedBy?: string;
 }) {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -57,7 +68,7 @@ function FilePicker({
                   : "اضغط لاختيار صورة"
                 : "اضغط لاختيار ملف"}
           </span>
-          <span className="block truncate text-xs text-brand-ink/50">
+          <span className="block truncate text-xs text-brand-ink/70">
             {files.length > 0
               ? files.map((f) => f.name).join("، ")
               : isImage
@@ -66,6 +77,8 @@ function FilePicker({
           </span>
         </span>
         <input
+          id={id}
+          aria-describedby={describedBy}
           name={field.name}
           type="file"
           multiple={multiple}
@@ -99,10 +112,16 @@ export default function FieldInput({
   isCreate,
   relationOptions,
   rowValues,
+  id,
+  describedBy,
 }: {
   field: FieldConfig;
-  defaultValue?: string | number;
+  defaultValue?: string | number | Date;
   isCreate: boolean;
+  /** Matches the label's htmlFor, so clicking the label focuses the field. */
+  id?: string;
+  /** id of the hint text under the field (aria-describedby). */
+  describedBy?: string;
   relationOptions?: { value: string; label: string }[];
   /** The whole saved row (used by fields that fill several columns, like the map location). */
   rowValues?: Record<string, unknown>;
@@ -129,6 +148,8 @@ export default function FieldInput({
   if (field.type === "textarea") {
     return (
       <textarea
+        id={id}
+        aria-describedby={describedBy}
         name={field.name}
         defaultValue={defaultValue as string}
         rows={field.name === "content" ? 10 : 4}
@@ -140,7 +161,14 @@ export default function FieldInput({
   }
 
   if (field.type === "file" || field.type === "file-multiple") {
-    return <FilePicker field={field} isCreate={isCreate} />;
+    return (
+      <FilePicker
+        field={field}
+        isCreate={isCreate}
+        id={id}
+        describedBy={describedBy}
+      />
+    );
   }
 
   if (field.type === "relation") {
@@ -148,6 +176,8 @@ export default function FieldInput({
     return (
       <div className="relative">
         <select
+          id={id}
+          aria-describedby={describedBy}
           name={field.name}
           defaultValue={defaultValue ? String(defaultValue) : ""}
           required={required}
@@ -166,7 +196,7 @@ export default function FieldInput({
             </option>
           ))}
         </select>
-        <ChevronDown className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-ink/40" />
+        <ChevronDown className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-ink/60" />
       </div>
     );
   }
@@ -182,6 +212,8 @@ export default function FieldInput({
         )}
         <div className="relative min-w-0 flex-1">
           <select
+            id={id}
+            aria-describedby={describedBy}
             name={field.name}
             defaultValue={defaultValue as string}
             onChange={(e) => setSelected(e.target.value)}
@@ -194,14 +226,31 @@ export default function FieldInput({
               </option>
             ))}
           </select>
-          <ChevronDown className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-ink/40" />
+          <ChevronDown className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-ink/60" />
         </div>
       </div>
     );
   }
 
+  if (field.type === "date") {
+    return (
+      <input
+        id={id}
+        aria-describedby={describedBy}
+        type="date"
+        name={field.name}
+        defaultValue={toDateInputValue(defaultValue)}
+        required={required}
+        dir="ltr"
+        className={`${inputClass} text-right`}
+      />
+    );
+  }
+
   return (
     <input
+      id={id}
+      aria-describedby={describedBy}
       type={field.type === "number" ? "number" : "text"}
       inputMode={field.type === "number" ? "numeric" : undefined}
       name={field.name}

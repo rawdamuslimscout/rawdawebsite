@@ -5,10 +5,12 @@ import {
   resourceRegistry,
   getDelegate,
 } from "@/lib/admin-resources";
+import { requireAdminPage } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
+  await requireAdminPage();
   const entries = Object.values(resourceRegistry);
 
   const counts = await Promise.all(

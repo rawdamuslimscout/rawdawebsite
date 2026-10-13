@@ -50,7 +50,7 @@ export default function MapActivityList({
                   )}
                 </span>
                 {place.description && (
-                  <span className="mt-1 line-clamp-2 block text-sm leading-6 text-brand-ink/55">
+                  <span className="mt-1 line-clamp-2 block text-sm leading-6 text-brand-ink/65">
                     {place.description}
                   </span>
                 )}

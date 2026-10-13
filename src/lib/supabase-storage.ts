@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { legacyThumbPath } from "@/lib/image-url";
 
 const bucket = process.env.SUPABASE_STORAGE_BUCKET || "uploads";
 
@@ -95,4 +96,72 @@ export async function uploadToStorage(file: File, folder: string, thumb?: File |
     throw new Error("تعذّر رفع الملف. تحقق من اتصالك وأعد المحاولة.");
   }
   return store.getPublicUrl(path).data.publicUrl;
+}
+
+/** "<SUPABASE_URL>/storage/v1/object/public/<bucket>/" — the prefix of every URL we hand out. */
+function publicPrefix(): string | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!url) return null;
+  try {
+    return `${new URL(url).origin}/storage/v1/object/public/${bucket}/`;
+  } catch {
+    return null;
+  }
+}
+
+/** Object path inside OUR bucket for one of our public URLs, else null. */
+function storagePath(url: string): string | null {
+  const prefix = publicPrefix();
+  if (!prefix || typeof url !== "string" || !url.startsWith(prefix)) return null;
+  let path: string;
+  try {
+    path = decodeURIComponent(url.slice(prefix.length).split(/[?#]/)[0]);
+  } catch {
+    return null;
+  }
+  // Only the shapes uploads have: "<folder>/<file>" or "<folder>/<uuid>/<file>".
+  // File names may contain "_" (early uploads kept the phone's file name, e.g.
+  // "..._n.jpg"); folders, slashes and ".." stay forbidden.
+  return /^[a-z0-9-]+\/(?:[0-9a-f-]{36}\/)?[a-z0-9._-]+$/i.test(path) && !path.includes("..")
+    ? path
+    : null;
+}
+
+/** True only for public URLs of files in this site's own Storage bucket. */
+export function isOwnStorageUrl(url: string): boolean {
+  return storagePath(url) !== null;
+}
+
+/**
+ * Best-effort removal of uploaded files (plus their thumbnails). URLs outside
+ * our bucket are ignored. Never throws: a failed cleanup only leaves an orphan.
+ */
+/**
+ * The object paths to delete for these URLs: each file of ours, plus the
+ * thumbnail that belongs to it ("<uuid>/thumb.jpg" next to "<uuid>/full.<ext>",
+ * or "<name>.thumb.jpg" next to a legacy "<name>.<ext>"). URLs outside our
+ * bucket are ignored, and a thumbnail never adds anything else.
+ */
+export function storagePathsToRemove(urls: string[]): string[] {
+  const paths = new Set<string>();
+  for (const url of urls) {
+    const path = storagePath(url);
+    if (!path) continue;
+    paths.add(path);
+    if (/\/full\.[a-z]+$/i.test(path)) paths.add(path.replace(/\/full\.[a-z]+$/i, "/thumb.jpg"));
+    const sibling = legacyThumbPath(path);
+    if (sibling) paths.add(sibling);
+  }
+  return [...paths];
+}
+
+export async function removeFromStorage(urls: string[]): Promise<void> {
+  const paths = new Set(storagePathsToRemove(urls));
+  if (paths.size === 0) return;
+  try {
+    const { error } = await getStorageClient().storage.from(bucket).remove([...paths]);
+    if (error) console.error("[storage] cleanup failed", error.message);
+  } catch (err) {
+    console.error("[storage] cleanup failed", err instanceof Error ? err.message : err);
+  }
 }

@@ -1,27 +1,18 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent as ReactKeyboardEvent,
-} from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   CalendarDays,
-  Check,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   MapPin,
   Tent,
 } from "lucide-react";
 
-import NewsModal from "@/components/ui/NewsModal";
-import type { NewsItem } from "@/data/content";
-import { responsiveImage, thumbUrl } from "@/lib/image-url";
+import { arabicCount, ITEM_FORMS } from "@/components/news/format";
+import SafeImage from "@/components/ui/SafeImage";
 
 export type HubItem = {
   key: string;
@@ -32,14 +23,18 @@ export type HubItem = {
   label?: string;
   excerpt: string;
   image?: string;
-  news?: NewsItem;
+  /** Detail page (news only). */
+  href?: string;
+  /** Events only: true when the real dates say it is still ahead. */
+  upcoming?: boolean;
 };
 
-const KIND_LABEL = {
-  news: "خبر",
-  event: "مناسبة قادمة",
-  camp: "مخيم",
-} as const;
+function kindLabel(item: HubItem) {
+  if (item.kind === "news") return "خبر";
+  if (item.kind === "camp") return "مخيم";
+  // Only events with real future dates are called "upcoming".
+  return item.upcoming ? "مناسبة قادمة" : "مناسبة";
+}
 
 const TABS = [
   { id: "all", label: "الكل" },
@@ -59,68 +54,11 @@ const PAGE_SIZE = 5;
 
 export default function HubClient({ items }: { items: HubItem[] }) {
   const [tab, setTab] = useState<TabId>("all");
-  const [openNews, setOpenNews] = useState<NewsItem | null>(null);
-  const [filterOpen, setFilterOpen] = useState(false);
   const [page, setPage] = useState(1);
 
-  const filterRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const listRef = useRef<HTMLUListElement>(null);
 
-  const closeNews = useCallback(() => setOpenNews(null), []);
-
-  // Hash navigation
-  useEffect(() => {
-    const apply = () => {
-      const t = HASH_TO_TAB[window.location.hash];
-
-      if (t) {
-        setTab(t);
-        setPage(1);
-      }
-    };
-
-    apply();
-
-    window.addEventListener("hashchange", apply);
-
-    return () => window.removeEventListener("hashchange", apply);
-  }, []);
-
-  // While the filter menu is open: close on outside click/tap or Escape
-  // (Escape hands focus back to the trigger).
-  useEffect(() => {
-    if (!filterOpen) return;
-
-    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
-      if (
-        filterRef.current &&
-        !filterRef.current.contains(event.target as Node)
-      ) {
-        setFilterOpen(false);
-      }
-    };
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setFilterOpen(false);
-        triggerRef.current?.focus();
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("touchstart", handleClickOutside);
-    document.addEventListener("keydown", handleEscape);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [filterOpen]);
-
-  // Category counts
+  // Category counts (the same numbers the chips and the summary line use).
   const counts = useMemo(() => {
     const c: Record<string, number> = {
       all: items.length,
@@ -133,18 +71,26 @@ export default function HubClient({ items }: { items: HubItem[] }) {
     return c;
   }, [items]);
 
-  const visibleTabs = TABS.filter((t) => (counts[t.id] ?? 0) > 0);
-
-  // Move focus into the menu (onto the current choice) when it opens.
+  // Hash navigation (old links such as /#camps open the matching filter).
   useEffect(() => {
-    if (!filterOpen) return;
-    const index = Math.max(
-      0,
-      visibleTabs.findIndex((t) => t.id === tab),
-    );
-    optionRefs.current[index]?.focus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterOpen]);
+    const apply = () => {
+      const t = HASH_TO_TAB[window.location.hash];
+
+      if (t && (counts[t] ?? 0) > 0) {
+        setTab(t);
+        setPage(1);
+      }
+    };
+
+    apply();
+
+    window.addEventListener("hashchange", apply);
+
+    return () => window.removeEventListener("hashchange", apply);
+  }, [counts]);
+
+  // Only offer categories that actually have items.
+  const visibleTabs = TABS.filter((t) => (counts[t.id] ?? 0) > 0);
 
   // Featured item and supporting list
   const { featured, rest } = useMemo(() => {
@@ -205,8 +151,6 @@ export default function HubClient({ items }: { items: HubItem[] }) {
     return null;
   }
 
-  const selectedTab = TABS.find((t) => t.id === tab);
-
   const changePage = (nextPage: number) => {
     const target = Math.max(1, Math.min(nextPage, totalPages));
     if (target === page) return;
@@ -223,122 +167,51 @@ export default function HubClient({ items }: { items: HubItem[] }) {
   const chooseTab = (id: TabId) => {
     setTab(id);
     setPage(1);
-    setFilterOpen(false);
-    triggerRef.current?.focus();
   };
 
-  const onMenuKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
-    const options = optionRefs.current.slice(0, visibleTabs.length).filter(
-      (el): el is HTMLButtonElement => Boolean(el),
-    );
-    const current = options.indexOf(document.activeElement as HTMLButtonElement);
-    let next = -1;
-
-    if (event.key === "ArrowDown") next = (current + 1) % options.length;
-    else if (event.key === "ArrowUp")
-      next = (current - 1 + options.length) % options.length;
-    else if (event.key === "Home") next = 0;
-    else if (event.key === "End") next = options.length - 1;
-    else if (event.key === "Tab") setFilterOpen(false);
-
-    if (next >= 0) {
-      event.preventDefault();
-      options[next]?.focus();
-    }
-  };
-
-  const onTriggerKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      setFilterOpen(true);
-    }
-  };
-
-  const firstShown = Math.min((page - 1) * PAGE_SIZE + 1, rest.length);
-  const lastShown = Math.min(page * PAGE_SIZE, rest.length);
+  // The featured card counts as the first item, so the summary line and
+  // the chip counts always agree.
+  const total = rest.length + 1;
+  const firstShown = page === 1 ? 1 : (page - 1) * PAGE_SIZE + 2;
+  const lastShown = Math.min(page * PAGE_SIZE + 1, total);
 
   return (
     <>
-      {/* Filter dropdown */}
-      {visibleTabs.length > 1 && (
-        <div ref={filterRef} className="relative mt-8 flex justify-start">
-          <button
-            ref={triggerRef}
-            type="button"
-            aria-expanded={filterOpen}
-            aria-haspopup="menu"
-            aria-controls="hub-filter-menu"
-            onClick={() => setFilterOpen((prev) => !prev)}
-            onKeyDown={onTriggerKeyDown}
-            className="inline-flex min-h-11 min-w-[180px] items-center justify-between gap-5 rounded-xl border border-brand-purple/15 bg-white px-4 py-2.5 text-sm font-semibold text-brand-ink shadow-sm transition-colors hover:border-brand-purple/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple/40"
-          >
-            <span className="flex items-center gap-2">
-              <span className="sr-only">تصفية المحتوى: </span>
-              <span>{selectedTab?.label ?? "الكل"}</span>
+      {/* Filter chips */}
+      {visibleTabs.length > 2 && (
+        <div
+          role="group"
+          aria-label="تصفية المحتوى"
+          className="no-scrollbar -mx-5 mt-8 flex gap-2 overflow-x-auto px-5 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
+        >
+          {visibleTabs.map((t) => {
+            const active = tab === t.id;
 
-              <span className="rounded-full bg-brand-purple/10 px-2 py-0.5 text-xs text-brand-purple">
-                {counts[tab]}
-              </span>
-            </span>
-
-            <ChevronDown
-              aria-hidden="true"
-              className={`h-4 w-4 text-brand-ink/50 transition-transform duration-200 ${
-                filterOpen ? "rotate-180" : ""
-              }`}
-            />
-          </button>
-
-          {filterOpen && (
-            <div
-              id="hub-filter-menu"
-              role="menu"
-              aria-label="تصفية المحتوى"
-              onKeyDown={onMenuKeyDown}
-              className="absolute start-0 top-full z-30 mt-2 min-w-[220px] overflow-hidden rounded-xl border border-brand-purple/10 bg-white p-1.5 shadow-lg"
-            >
-              {visibleTabs.map((t, i) => {
-                const active = tab === t.id;
-
-                return (
-                  <button
-                    key={t.id}
-                    ref={(el) => {
-                      optionRefs.current[i] = el;
-                    }}
-                    type="button"
-                    role="menuitemradio"
-                    aria-checked={active}
-                    tabIndex={-1}
-                    onClick={() => chooseTab(t.id)}
-                    className={`flex min-h-11 w-full items-center justify-between gap-4 rounded-lg px-3 py-2.5 text-start text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-purple/40 ${
-                      active
-                        ? "bg-brand-purple/5 font-bold text-brand-purple"
-                        : "text-brand-ink/75 hover:bg-brand-purple-tint/50 focus-visible:bg-brand-purple-tint/50"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      {t.label}
-
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] ${
-                          active
-                            ? "bg-brand-purple/10 text-brand-purple"
-                            : "bg-brand-ink/5 text-brand-ink/60"
-                        }`}
-                      >
-                        {counts[t.id]}
-                      </span>
-                    </span>
-
-                    {active && (
-                      <Check className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+            return (
+              <button
+                key={t.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => chooseTab(t.id)}
+                className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors ${
+                  active
+                    ? "bg-brand-purple text-white shadow-sm"
+                    : "bg-white text-brand-ink/75 ring-1 ring-brand-purple/10 hover:bg-brand-purple-tint hover:text-brand-ink"
+                }`}
+              >
+                {t.label}
+                <span
+                  className={`min-w-[22px] rounded-full px-1.5 py-0.5 text-center text-[11px] font-bold tabular-nums ${
+                    active
+                      ? "bg-white/20 text-white"
+                      : "bg-brand-purple/[0.06] text-brand-ink/70"
+                  }`}
+                >
+                  {counts[t.id] ?? 0}
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -349,7 +222,7 @@ export default function HubClient({ items }: { items: HubItem[] }) {
       >
         {/* Featured */}
         <div className="lg:col-span-7">
-          <Featured item={featured} onOpen={setOpenNews} />
+          <Featured item={featured} />
         </div>
 
         {/* Supporting list and pagination */}
@@ -366,7 +239,7 @@ export default function HubClient({ items }: { items: HubItem[] }) {
 
             {paginatedItems.map((item) => (
               <li key={item.key}>
-                <Row item={item} onOpen={setOpenNews} />
+                <Row item={item} />
               </li>
             ))}
           </ul>
@@ -424,23 +297,23 @@ export default function HubClient({ items }: { items: HubItem[] }) {
           )}
 
           {/* Results count (announced when the page or filter changes) */}
-          {rest.length > 0 && (
+          {total > 1 && (
             <p
               aria-live="polite"
-              className="mt-3 text-center text-xs text-brand-ink/60"
+              className="mt-3 text-center text-xs text-brand-ink/70"
             >
-              عرض {firstShown}–{lastShown} من {rest.length} عناصر
+              {totalPages > 1
+                ? `عرض ${firstShown}–${lastShown} من ${arabicCount(total, ITEM_FORMS)}`
+                : arabicCount(total, ITEM_FORMS)}
             </p>
           )}
         </div>
       </div>
-
-      <NewsModal item={openNews} onClose={closeNews} />
     </>
   );
 }
 
-function KindChip({ kind, light }: { kind: HubItem["kind"]; light?: boolean }) {
+function KindChip({ item, light }: { item: HubItem; light?: boolean }) {
   return (
     <span
       className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
@@ -449,34 +322,26 @@ function KindChip({ kind, light }: { kind: HubItem["kind"]; light?: boolean }) {
           : "bg-brand-purple/10 text-brand-purple"
       }`}
     >
-      {KIND_LABEL[kind]}
+      {kindLabel(item)}
     </span>
   );
 }
 
-function Featured({
-  item,
-  onOpen,
-}: {
-  item: HubItem;
-  onOpen: (n: NewsItem) => void;
-}) {
-  // A real <article> with a heading; for news the "read more" button's
+function Featured({ item }: { item: HubItem }) {
+  // A real <article> with a heading; for news the "read more" link's
   // ::after stretches over the whole card, so the card stays one big tap
-  // target without wrapping headings inside a <button>.
+  // target without wrapping headings inside a link.
   return (
     <article className="group relative block h-full min-h-[340px] w-full overflow-hidden rounded-2xl bg-brand-purple-dark text-start shadow-soft transition duration-300 hover:shadow-lift focus-within:shadow-lift sm:min-h-[420px] lg:min-h-[500px]">
-      {item.image ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          sizes="(min-width: 1024px) 58vw, 100vw"
-          alt=""
-          loading="lazy"
-          decoding="async"
-          {...responsiveImage(item.image)}
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-        />
-      ) : (
+      {/* No photo, or a photo that fails to load: the same branded backdrop. */}
+      <SafeImage
+        src={item.image}
+        alt=""
+        sizes="(min-width: 1024px) 58vw, 100vw"
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+        fallback={
         <>
           <div
             aria-hidden="true"
@@ -495,7 +360,8 @@ function Featured({
             />
           </svg>
         </>
-      )}
+        }
+      />
 
       <div
         aria-hidden="true"
@@ -504,7 +370,7 @@ function Featured({
 
       <div className="relative flex h-full min-h-[inherit] flex-col justify-end p-6 sm:p-8">
         <div className="flex flex-wrap items-center gap-3">
-          <KindChip kind={item.kind} light />
+          <KindChip item={item} light />
 
           <span className="text-sm font-semibold text-white/85">
             {item.date}
@@ -534,20 +400,18 @@ function Featured({
             </span>
           )}
 
-          {item.news && (
-            <button
-              type="button"
-              onClick={() => onOpen(item.news!)}
-              aria-haspopup="dialog"
+          {item.href && (
+            <Link
+              href={item.href}
               className="inline-flex min-h-11 items-center gap-2 after:absolute after:inset-0 after:rounded-2xl after:content-['']"
             >
-              اقرأ التفاصيل
+              اقرأ الخبر
               <span className="sr-only">: {item.title}</span>
               <ArrowLeft
                 className="h-4 w-4 transition-transform group-hover:-translate-x-1"
                 aria-hidden="true"
               />
-            </button>
+            </Link>
           )}
         </div>
       </div>
@@ -555,40 +419,33 @@ function Featured({
   );
 }
 
-function Row({
-  item,
-  onOpen,
-}: {
-  item: HubItem;
-  onOpen: (n: NewsItem) => void;
-}) {
+function Row({ item }: { item: HubItem }) {
   const Icon =
     item.kind === "event" ? CalendarDays : item.kind === "camp" ? Tent : null;
 
   const inner = (
     <>
       <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-purple text-brand-yellow sm:h-[72px] sm:w-[72px]">
-        {item.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            alt=""
-            width={72}
-            height={72}
-            loading="lazy"
-            decoding="async"
-            src={thumbUrl(item.image)}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
-        ) : Icon ? (
-          <Icon className="h-6 w-6" strokeWidth={1.75} aria-hidden="true" />
-        ) : null}
+        <SafeImage
+          src={item.image}
+          variant="thumb"
+          alt=""
+          width={72}
+          height={72}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          fallback={
+            Icon ? <Icon className="h-6 w-6" strokeWidth={1.75} aria-hidden="true" /> : null
+          }
+        />
       </span>
 
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold">
-          <span className="text-brand-purple">{KIND_LABEL[item.kind]}</span>
+          <span className="text-brand-purple">{kindLabel(item)}</span>
 
-          <span className="text-brand-ink/60">{item.date}</span>
+          <span className="text-brand-ink/70">{item.date}</span>
         </span>
 
         <span className="mt-1 block font-display text-base font-semibold leading-snug text-brand-ink sm:text-lg">
@@ -596,7 +453,7 @@ function Row({
         </span>
 
         {item.place && (
-          <span className="mt-1 flex items-center gap-1 text-xs text-brand-ink/60">
+          <span className="mt-1 flex items-center gap-1 text-xs text-brand-ink/70">
             <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             {item.place}
           </span>
@@ -604,14 +461,14 @@ function Row({
 
         {/* Events and camps have no detail view, so show their summary
             here instead of hiding it. */}
-        {!item.news && item.excerpt && (
+        {!item.href && item.excerpt && (
           <span className="mt-1.5 line-clamp-2 block text-xs leading-6 text-brand-ink/70">
             {item.excerpt}
           </span>
         )}
       </span>
 
-      {item.news && (
+      {item.href && (
         <ArrowLeft
           className="h-4 w-4 shrink-0 text-brand-purple/50 transition-transform group-hover:-translate-x-1 group-hover:text-brand-purple"
           aria-hidden="true"
@@ -623,15 +480,13 @@ function Row({
   const cls =
     "group flex w-full items-center gap-4 p-4 text-start transition-colors duration-200 sm:p-5";
 
-  return item.news ? (
-    <button
-      type="button"
-      onClick={() => onOpen(item.news!)}
-      aria-haspopup="dialog"
+  return item.href ? (
+    <Link
+      href={item.href}
       className={`${cls} hover:bg-brand-purple-tint/60 focus-visible:bg-brand-purple-tint/60 focus-visible:outline-offset-[-3px]`}
     >
       {inner}
-    </button>
+    </Link>
   ) : (
     <div className={cls}>{inner}</div>
   );

@@ -1,12 +1,40 @@
 import type { Metadata, Viewport } from "next";
 import { El_Messiri, Cairo } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import BackToTop from "@/components/layout/BackToTop";
 import { getSiteSettings } from "@/lib/data";
 import JsonLd from "@/components/ui/JsonLd";
-import { SITE_URL, SITE_NAME, ORG_NAME } from "@/lib/site";
+import {
+  SITE_URL,
+  SITE_NAME,
+  ORG_NAME,
+  SITE_EMAIL,
+  SITE_LOGO_PATH,
+  absoluteUrl,
+  SITE_DEFAULT_TITLE,
+} from "@/lib/site";
+import { OG_IMAGE } from "@/lib/seo";
+import { siteInfo as staticSiteInfo } from "@/data/content";
+
+type JsonLdSettings = { name: string; instagramUrl: string; contactPhone: string };
+
+/**
+ * Settings are only used for JSON-LD here. getSiteSettings() throws on a DB
+ * outage; the root layout must never fail because of it (it wraps admin and
+ * error pages too), so fall back to static values.
+ */
+async function getJsonLdSettings(): Promise<JsonLdSettings> {
+  try {
+    const s = await getSiteSettings();
+    return { name: s.name, instagramUrl: s.instagramUrl, contactPhone: s.contactPhone };
+  } catch (error) {
+    console.error("[layout] getSiteSettings failed; using static JSON-LD values.", error);
+    return {
+      name: staticSiteInfo.name,
+      instagramUrl: staticSiteInfo.instagramUrl,
+      contactPhone: "",
+    };
+  }
+}
 
 const elMessiri = El_Messiri({
   subsets: ["arabic", "latin"],
@@ -17,29 +45,39 @@ const elMessiri = El_Messiri({
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
   display: "swap",
 });
 
+const DEFAULT_TITLE = SITE_DEFAULT_TITLE;
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "فوج روضة الفيحاء | الكشاف المسلم في لبنان",
+    default: DEFAULT_TITLE,
     template: "%s",
   },
-  alternates: { canonical: "/" },
-  robots: { index: true, follow: true },
+  // No root `alternates.canonical`: it would leak a homepage canonical into
+  // every page that doesn't set its own (404, admin). Pages set theirs via
+  // pageMetadata(). No site-wide `robots` either: pages are indexable by
+  // default, and leaving it out lets 404s and admin pages emit a single noindex.
   description:
-    "الموقع الرسمي لفوج روضة الفيحاء، جمعية الكشاف المسلم في لبنان - مفوضية الشمال. نُنمّي الإنسان، ونبني القائد، ونصنع الذكريات.",
+    "الموقع الرسمي لفوج روضة الفيحاء، جمعية الكشاف المسلم في لبنان – مفوضية الشمال، طرابلس. نُنمّي الإنسان، ونبني القائد، ونصنع الذكريات.",
   openGraph: {
-    title: "فوج روضة الفيحاء | الكشاف المسلم في لبنان",
+    title: DEFAULT_TITLE,
     description:
-      "الموقع الرسمي لفوج روضة الفيحاء — مخيمات، رحلات، أنشطة كشفية وتربوية في طرابلس، لبنان.",
+      "الموقع الرسمي لفوج روضة الفيحاء: مخيمات ورحلات وأنشطة كشفية وتربوية في طرابلس، لبنان.",
     locale: "ar_LB",
     type: "website",
     url: "/",
-    siteName: "فوج روضة الفيحاء",
+    siteName: SITE_NAME,
+    images: [OG_IMAGE],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: DEFAULT_TITLE,
+    images: [OG_IMAGE.url],
   },
   icons: {
     icon: "/favicon.ico",
@@ -56,7 +94,8 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const siteInfo = await getSiteSettings();
+  const siteInfo = await getJsonLdSettings();
+  const telephone = siteInfo.contactPhone.trim();
   return (
     <html
       lang="ar"
@@ -72,6 +111,15 @@ export default async function RootLayout({
               "@id": `${SITE_URL}/#organization`,
               name: siteInfo.name || SITE_NAME,
               url: SITE_URL,
+              logo: absoluteUrl(SITE_LOGO_PATH),
+              email: SITE_EMAIL,
+              ...(telephone ? { telephone } : {}),
+              address: {
+                "@type": "PostalAddress",
+                addressLocality: "طرابلس",
+                addressCountry: "LB",
+              },
+              areaServed: "طرابلس، لبنان",
               parentOrganization: { "@type": "Organization", name: ORG_NAME },
               ...(siteInfo.instagramUrl ? { sameAs: [siteInfo.instagramUrl] } : {}),
             },
@@ -86,18 +134,8 @@ export default async function RootLayout({
             },
           ]}
         />
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-brand-yellow focus:px-5 focus:py-3 focus:text-sm focus:font-bold focus:text-brand-purple-dark focus:shadow-lift"
-        >
-          تخطَّ إلى المحتوى
-        </a>
-        <Navbar siteName={siteInfo.name} />
-        <main id="main-content" tabIndex={-1} className="outline-none">
-          {children}
-        </main>
-        <Footer />
-        <BackToTop />
+        {/* Public chrome lives in (site)/layout.tsx; admin has its own shell. */}
+        {children}
       </body>
     </html>
   );

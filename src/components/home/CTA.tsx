@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { ArrowLeft, Instagram } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import Reveal from "@/components/ui/Reveal";
 import { getSiteSettings } from "@/lib/data";
+import { getContactLinks } from "@/lib/contact";
 
 export default async function CTA() {
   const siteInfo = await getSiteSettings();
+  const { whatsappHref } = getContactLinks(siteInfo.contactPhone);
   return (
     <section className="relative overflow-hidden bg-brand-purple py-20 sm:py-24">
       <div
@@ -24,16 +27,23 @@ export default async function CTA() {
           كن جزءًا من الحكاية
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/80 sm:text-lg">
-          انضم إلى رحلة كشفية تجمع القيم والمغامرة والأخوة، وابدأ فصلك الخاص
-          في مسيرة فوج روضة الفيحاء.
+          انضم إلى رحلة كشفية تجمع بين القيم والمغامرة والأخوّة، وابدأ فصلك
+          الخاص في مسيرة {siteInfo.name}.
         </p>
         <div className="mx-auto mt-9 flex max-w-md flex-col items-stretch justify-center gap-3 sm:max-w-none sm:flex-row">
           <Link href="/join" className="btn-gold">
             انضم إلينا
             <ArrowLeft className="btn-arrow h-4 w-4" aria-hidden="true" />
           </Link>
-          <a href="#contact" className="btn-outline-light">
-            تواصل معنا
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-outline-light"
+          >
+            <FaWhatsapp className="h-[18px] w-[18px]" aria-hidden="true" />
+            راسلنا عبر واتساب
+            <span className="sr-only"> (يفتح في نافذة جديدة)</span>
           </a>
           {siteInfo.instagramUrl && (
             <a
@@ -43,7 +53,7 @@ export default async function CTA() {
               className="btn-outline-light"
             >
               <Instagram className="h-4 w-4" aria-hidden="true" />
-              تابعنا على Instagram
+              تابعنا على إنستغرام
               <span className="sr-only"> (يفتح في نافذة جديدة)</span>
             </a>
           )}

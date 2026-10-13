@@ -12,7 +12,9 @@ const TITLE = "أماكن من رحلتنا الكشفية";
  * so the content stays crawlable even before (or without) the map script.
  */
 export default async function ScoutMap() {
-  const { places, failed } = await getMapPlaces();
+  // getMapPlaces() throws on a DB error (ISR keeps the last good page), so
+  // its legacy `failed` flag is always false and needs no error state here.
+  const { places } = await getMapPlaces();
 
   return (
     <section id="map" aria-label={TITLE} className="section-y relative bg-brand-purple-tint/50">
@@ -24,14 +26,7 @@ export default async function ScoutMap() {
           />
         </Reveal>
 
-        {failed ? (
-          <p
-            role="status"
-            className="mt-8 rounded-2xl border border-brand-purple/10 bg-white p-6 text-center text-base leading-8 text-brand-ink/70"
-          >
-            تعذّر تحميل أماكن الأنشطة الآن. حدّث الصفحة بعد قليل.
-          </p>
-        ) : places.length === 0 ? (
+        {places.length === 0 ? (
           <p className="mt-8 rounded-2xl border border-dashed border-brand-purple/25 bg-white/70 p-8 text-center font-display text-lg leading-8 text-brand-ink/70">
             سنضيف قريبًا مواقع أنشطتنا ومخيماتنا على الخريطة.
           </p>

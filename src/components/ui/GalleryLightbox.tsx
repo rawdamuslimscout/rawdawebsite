@@ -39,11 +39,17 @@ export default function GalleryLightbox({
   // Which way the strip moved, so the next image slides in from the side
   // the visitor is heading to (RTL: "next" lives on the left).
   const [direction, setDirection] = useState<1 | -1>(1);
-  // Full-size images the browser has finished downloading.
+  // Full-size images the browser has finished downloading, and any URL
+  // (thumbnail or original) that failed to load.
   const [loaded, setLoaded] = useState<Record<string, true>>({});
+  const [failed, setFailed] = useState<Record<string, true>>({});
 
   const markLoaded = useCallback((src: string) => {
     setLoaded((prev) => (prev[src] ? prev : { ...prev, [src]: true }));
+  }, []);
+
+  const markFailed = useCallback((src: string) => {
+    setFailed((prev) => (prev[src] ? prev : { ...prev, [src]: true }));
   }, []);
 
   const goPrev = useCallback(() => {
@@ -152,14 +158,18 @@ export default function GalleryLightbox({
       const img = new Image();
       img.decoding = "async";
       img.onload = () => markLoaded(url);
+      img.onerror = () => markFailed(url);
       img.src = url;
       return img;
     });
 
     return () => {
-      for (const img of images) img.onload = null;
+      for (const img of images) {
+        img.onload = null;
+        img.onerror = null;
+      }
     };
-  }, [open, index, items, markLoaded]);
+  }, [open, index, items, markLoaded, markFailed]);
 
   /* ---------------------------------------------------------------------- */
   /* Touch: swipe sideways to navigate, down to close; never fight pinch     */
@@ -203,15 +213,27 @@ export default function GalleryLightbox({
     }
   };
 
-  const fullSrc = item?.imageUrl;
+  const fullSrc = item?.imageUrl || undefined;
+  const thumbSrc = fullSrc ? thumbUrl(fullSrc) : undefined;
+  const hasThumb = !!fullSrc && thumbSrc !== fullSrc;
   const isLoaded = !!fullSrc && !!loaded[fullSrc];
+  const fullFailed = !!fullSrc && !!failed[fullSrc];
+  const thumbUsable = hasThumb && !!thumbSrc && !failed[thumbSrc];
   // Show the (usually cached) thumbnail at once, then swap in the full image.
-  const displaySrc = fullSrc
-    ? isLoaded
+  // A failed thumbnail falls back to the original; a failed original keeps
+  // the thumbnail if there is one, otherwise the "unavailable" panel shows.
+  // Each URL fails at most once, so this can't loop.
+  const displaySrc = !fullSrc
+    ? undefined
+    : isLoaded
       ? fullSrc
-      : thumbUrl(fullSrc)
-    : undefined;
-  const hasThumb = !!fullSrc && thumbUrl(fullSrc) !== fullSrc;
+      : thumbUsable
+        ? thumbSrc
+        : fullFailed
+          ? undefined
+          : fullSrc;
+  const showingPreview = displaySrc === thumbSrc && hasThumb && !isLoaded;
+  const waiting = !isLoaded && !fullFailed;
   const captionId = item ? `lightbox-caption-${item.id}` : undefined;
 
   return (
@@ -425,19 +447,21 @@ export default function GalleryLightbox({
             {displaySrc ? (
               <div className="relative">
                 <img
+                  key={displaySrc}
                   src={displaySrc}
                   alt={item.title}
                   draggable={false}
                   onLoad={() => {
                     if (displaySrc === fullSrc) markLoaded(fullSrc);
                   }}
+                  onError={() => markFailed(displaySrc)}
                   className={`
                     w-auto
                     max-w-full
                     select-none
                     object-contain
                     ${
-                      !isLoaded && hasThumb
+                      showingPreview && !fullFailed
                         ? // Low-res preview stretched to the size the full
                           // image will take, so nothing jumps when it swaps in.
                           "h-[76vh] sm:h-[78vh]"
@@ -445,7 +469,7 @@ export default function GalleryLightbox({
                     }
                   `}
                 />
-                {!isLoaded && (
+                {waiting && (
                   <span
                     role="status"
                     className="pointer-events-none absolute inset-0 flex items-center justify-center"
@@ -461,7 +485,7 @@ export default function GalleryLightbox({
                 )}
               </div>
             ) : (
-              <div className="flex h-[50vh] w-[min(80vw,40rem)] flex-col items-center justify-center gap-3 rounded-2xl bg-white/5 text-white/50 sm:rounded-3xl">
+              <div className="flex h-[50vh] w-[min(80vw,40rem)] flex-col items-center justify-center gap-3 rounded-2xl bg-white/5 text-white/70 sm:rounded-3xl">
                 <ImageOff
                   className="h-10 w-10"
                   strokeWidth={1.5}
@@ -512,7 +536,7 @@ export default function GalleryLightbox({
                   py-2
                   text-[11px]
                   font-medium
-                  text-white/40
+                  text-white/70
                   sm:flex
                 "
               >
@@ -529,7 +553,7 @@ export default function GalleryLightbox({
                   py-2
                   text-[11px]
                   font-medium
-                  text-white/40
+                  text-white/70
                   sm:hidden
                 "
               >

@@ -1,4 +1,5 @@
 import Image, { getImageProps } from "next/image";
+import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { getSiteSettings } from "@/lib/data";
 import SalawatButton from "./SalawatButton";
@@ -14,13 +15,13 @@ export default async function Hero() {
     <section
       id="home"
       className="
-        relative isolate flex min-h-[760px]
+        relative isolate flex
+        min-h-[clamp(560px,100svh,860px)]
         items-center overflow-hidden
         bg-brand-purple-dark
-        pb-20 pt-16
-        sm:min-h-[720px]
-        lg:min-h-[760px]
-        lg:pb-20 lg:pt-24
+        pb-20 pt-24
+        lg:min-h-[clamp(640px,100svh,800px)]
+        lg:pb-20 lg:pt-28
       "
     >
       {/* Background: one <picture>, so each device downloads only its own image
@@ -30,7 +31,7 @@ export default async function Hero() {
           <source media="(min-width: 1024px)" srcSet={heroDesktop.srcSet} sizes="100vw" />
           <img
             {...heroMobile}
-            alt="راية فوج روضة الفيحاء في الطبيعة"
+            alt=""
             className="scale-[1.25] object-cover object-[left_35%] lg:scale-100 lg:object-[left_32%]"
           />
         </picture>
@@ -127,7 +128,7 @@ export default async function Hero() {
             <div className="relative h-10 w-10 shrink-0 sm:h-11 sm:w-11">
               <Image
                 src="/images/muslim-scout-emblem-white.png"
-                alt="شعار جمعية الكشّاف المسلم في لبنان"
+                alt="شعار جمعية الكشاف المسلم في لبنان"
                 fill
                 sizes="44px"
                 className="object-contain"
@@ -142,7 +143,7 @@ export default async function Hero() {
                   drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]
                 "
               >
-                جمعية الكشّاف المسلم في لبنان
+                جمعية الكشاف المسلم في لبنان
               </p>
 
               <p
@@ -204,45 +205,58 @@ export default async function Hero() {
             في مخيمات وأنشطة تصنع الذكريات وتنمّي الإنسان.
           </p>
 
-          {/* CTA buttons */}
+          {/* CTA buttons: two side by side even on phones, so both sit above the fold */}
           <div
             className="
-              mx-auto mt-7 flex w-full max-w-[520px]
-              flex-col items-stretch gap-3
-              sm:mt-9 sm:flex-row
+              mx-auto mt-7 grid w-full max-w-[520px]
+              grid-cols-2 gap-3
+              sm:mt-9 sm:flex
               sm:justify-center
               lg:mx-0 lg:max-w-none
               lg:justify-start
             "
           >
-            <SalawatButton
+            <Link
+              href="/join"
               className="
                 btn-gold justify-center
-                min-h-14
-                text-base
+                px-4 text-base
                 shadow-[0_6px_20px_rgba(0,0,0,0.12)]
-                sm:min-h-12
-                sm:min-w-[200px]
+                sm:min-w-[200px] sm:px-7
               "
-            />
+            >
+              انضم إلينا
+              <ArrowLeft className="btn-arrow h-4 w-4" aria-hidden="true" />
+            </Link>
 
-            <a
-              href="#about"
+            <Link
+              href="/about"
               className="
                 btn-outline-light justify-center
-                min-h-14
                 border border-white/50
                 bg-[#281747]/25
                 backdrop-blur-md
-                text-base text-white
+                px-4 text-base text-white
                 hover:bg-white/15
-                sm:min-h-12
-                sm:min-w-[200px]
+                sm:min-w-[200px] sm:px-7
               "
             >
               تعرّف على الفوج
-              <ArrowLeft className="btn-arrow h-4 w-4" aria-hidden="true" />
-            </a>
+            </Link>
+          </div>
+
+          {/* Salawat counter: a small tertiary action under the CTAs */}
+          <div className="mt-4 flex justify-center lg:justify-start">
+            <SalawatButton
+              className="
+                inline-flex min-h-[44px] items-center gap-2.5
+                rounded-full border border-white/25
+                bg-white/10 pe-1.5 ps-4
+                text-sm font-semibold text-white
+                backdrop-blur-sm
+                hover:bg-white/15
+              "
+            />
           </div>
         </div>
       </div>

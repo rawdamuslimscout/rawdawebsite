@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { cache } from "react";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { SESSION_COOKIE_NAME, SESSION_TTL_SECONDS } from "@/lib/session-constants";
 
@@ -89,6 +90,17 @@ export const getSessionAdminId = cache(async (): Promise<string | null> => {
     return null;
   }
 });
+
+/**
+ * Page-level guard for admin server components. Layouts don't protect page
+ * data loads on their own (pages render in parallel with layouts), so every
+ * admin page calls this before touching the database.
+ */
+export async function requireAdminPage(): Promise<string> {
+  const adminId = await getSessionAdminId();
+  if (!adminId) redirect("/admin/login");
+  return adminId;
+}
 
 /** Invalidates every session of this admin (used by logout and password changes). */
 export async function revokeAdminSessions(adminId: string) {

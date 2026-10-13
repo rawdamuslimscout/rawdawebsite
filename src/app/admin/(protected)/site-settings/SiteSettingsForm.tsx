@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { saveSiteSettings } from "./actions";
 import { useToast } from "../ToastProvider";
 import { friendlyMessage } from "@/lib/errors";
-import { thumbUrl } from "@/lib/image-url";
+import SafeImage from "@/components/ui/SafeImage";
 
 type Settings = {
   name: string;
@@ -22,7 +22,7 @@ type Settings = {
 type GalleryItem = { id: string; title: string; imageUrl: string };
 
 const inputClass =
-  "w-full rounded-xl border border-brand-purple/15 bg-white px-3.5 py-2.5 text-base outline-none transition-colors placeholder:text-brand-ink/30 focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/10 sm:text-sm";
+  "w-full rounded-xl border border-brand-purple/15 bg-white px-3.5 py-2.5 text-base outline-none transition-colors placeholder:text-brand-ink/60 focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/10 sm:text-sm";
 
 export default function SiteSettingsForm({
   settings,
@@ -67,10 +67,11 @@ export default function SiteSettingsForm({
       className="mt-8 grid gap-4 rounded-2xl border border-brand-purple/10 bg-white p-6 shadow-sm sm:grid-cols-2"
     >
       <div>
-        <label className="mb-1.5 block text-sm font-semibold text-brand-ink/80">
+        <label htmlFor="settings-name" className="mb-1.5 block text-sm font-semibold text-brand-ink/80">
           اسم الفوج
         </label>
         <input
+          id="settings-name"
           name="name"
           defaultValue={settings.name}
           required
@@ -78,92 +79,103 @@ export default function SiteSettingsForm({
         />
       </div>
       <div>
-        <label className="mb-1.5 block text-sm font-semibold text-brand-ink/80">
+        <label htmlFor="settings-tagline" className="mb-1.5 block text-sm font-semibold text-brand-ink/80">
           العبارة التعريفية
         </label>
         <input
+          id="settings-tagline"
+          aria-describedby="settings-tagline-help"
           name="tagline"
           defaultValue={settings.tagline}
           placeholder="جملة قصيرة تعبّر عن الفوج"
           className={inputClass}
         />
-        <p className="mt-1.5 text-xs text-brand-ink/50">
+        <p id="settings-tagline-help" className="mt-1.5 text-xs text-brand-ink/70">
           تظهر في قسم «عن الفوج» عندما لا توجد صور.
         </p>
       </div>
       <div className="sm:col-span-2">
-        <label className="mb-1.5 block text-sm font-semibold text-brand-ink/80">
+        <label htmlFor="settings-parentOrg" className="mb-1.5 block text-sm font-semibold text-brand-ink/80">
           الجهة الأم (الجمعية / المفوضية)
         </label>
         <input
+          id="settings-parentOrg"
           name="parentOrg"
           defaultValue={settings.parentOrg}
           className={inputClass}
         />
       </div>
       <div>
-        <label className="mb-1.5 block text-sm font-semibold text-brand-ink/80">
+        <label htmlFor="settings-instagramUrl" className="mb-1.5 block text-sm font-semibold text-brand-ink/80">
           رابط حساب إنستغرام
         </label>
         <input
           type="url"
+          id="settings-instagramUrl"
+          aria-describedby="settings-instagramUrl-help"
           name="instagramUrl"
           defaultValue={settings.instagramUrl}
           placeholder="https://instagram.com/..."
           dir="ltr"
           className={inputClass}
         />
-        <p className="mt-1.5 text-xs text-brand-ink/50">
+        <p id="settings-instagramUrl-help" className="mt-1.5 text-xs text-brand-ink/70">
           يظهر كأيقونة في أسفل الموقع. انسخ الرابط كاملًا من المتصفح.
         </p>
       </div>
       <div>
-        <label className="mb-1.5 block text-sm font-semibold text-brand-ink/80">
+        <label htmlFor="settings-contactPhone" className="mb-1.5 block text-sm font-semibold text-brand-ink/80">
           رقم الهاتف
         </label>
         <input
           type="tel"
+          id="settings-contactPhone"
+          aria-describedby="settings-contactPhone-help"
           name="contactPhone"
           defaultValue={settings.contactPhone}
           placeholder="+961 81 348 184"
           dir="ltr"
           className={inputClass}
         />
-        <p className="mt-1.5 text-xs text-brand-ink/50">
+        <p id="settings-contactPhone-help" className="mt-1.5 text-xs text-brand-ink/70">
           يظهر في أسفل الموقع، ويُستخدم أيضًا لزر واتساب.
         </p>
       </div>
       <div className="sm:col-span-2">
-        <label className="mb-1.5 block text-sm font-semibold text-brand-ink/80">
+        <label htmlFor="settings-contactLocation" className="mb-1.5 block text-sm font-semibold text-brand-ink/80">
           العنوان
         </label>
         <input
+          id="settings-contactLocation"
+          aria-describedby="settings-contactLocation-help"
           name="contactLocation"
           defaultValue={settings.contactLocation}
           placeholder="مثال: طرابلس، لبنان"
           className={inputClass}
         />
-        <p className="mt-1.5 text-xs text-brand-ink/50">يظهر في أسفل الموقع.</p>
+        <p id="settings-contactLocation-help" className="mt-1.5 text-xs text-brand-ink/70">يظهر في أسفل الموقع.</p>
       </div>
       <div className="sm:col-span-2">
-        <label className="mb-1.5 block text-sm font-semibold text-brand-ink/80">
+        <label htmlFor="settings-joinIntro" className="mb-1.5 block text-sm font-semibold text-brand-ink/80">
           مقدمة صفحة «انضم إلينا»
         </label>
         <textarea
+          id="settings-joinIntro"
+          aria-describedby="settings-joinIntro-help"
           name="joinIntro"
           defaultValue={settings.joinIntro}
           rows={3}
           className={`${inputClass} resize-y`}
         />
-        <p className="mt-1.5 text-xs text-brand-ink/50">
+        <p id="settings-joinIntro-help" className="mt-1.5 text-xs text-brand-ink/70">
           تظهر أعلى صفحة «انضم إلينا».
         </p>
       </div>
-      <fieldset className="sm:col-span-2">
+      <fieldset className="sm:col-span-2" aria-describedby="settings-aboutImageIds-help">
         <legend className="mb-1.5 block text-sm font-semibold text-brand-ink/80">
           صور قسم «عن الفوج»
         </legend>
-        <p className="mb-3 text-xs text-brand-ink/45">
+        <p id="settings-aboutImageIds-help" className="mb-3 text-xs text-brand-ink/70">
           اختر صورتين من معرض الصور لتظهرا بجانب نص «عن الفوج» في الصفحة الرئيسية. اتركهما دون اختيار لاستخدام أول صورتين تلقائيًا.
         </p>
         {gallery.length > 0 ? (
@@ -180,11 +192,11 @@ export default function SiteSettingsForm({
                   defaultChecked={settings.aboutImageIds.includes(item.id)}
                   className="h-4 w-4 accent-brand-purple"
                 />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={thumbUrl(item.imageUrl)}
+                <SafeImage
+                  src={item.imageUrl}
+                  variant="thumb"
                   alt=""
-                  className="h-12 w-12 rounded-md object-cover"
+                  className="h-12 w-12 shrink-0 rounded-md object-cover"
                 />
                 <span className="min-w-0 truncate text-sm text-brand-ink">
                   {item.title}

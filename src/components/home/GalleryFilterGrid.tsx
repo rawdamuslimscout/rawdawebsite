@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
-import { Check, ChevronDown, SlidersHorizontal } from "lucide-react";
 
 import GalleryCard from "@/components/ui/GalleryCard";
 import GalleryLightbox from "@/components/ui/GalleryLightbox";
+import { arabicCount, PHOTO_FORMS } from "@/components/news/format";
 import { galleryFilters, type GalleryItem } from "@/data/content";
+import { fillGalleryGaps, type TileSpan } from "@/lib/gallery-layout";
 
 /* -------------------------------------------------------------------------- */
 /*                              DESKTOP LAYOUT                                */
@@ -19,26 +20,38 @@ import { galleryFilters, type GalleryItem } from "@/data/content";
  * Mobile + tablet = clean predictable grid
  * Desktop = editorial / masonry-inspired composition
  */
-const DESKTOP_SPANS: Record<string, string> = {
-  large: "lg:col-span-2 lg:row-span-2",
-  medium: "lg:col-span-2 lg:row-span-1",
-  small: "lg:col-span-1 lg:row-span-1",
+const DESKTOP_SPANS: Record<string, TileSpan> = {
+  large: { col: 2, row: 2 },
+  medium: { col: 2, row: 1 },
+  small: { col: 1, row: 1 },
 
-  lg: "lg:col-span-2 lg:row-span-2",
-  wide: "lg:col-span-2 lg:row-span-1",
-  tall: "lg:col-span-1 lg:row-span-2",
-  sm: "lg:col-span-1 lg:row-span-1",
+  lg: { col: 2, row: 2 },
+  wide: { col: 2, row: 1 },
+  tall: { col: 1, row: 2 },
+  sm: { col: 1, row: 1 },
 };
 
-export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
+// Literal class names so Tailwind generates them (index = span).
+const BASE_COL_SPAN = ["", "col-span-1", "col-span-2"];
+const SM_COL_SPAN = ["", "sm:col-span-1", "sm:col-span-2", "sm:col-span-3"];
+const LG_COL_SPAN = ["", "lg:col-span-1", "lg:col-span-2", "lg:col-span-3", "lg:col-span-4"];
+const LG_ROW_SPAN = ["", "lg:row-span-1", "lg:row-span-2", "lg:row-span-3", "lg:row-span-4", "lg:row-span-5", "lg:row-span-6"];
+// Below desktop, rows take their height from the tiles' 4:3 ratio; a tile
+// widened to fill the last row keeps the same height with a wider ratio.
+const BASE_ASPECT = ["", "aspect-[4/3]", "aspect-[8/3]"];
+const SM_ASPECT = ["", "sm:aspect-[4/3]", "sm:aspect-[8/3]", "sm:aspect-[4/1]"];
+const ONE: TileSpan = { col: 1, row: 1 };
+
+export default function GalleryFilterGrid({
+  items,
+  withFilters = true,
+}: {
+  items: GalleryItem[];
+  /** false for the homepage teaser: no category chips, just the grid. */
+  withFilters?: boolean;
+}) {
   const [active, setActive] = useState("all");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-
-  const [filterOpen, setFilterOpen] = useState(false);
-
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
 
   /* ------------------------------------------------------------------------ */
   /* FILTERS                                                                  */
@@ -83,7 +96,19 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
   const activeFilter =
     visibleFilters.find((filter) => filter.id === active) ?? visibleFilters[0];
 
-  const activeCount = counts.get(active) ?? 0;
+  // Tile sizes per breakpoint with every hole filled (see lib/gallery-layout.ts):
+  // 2 columns on phones, 3 on tablets, 4 (admin-chosen sizes) on desktop.
+  const layout = useMemo(() => {
+    const ones = filtered.map(() => ONE);
+    return {
+      base: fillGalleryGaps(ones, 2),
+      sm: fillGalleryGaps(ones, 3),
+      lg: fillGalleryGaps(
+        filtered.map((item) => DESKTOP_SPANS[item.size as string] ?? ONE),
+        4,
+      ),
+    };
+  }, [filtered]);
 
   /* ------------------------------------------------------------------------ */
   /* RESET INVALID FILTER                                                     */
@@ -95,74 +120,6 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
       setLightboxIndex(null);
     }
   }, [active, counts]);
-
-  /* ------------------------------------------------------------------------ */
-  /* CLOSE DROPDOWN                                                           */
-  /* ------------------------------------------------------------------------ */
-
-  useEffect(() => {
-    if (!filterOpen) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setFilterOpen(false);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setFilterOpen(false);
-        triggerRef.current?.focus();
-      }
-    };
-
-    // Move focus to the selected option so arrow keys work straight away.
-    const raf = requestAnimationFrame(() => {
-      menuRef.current
-        ?.querySelector<HTMLButtonElement>('[aria-selected="true"]')
-        ?.focus();
-    });
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [filterOpen]);
-
-  /** Arrow / Home / End navigation between options; Tab closes the menu. */
-  const onMenuKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    const options = Array.from(
-      menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="option"]') ??
-        [],
-    );
-    if (!options.length) return;
-    const current = options.indexOf(
-      document.activeElement as HTMLButtonElement,
-    );
-
-    let next: number | null = null;
-    if (event.key === "ArrowDown") next = (current + 1) % options.length;
-    else if (event.key === "ArrowUp")
-      next = (current - 1 + options.length) % options.length;
-    else if (event.key === "Home") next = 0;
-    else if (event.key === "End") next = options.length - 1;
-    else if (event.key === "Tab") {
-      setFilterOpen(false);
-      return;
-    }
-
-    if (next !== null) {
-      event.preventDefault();
-      options[next]?.focus();
-    }
-  };
 
   /* ------------------------------------------------------------------------ */
   /* EMPTY STATE                                                              */
@@ -179,8 +136,6 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
   const changeFilter = (filterId: string) => {
     setActive(filterId);
     setLightboxIndex(null);
-    setFilterOpen(false);
-    triggerRef.current?.focus();
   };
 
   /* ------------------------------------------------------------------------ */
@@ -193,258 +148,41 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
       {/* FILTER                                                               */}
       {/* ==================================================================== */}
 
-      {visibleFilters.length > 1 && (
+      {/* Chips are only useful with at least two real categories. */}
+      {withFilters && visibleFilters.length > 2 && (
         <div
-          ref={dropdownRef}
-          className="relative z-30  mt-5 max-w-[300px] sm:mt-7"
+          role="group"
+          aria-label="تصنيف الصور"
+          className="no-scrollbar -mx-5 mt-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:mx-0 sm:mt-7 sm:flex-wrap sm:px-0"
         >
-          {/* ---------------------------------------------------------------- */}
-          {/* FILTER TRIGGER                                                   */}
-          {/* ---------------------------------------------------------------- */}
+          {visibleFilters.map((filter) => {
+            const isActive = active === filter.id;
 
-          <motion.button
-            ref={triggerRef}
-            type="button"
-            onClick={() => setFilterOpen((current) => !current)}
-            aria-expanded={filterOpen}
-            aria-haspopup="listbox"
-            aria-label={`تصنيف الصور: ${activeFilter?.label ?? ""} (${activeCount})`}
-            whileTap={{ scale: 0.985 }}
-            className="
-              group
-              flex
-              min-h-[48px]
-              w-full
-              items-center
-              justify-between
-              rounded-xl
-              border
-              border-brand-purple/[0.10]
-              bg-white
-              px-3
-              shadow-[0_4px_20px_rgba(53,30,88,0.045)]
-              transition
-              duration-200
-              hover:border-brand-purple/[0.18]
-              hover:shadow-[0_7px_24px_rgba(53,30,88,0.07)]
-              focus-visible:outline-none
-              focus-visible:ring-2
-              focus-visible:ring-brand-purple/20
-              sm:min-h-[50px]
-              sm:rounded-2xl
-              sm:px-3.5
-            "
-          >
-            {/* Left */}
-            <span className="flex min-w-0 items-center gap-2.5">
-              <span
-                className="
-                  flex
-                  h-8
-                  w-8
-                  shrink-0
-                  items-center
-                  justify-center
-                  rounded-lg
-                  bg-brand-purple/[0.065]
-                  text-brand-purple
-                  transition
-                  group-hover:bg-brand-purple/[0.09]
-                "
+            return (
+              <button
+                key={filter.id}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => changeFilter(filter.id)}
+                className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors ${
+                  isActive
+                    ? "bg-brand-purple text-white shadow-sm"
+                    : "bg-white text-brand-ink/75 ring-1 ring-brand-purple/10 hover:bg-brand-purple-tint hover:text-brand-ink"
+                }`}
               >
-                <SlidersHorizontal size={15} strokeWidth={2} />
-              </span>
-
-              <span className="min-w-0 text-right">
+                {filter.label}
                 <span
-                  className="
-                    block
-                    text-[9px]
-                    font-medium
-                    leading-none
-                    text-brand-ink/35
-                  "
+                  className={`min-w-[22px] rounded-full px-1.5 py-0.5 text-center text-[11px] font-bold tabular-nums ${
+                    isActive
+                      ? "bg-white/20 text-white"
+                      : "bg-brand-purple/[0.06] text-brand-ink/70"
+                  }`}
                 >
-                  تصنيف الصور
+                  {counts.get(filter.id) ?? 0}
                 </span>
-
-                <span
-                  className="
-                    mt-1
-                    block
-                    truncate
-                    text-[13px]
-                    font-bold
-                    leading-none
-                    text-brand-ink
-                    sm:text-sm
-                  "
-                >
-                  {activeFilter?.label}
-                </span>
-              </span>
-            </span>
-
-            {/* Right */}
-            <span className="flex shrink-0 items-center gap-1.5">
-              <span
-                className="
-                  min-w-[22px]
-                  rounded-md
-                  bg-brand-purple/[0.065]
-                  px-1.5
-                  py-1
-                  text-center
-                  text-[9px]
-                  font-bold
-                  text-brand-purple
-                "
-              >
-                {activeCount}
-              </span>
-
-              <motion.span
-                animate={{
-                  rotate: filterOpen ? 180 : 0,
-                }}
-                transition={{ duration: 0.18 }}
-                className="text-brand-ink/35"
-              >
-                <ChevronDown size={16} />
-              </motion.span>
-            </span>
-          </motion.button>
-
-          {/* ---------------------------------------------------------------- */}
-          {/* FILTER MENU                                                       */}
-          {/* ---------------------------------------------------------------- */}
-
-          <AnimatePresence>
-            {filterOpen && (
-              <motion.div
-                initial={{
-                  opacity: 0,
-                  y: -5,
-                  scale: 0.985,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 6,
-                  scale: 1,
-                }}
-                exit={{
-                  opacity: 0,
-                  y: -4,
-                  scale: 0.985,
-                }}
-                transition={{
-                  duration: 0.16,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-                ref={menuRef}
-                role="listbox"
-                aria-label="تصنيف الصور"
-                onKeyDown={onMenuKeyDown}
-                className="
-                  absolute
-                  left-0
-                  right-0
-                  top-full
-                  overflow-hidden
-                  rounded-xl
-                  border
-                  border-brand-purple/[0.10]
-                  bg-white
-                  p-1
-                  shadow-[0_18px_45px_rgba(53,30,88,0.13)]
-                  sm:rounded-2xl
-                "
-              >
-                {visibleFilters.map((filter) => {
-                  const isActive = active === filter.id;
-
-                  const count = counts.get(filter.id) ?? 0;
-
-                  return (
-                    <button
-                      key={filter.id}
-                      type="button"
-                      role="option"
-                      aria-selected={isActive}
-                      onClick={() => changeFilter(filter.id)}
-                      className={`
-                        flex
-                        min-h-[44px]
-                        w-full
-                        items-center
-                        justify-between
-                        rounded-lg
-                        px-3
-                        text-right
-                        transition
-                        duration-150
-                        sm:min-h-[45px]
-                        sm:rounded-xl
-                        focus-visible:outline-none
-                        focus-visible:ring-2
-                        focus-visible:ring-inset
-                        focus-visible:ring-brand-purple/30
-                        ${
-                          isActive
-                            ? "bg-brand-purple/[0.065] text-brand-purple"
-                            : "text-brand-ink/65 hover:bg-brand-purple/[0.035] hover:text-brand-ink"
-                        }
-                      `}
-                    >
-                      <span className="flex items-center gap-2.5">
-                        <span
-                          className={`
-                            flex
-                            h-[18px]
-                            w-[18px]
-                            items-center
-                            justify-center
-                            rounded-full
-                            border
-                            ${
-                              isActive
-                                ? "border-brand-purple bg-brand-purple text-white"
-                                : "border-brand-ink/15"
-                            }
-                          `}
-                        >
-                          {isActive && <Check size={10} strokeWidth={3} />}
-                        </span>
-
-                        <span className="text-[13px] font-semibold">
-                          {filter.label}
-                        </span>
-                      </span>
-
-                      <span
-                        className={`
-                          min-w-[23px]
-                          rounded-md
-                          px-1.5
-                          py-1
-                          text-center
-                          text-[9px]
-                          font-bold
-                          ${
-                            isActive
-                              ? "bg-brand-purple text-white"
-                              : "bg-brand-purple/[0.05] text-brand-ink/40"
-                          }
-                        `}
-                      >
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -454,7 +192,9 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
 
       {/* Announce the new result count to screen readers after filtering. */}
       <p className="sr-only" aria-live="polite" aria-atomic="true">
-        {`${activeFilter?.label ?? ""}: ${filtered.length} صورة`}
+        {withFilters && visibleFilters.length > 2
+          ? `${activeFilter?.label ?? ""}: ${arabicCount(filtered.length, PHOTO_FORMS)}`
+          : ""}
       </p>
 
       {filtered.length > 0 && (
@@ -468,6 +208,8 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
               sm:mt-7
             "
         >
+          {/* Dense packing: smaller tiles fill the holes the 2x2 / 2x1 tiles leave
+              on desktop (reading and tab order still follow the list). */}
           <div
             className="
                 grid
@@ -475,6 +217,7 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
                 gap-2
                 sm:grid-cols-3
                 sm:gap-3
+                lg:grid-flow-dense
                 lg:auto-rows-[190px]
                 lg:grid-cols-4
                 lg:gap-4
@@ -511,12 +254,16 @@ export default function GalleryFilterGrid({ items }: { items: GalleryItem[] }) {
                       overflow-hidden
                       rounded-xl
                       sm:rounded-2xl
-                      ${DESKTOP_SPANS[item.size as string] ?? ""}
+                      ${BASE_COL_SPAN[layout.base[index]?.col ?? 1]}
+                      ${SM_COL_SPAN[layout.sm[index]?.col ?? 1]}
+                      ${LG_COL_SPAN[layout.lg[index]?.col ?? 1]}
+                      ${LG_ROW_SPAN[layout.lg[index]?.row ?? 1]}
                     `}
                 >
                   <GalleryCard
                     item={item}
                     onClick={() => setLightboxIndex(index)}
+                    aspectClassName={`${BASE_ASPECT[layout.base[index]?.col ?? 1]} ${SM_ASPECT[layout.sm[index]?.col ?? 1]} lg:aspect-auto`}
                   />
                 </motion.div>
               ))}

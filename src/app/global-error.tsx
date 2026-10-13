@@ -13,6 +13,10 @@ export default function GlobalError({
 }) {
   return (
     <html lang="ar" dir="rtl">
+      <head>
+        <title>الموقع غير متاح مؤقتًا | فوج روضة الفيحاء</title>
+        <meta name="robots" content="noindex" />
+      </head>
       <body
         style={{
           margin: 0,
@@ -27,7 +31,7 @@ export default function GlobalError({
           padding: "24px",
         }}
       >
-        <div style={{ maxWidth: 420 }}>
+        <main style={{ maxWidth: 420 }}>
           <h1 style={{ fontSize: 24, margin: "0 0 12px" }}>
             الموقع غير متاح مؤقتًا
           </h1>
@@ -50,7 +54,7 @@ export default function GlobalError({
           >
             إعادة المحاولة
           </button>
-        </div>
+        </main>
       </body>
     </html>
   );

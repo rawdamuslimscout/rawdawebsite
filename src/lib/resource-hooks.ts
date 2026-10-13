@@ -24,6 +24,20 @@ export async function validateResourceWrite(
   if (resource === "org-assignments") return validateAssignment(data);
   if (resource === "places") return validateExists("newsItem", data.newsId, "الخبر المختار غير موجود.");
   if (resource === "org-qualifications") return validateExists("orgPerson", data.personId, "الشخص المختار غير موجود.");
+  if (resource === "events") return validateEventDates(id, data);
+  return null;
+}
+
+async function validateEventDates(id: string, data: Record<string, CoercedValue>): Promise<string | null> {
+  let { startDate, endDate } = data;
+  // Partial updates (JSON API) may send only one of the two: compare with the saved value.
+  if (id && (startDate === undefined || endDate === undefined)) {
+    const saved = await prisma.eventItem.findUnique({ where: { id }, select: { startDate: true, endDate: true } });
+    if (startDate === undefined) startDate = saved?.startDate ?? null;
+    if (endDate === undefined) endDate = saved?.endDate ?? null;
+  }
+  if (startDate instanceof Date && endDate instanceof Date && endDate.getTime() < startDate.getTime())
+    return "تاريخ النهاية يجب ألا يسبق تاريخ البداية.";
   return null;
 }
 

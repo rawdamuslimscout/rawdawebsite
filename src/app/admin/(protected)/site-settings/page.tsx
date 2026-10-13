@@ -1,8 +1,13 @@
 import { prisma } from "@/lib/prisma";
+import { requireAdminPage } from "@/lib/session";
 import { siteInfo } from "@/data/content";
 import SiteSettingsForm from "./SiteSettingsForm";
 
+// Like every other admin page: always rendered per request, never prerendered.
+export const dynamic = "force-dynamic";
+
 export default async function SiteSettingsPage() {
+  await requireAdminPage();
   let settings: {
     name: string;
     tagline: string;

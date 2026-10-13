@@ -12,7 +12,14 @@ export function readingMinutes(post: Pick<BlogPost, "content">) {
   return Math.max(1, Math.round(words / 180));
 }
 
-/** "قراءة في دقيقة" / "دقيقتين" / "٣ دقائق" / "١٢ دقيقة" — Arabic number agreement. */
+/** Admin-entered dates may use Eastern Arabic digits; the site uses Western digits. */
+export function toWesternDigits(text: string) {
+  return text.replace(/[٠-٩]/g, (d) =>
+    String(d.charCodeAt(0) - 0x0660),
+  );
+}
+
+/** "قراءة في دقيقة" / "دقيقتين" / "3 دقائق" / "12 دقيقة" — Arabic number agreement. */
 export function readingTimeLabel(minutes: number) {
   if (minutes <= 1) return "قراءة في دقيقة";
   if (minutes === 2) return "قراءة في دقيقتين";
@@ -38,7 +45,7 @@ export default function BlogCard({ post }: { post: BlogPost }) {
       <div className="flex flex-1 flex-col p-5">
         <p className="flex flex-wrap items-center gap-x-1.5 text-xs font-medium text-brand-turquoise-dark">
           <span>
-            {post.date} · {post.author}
+            {toWesternDigits(post.date)} · {post.author}
           </span>
           <span aria-hidden="true">·</span>
           <span className="inline-flex items-center gap-1">
@@ -50,7 +57,7 @@ export default function BlogCard({ post }: { post: BlogPost }) {
           {/* The title link is stretched over the whole card (after:inset-0),
               so the entire card is one click/tap target with a clear name. */}
           <Link
-            href={`/blog/${post.slug}`}
+            href={`/blog/${encodeURIComponent(post.slug)}`}
             className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
           >
             {post.title}

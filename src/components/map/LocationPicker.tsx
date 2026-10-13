@@ -8,7 +8,7 @@ import type { PickerTarget } from "./LocationPickerMap";
 const PickerMap = dynamic(() => import("./LocationPickerMap"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-64 items-center justify-center rounded-xl bg-brand-purple-tint/60 text-sm text-brand-ink/55 sm:h-72">
+    <div className="flex h-64 items-center justify-center rounded-xl bg-brand-purple-tint/60 text-sm text-brand-ink/65 sm:h-72">
       جارٍ تحميل الخريطة…
     </div>
   ),

@@ -7,13 +7,10 @@ const AR_DIGITS = "٠١٢٣٤٥٦٧٨٩";
 function toLatin(s: string) {
   return s.replace(/[٠-٩]/g, (d) => String(AR_DIGITS.indexOf(d)));
 }
-function toArabic(n: number) {
-  return String(n).replace(/[0-9]/g, (d) => AR_DIGITS[Number(d)]);
-}
 
 /**
- * Animated impact number. Keeps the original numeral system (Latin or
- * Arabic-Indic) and any prefix/suffix such as "+". Server output is the
+ * Animated impact number. Always shows Western digits (the site standard),
+ * normalising any Arabic-Indic input, and keeps any prefix/suffix such as "+". Server output is the
  * final value, so there is no hydration mismatch and no-JS is correct.
  * Screen readers always get the final value (the ticking digits are hidden
  * from them), and the box reserves the final width so nothing reflows.
@@ -21,7 +18,6 @@ function toArabic(n: number) {
 export default function CountUp({ value }: { value: string }) {
   const match = value.match(/^(.*?)([0-9٠-٩]+)([\s\S]*)$/);
   const target = match ? parseInt(toLatin(match[2]), 10) : NaN;
-  const arabic = match ? /[٠-٩]/.test(match[2]) : false;
   const [shown, setShown] = useState<number>(target);
   const ref = useRef<HTMLSpanElement | null>(null);
 
@@ -71,15 +67,15 @@ export default function CountUp({ value }: { value: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
-  if (!match || Number.isNaN(target)) return <span>{value}</span>;
+  if (!match || Number.isNaN(target)) return <span>{toLatin(value)}</span>;
 
   const prefix = match[1].trim();
   const suffix = match[3].trim();
-  const text = arabic ? toArabic(shown) : String(shown);
+  const text = String(shown);
 
   return (
     <span ref={ref} className="inline-flex">
-      <span className="sr-only">{value}</span>
+      <span className="sr-only">{toLatin(value)}</span>
       <span
         dir="ltr"
         aria-hidden="true"

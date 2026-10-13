@@ -130,7 +130,7 @@ export default function FaqList({
       {showSearch && (
         <div className="relative">
           <Search
-            className="pointer-events-none absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-ink/40"
+            className="pointer-events-none absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-ink/60"
             aria-hidden="true"
           />
           <input
@@ -143,7 +143,7 @@ export default function FaqList({
             placeholder="ابحث في الأسئلة…"
             aria-label="ابحث في الأسئلة"
             enterKeyHint="search"
-            className="min-h-[48px] w-full rounded-full border border-brand-purple/15 bg-white py-3 pe-12 ps-11 text-base outline-none transition-colors focus:border-brand-purple sm:text-sm [&::-webkit-search-cancel-button]:hidden"
+            className="min-h-[48px] w-full rounded-full border border-brand-purple/15 bg-white py-3 pe-12 ps-11 text-base outline-none placeholder:text-brand-ink/60 transition-colors focus:border-brand-purple sm:text-sm [&::-webkit-search-cancel-button]:hidden"
           />
           {query && (
             <button
@@ -153,7 +153,7 @@ export default function FaqList({
                 inputRef.current?.focus();
               }}
               aria-label="مسح البحث"
-              className="absolute end-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-brand-ink/50 hover:bg-brand-purple-tint hover:text-brand-ink"
+              className="absolute end-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-brand-ink/65 hover:bg-brand-purple-tint hover:text-brand-ink"
             >
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -174,12 +174,12 @@ export default function FaqList({
       )}
 
       <p className="sr-only" role="status" aria-live="polite">
-        {filtering ? `${visible.length} من ${items.length} سؤالًا` : ""}
+        {filtering ? `النتائج: ${visible.length} من ${items.length}` : ""}
       </p>
 
       {visible.length === 0 ? (
         <div className="mt-8 rounded-2xl bg-white p-8 text-center ring-1 ring-brand-purple/10">
-          <p className="text-sm text-brand-ink/60">
+          <p className="text-sm text-brand-ink/70">
             لا توجد أسئلة مطابقة لبحثك.
           </p>
           <button

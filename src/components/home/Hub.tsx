@@ -1,36 +1,61 @@
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { iconMap } from "@/lib/icons";
-import { getActivities, getCamps, getEvents, getNews } from "@/lib/data";
+import { getCamps, getEvents, getNews } from "@/lib/data";
+import {
+  displayDate,
+  latinDigits,
+  newsHref,
+  sortByPublished,
+} from "@/components/news/format";
 import HubClient, { type HubItem } from "./HubClient";
 
+/** The homepage shows only the latest news; the full archive lives on /news. */
+const HOME_NEWS_LIMIT = 6;
+
 export default async function Hub() {
-  const [news, events, camps, activities] = await Promise.all([
+  const [news, events, camps] = await Promise.all([
     getNews(),
     getEvents(),
     getCamps(),
-    getActivities(),
   ]);
 
+  // Past events (isUpcoming === false) are stale on the homepage. Upcoming
+  // ones come first, soonest first; events without real dates keep the
+  // admin order after them.
+  const upcoming = events
+    .filter((e) => e.isUpcoming === true)
+    .sort(
+      (a, b) =>
+        Date.parse(a.startDate ?? a.endDate ?? "") -
+        Date.parse(b.startDate ?? b.endDate ?? ""),
+    );
+  const undated = events.filter((e) => e.isUpcoming === undefined);
+
   const items: HubItem[] = [
-    ...news.map(
-      (n): HubItem => ({
-        key: `n-${n.id}`,
-        kind: "news",
-        title: n.title,
-        date: n.date,
-        label: n.category,
-        excerpt: n.excerpt,
-        image: n.imageUrls?.[0] || n.imageUrl || undefined,
-        news: n,
-      }),
-    ),
-    ...events.map(
+    ...sortByPublished(news)
+      .slice(0, HOME_NEWS_LIMIT)
+      .map(
+        (n): HubItem => ({
+          key: `n-${n.id}`,
+          kind: "news",
+          title: n.title,
+          date: displayDate(n.date, n.publishedAt),
+          label: n.category,
+          excerpt: n.excerpt,
+          image: n.imageUrls?.[0] || n.imageUrl || undefined,
+          href: newsHref(n.id),
+        }),
+      ),
+    ...[...upcoming, ...undated].map(
       (e): HubItem => ({
         key: `e-${e.id}`,
         kind: "event",
+        upcoming: e.isUpcoming === true,
         title: e.title,
-        date: e.date,
+        date: latinDigits(e.date),
         place: e.location,
         label: e.group,
         excerpt: e.description,
@@ -41,92 +66,43 @@ export default async function Hub() {
         key: `c-${c.id}`,
         kind: "camp",
         title: c.title,
-        date: c.year,
+        date: latinDigits(c.year),
         place: c.location,
         excerpt: c.summary,
       }),
     ),
   ];
 
+  if (items.length === 0) return null;
+
   return (
-    <>
-      {items.length > 0 && (
-        <section
-          id="news"
-          className="section-y relative bg-brand-purple-tint/60"
-        >
-          <span
-            id="camps"
-            aria-hidden="true"
-            className="absolute top-0 h-0 w-0 scroll-mt-24"
+    <section id="news" className="section-y relative bg-brand-purple-tint/60">
+      <span
+        id="camps"
+        aria-hidden="true"
+        className="absolute top-0 h-0 w-0 scroll-mt-24"
+      />
+
+      <div className="container-x">
+        <Reveal className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <SectionHeading
+            title="آخر ما يحدث في الفوج"
+            subtitle="أخبار ومناسبات ومخيمات — كل ما يجري في الفوج الآن في مكان واحد."
           />
+          <Link
+            href="/news"
+            className="group inline-flex min-h-11 shrink-0 items-center gap-2 self-start text-base font-bold text-brand-purple md:self-end"
+          >
+            <span className="link-underline pb-1">كل الأخبار والمقالات</span>
+            <ArrowLeft
+              className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-1 group-focus-visible:-translate-x-1"
+              aria-hidden="true"
+            />
+          </Link>
+        </Reveal>
 
-          <div className="container-x">
-            <Reveal>
-              <SectionHeading
-                title="آخر ما يحدث في الفوج"
-                subtitle="أخبار، مناسبات قادمة ومخيمات — كل ما يجري في الفوج الآن في مكان واحد."
-              />
-            </Reveal>
-
-            <HubClient items={items} />
-          </div>
-        </section>
-      )}
-
-      {activities.length > 0 && (
-        <section
-          id="activities"
-          className="relative overflow-hidden bg-brand-purple py-10 sm:py-16"
-        >
-          <div
-            aria-hidden="true"
-            className="texture-canvas absolute inset-0 opacity-30"
-          />
-
-          <div className="container-x relative">
-            <Reveal className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-              <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">
-                الأنشطة
-              </h2>
-            </Reveal>
-
-            <ul className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-white/10 sm:mt-8 sm:grid-cols-2 lg:grid-cols-4">
-              {activities.map((a, i) => {
-                const Icon = iconMap[a.icon];
-
-                return (
-                  <li
-                    key={a.id}
-                    className="bg-brand-purple last:odd:col-span-2 lg:last:odd:col-span-1"
-                  >
-                    <Reveal
-                      delay={(i % 4) * 60}
-                      className="flex h-full gap-3 p-4 sm:gap-4 sm:p-6"
-                    >
-                      <Icon
-                        className="mt-1 h-5 w-5 shrink-0 text-brand-yellow sm:h-6 sm:w-6"
-                        strokeWidth={1.75}
-                        aria-hidden="true"
-                      />
-
-                      <div className="min-w-0">
-                        <h3 className="font-display text-base font-semibold text-white sm:text-lg">
-                          {a.title}
-                        </h3>
-
-                        <p className="mt-1 text-xs leading-6 text-white/80 sm:mt-1.5 sm:text-sm sm:leading-7">
-                          {a.description}
-                        </p>
-                      </div>
-                    </Reveal>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </section>
-      )}
-    </>
+        <HubClient items={items} />
+      </div>
+    </section>
   );
 }

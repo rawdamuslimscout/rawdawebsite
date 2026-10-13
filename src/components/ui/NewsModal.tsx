@@ -1,18 +1,14 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
 
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { NewsItem } from "@/data/content";
+import { newsHref, newsImages } from "@/components/news/format";
+import SafeImage from "@/components/ui/SafeImage";
 
-export function newsImages(item: NewsItem): string[] {
-  return item.imageUrls?.length
-    ? item.imageUrls
-    : item.imageUrl
-      ? [item.imageUrl]
-      : [];
-}
+export { newsImages };
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -167,8 +163,9 @@ export default function NewsModal({
               else goPrev();
             }}
           >
-            <img
+            <SafeImage
               src={images[imageIndex]}
+              variant="original"
               alt={
                 images.length > 1
                   ? `${item.title} (${imageIndex + 1} من ${images.length})`
@@ -219,6 +216,16 @@ export default function NewsModal({
           <p className="mt-5 whitespace-pre-line text-base leading-8 text-brand-ink/70">
             {item.excerpt}
           </p>
+          <Link
+            href={newsHref(item.id)}
+            className="group mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-brand-purple"
+          >
+            <span className="link-underline pb-1">اقرأ الخبر كاملًا</span>
+            <ArrowLeft
+              className="h-4 w-4 transition-transform group-hover:-translate-x-1"
+              aria-hidden="true"
+            />
+          </Link>
         </div>
       </div>
     </div>

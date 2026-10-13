@@ -17,7 +17,8 @@ import {
 import type { FieldConfig, ResourceConfig } from "@/lib/admin-resources";
 import { friendlyMessage } from "@/lib/errors";
 import { makeThumbnail, prepareFile } from "@/lib/client-files";
-import { thumbUrl } from "@/lib/image-url";
+import SafeImage from "@/components/ui/SafeImage";
+import { parseStringArray as parseUrls } from "@/lib/json";
 import {
   saveItem,
   deleteItem,
@@ -26,25 +27,13 @@ import {
   uploadFile,
   type ActionResult,
 } from "./actions";
-import FieldInput from "./FieldInput";
+import FieldInput, { toDateInputValue } from "./FieldInput";
 import { useToast } from "../ToastProvider";
 
 type Option = { value: string; label: string };
 
 function isImageUrl(url: string): boolean {
   return /\.(png|jpe?g|gif|webp|svg|avif)(\?.*)?$/i.test(url);
-}
-
-function parseUrls(raw: unknown): string[] {
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(String(raw));
-    return Array.isArray(parsed)
-      ? parsed.filter((u): u is string => typeof u === "string")
-      : [];
-  } catch {
-    return [];
-  }
 }
 
 const isFileField = (f: FieldConfig) =>
@@ -252,6 +241,7 @@ export default function ResourceManager({
       return field.options?.find((o) => o.value === String(raw))?.label ?? String(raw);
     if (field?.type === "relation")
       return relations[name]?.find((o) => o.value === String(raw))?.label ?? "";
+    if (field?.type === "date") return toDateInputValue(raw);
     return String(raw);
   }
 
@@ -266,13 +256,20 @@ export default function ResourceManager({
     const required =
       !field.optional && !isFileField(field) && field.name !== "order";
     const id = row ? String(row.id) : "";
+    // Unique per form (create form vs. each row's edit form) so labels point at the right input.
+    const inputId = `${config.key}-${id || "new"}-${field.name}`;
+    const helpId = field.help ? `${inputId}-help` : undefined;
 
     return (
       <div
         key={field.name}
         className={field.type === "textarea" || field.type === "location" ? "sm:col-span-2" : ""}
       >
-        <label className="mb-1.5 block text-sm font-semibold text-brand-ink/80">
+        <label
+          // The map picker has its own labelled inputs.
+          htmlFor={field.type === "location" ? undefined : inputId}
+          className="mb-1.5 block text-sm font-semibold text-brand-ink/80"
+        >
           {field.label}
           {required && (
             <span className="mr-1 text-red-500" aria-hidden="true">
@@ -283,8 +280,10 @@ export default function ResourceManager({
         <FieldInput
           key={isFileField(field) ? `${field.name}-${version}` : field.name}
           field={field}
+          id={inputId}
+          describedBy={helpId}
           isCreate={isCreate}
-          defaultValue={row ? (row[field.name] as string | number) : undefined}
+          defaultValue={row ? (row[field.name] as string | number | Date) : undefined}
           relationOptions={relations[field.name]}
           rowValues={row ?? undefined}
         />
@@ -295,9 +294,10 @@ export default function ResourceManager({
         existingRaw ? (
           <div className="mt-2 flex items-center gap-3 rounded-xl bg-brand-purple-tint/40 p-2">
             {isImageUrl(existingRaw) ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={thumbUrl(existingRaw)}
+              // Thumbnail when there is one, else the original, else a neutral tile.
+              <SafeImage
+                src={existingRaw}
+                variant="thumb"
                 alt=""
                 className="h-14 w-14 rounded-lg border border-brand-purple/10 object-cover"
               />
@@ -319,9 +319,9 @@ export default function ResourceManager({
             {parseUrls(existingRaw).map((url) => (
               <div key={url} className="relative">
                 {isImageUrl(url) ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={thumbUrl(url)}
+                  <SafeImage
+                    src={url}
+                    variant="thumb"
                     alt=""
                     className="h-16 w-16 rounded-lg border border-brand-purple/10 object-cover"
                   />
@@ -351,7 +351,9 @@ export default function ResourceManager({
         ) : null}
 
         {field.help && (
-          <p className="mt-1.5 text-xs leading-5 text-brand-ink/50">{field.help}</p>
+          <p id={helpId} className="mt-1.5 text-xs leading-5 text-brand-ink/70">
+            {field.help}
+          </p>
         )}
       </div>
     );
@@ -390,7 +392,7 @@ export default function ResourceManager({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full sm:max-w-xs">
-          <Search className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-ink/35" />
+          <Search className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-ink/60" />
           <input
             type="search"
             value={query}
@@ -400,7 +402,7 @@ export default function ResourceManager({
           />
         </div>
         <div className="flex items-center justify-between gap-3 sm:justify-end">
-          <span className="text-xs text-brand-ink/50">
+          <span className="text-xs text-brand-ink/70">
             {query ? `${filteredRows.length} من ${rows.length}` : `${rows.length} عنصر`}
           </span>
           <button
@@ -421,7 +423,7 @@ export default function ResourceManager({
           <h2 className="font-display text-lg font-semibold text-brand-ink">
             {addLabel}
           </h2>
-          <p className="mt-1 text-xs text-brand-ink/50">
+          <p className="mt-1 text-xs text-brand-ink/70">
             الحقول التي عليها <span className="text-red-500">*</span> مطلوبة.
           </p>
           <form
@@ -440,12 +442,12 @@ export default function ResourceManager({
 
       <section className="mt-6 space-y-3">
         {rows.length === 0 && !createOpen && (
-          <p className="rounded-2xl border border-dashed border-brand-purple/20 bg-white/60 p-6 text-center text-sm text-brand-ink/55">
+          <p className="rounded-2xl border border-dashed border-brand-purple/20 bg-white/60 p-6 text-center text-sm text-brand-ink/70">
             لا توجد عناصر في هذا القسم بعد. اضغط «{addLabel}» للبدء.
           </p>
         )}
         {rows.length > 0 && filteredRows.length === 0 && (
-          <p className="text-sm text-brand-ink/50">لا توجد نتائج مطابقة لبحثك.</p>
+          <p className="text-sm text-brand-ink/70">لا توجد نتائج مطابقة لبحثك.</p>
         )}
         {filteredRows.map((row) => {
           const id = String(row.id);
@@ -462,9 +464,9 @@ export default function ResourceManager({
             >
               <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 sm:px-5">
                 {thumb ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={thumbUrl(thumb)}
+                  <SafeImage
+                    src={thumb}
+                    variant="thumb"
                     alt=""
                     className="h-12 w-12 shrink-0 rounded-lg border border-brand-purple/10 object-cover"
                   />
@@ -474,7 +476,7 @@ export default function ResourceManager({
                     {rowLabel}
                   </span>
                   {subtitle && (
-                    <span className="block truncate text-xs text-brand-ink/50">
+                    <span className="block truncate text-xs text-brand-ink/70">
                       {subtitle}
                     </span>
                   )}
@@ -492,7 +494,7 @@ export default function ResourceManager({
                           e.stopPropagation();
                           handleReorder(id, "up");
                         }}
-                        className="rounded-lg p-2 text-brand-ink/45 transition-colors hover:bg-brand-purple-tint hover:text-brand-purple disabled:cursor-not-allowed disabled:opacity-30"
+                        className="rounded-lg p-2 text-brand-ink/70 transition-colors hover:bg-brand-purple-tint hover:text-brand-purple disabled:cursor-not-allowed disabled:opacity-30"
                       >
                         <ChevronUp className="h-4 w-4" />
                       </button>
@@ -506,7 +508,7 @@ export default function ResourceManager({
                           e.stopPropagation();
                           handleReorder(id, "down");
                         }}
-                        className="rounded-lg p-2 text-brand-ink/45 transition-colors hover:bg-brand-purple-tint hover:text-brand-purple disabled:cursor-not-allowed disabled:opacity-30"
+                        className="rounded-lg p-2 text-brand-ink/70 transition-colors hover:bg-brand-purple-tint hover:text-brand-purple disabled:cursor-not-allowed disabled:opacity-30"
                       >
                         <ChevronDown className="h-4 w-4" />
                       </button>
@@ -522,7 +524,7 @@ export default function ResourceManager({
                       e.stopPropagation();
                       handleDelete(id, rowLabel);
                     }}
-                    className="rounded-lg p-2 text-brand-ink/45 transition-colors hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30"
+                    className="rounded-lg p-2 text-brand-ink/70 transition-colors hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30"
                   >
                     {busyKey === `delete-${id}` ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

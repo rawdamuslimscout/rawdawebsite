@@ -1,20 +1,12 @@
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
+import { retryRead } from "@/lib/db-retry";
 import { safeHref } from "@/lib/safe-url";
+import { toNewsItem } from "@/lib/data";
 import { isMapCategory, type MapPlace } from "@/data/map";
-import type { NewsItem } from "@/data/content";
 
+/** `failed` is kept for the map component; a DB error now throws instead (see lib/data.ts). */
 export type MapPlacesResult = { places: MapPlace[]; failed: boolean };
-
-function parseImageUrls(value: string): string[] {
-  try {
-    const parsed = JSON.parse(value || "[]");
-    return Array.isArray(parsed)
-      ? parsed.filter((u): u is string => typeof u === "string")
-      : [];
-  } catch {
-    return [];
-  }
-}
 
 const validCoords = (lat: number, lng: number) =>
   Number.isFinite(lat) &&
@@ -26,33 +18,23 @@ const validCoords = (lat: number, lng: number) =>
 /**
  * Published places with valid coordinates, for the public map.
  * Same contract as the other getters in lib/data.ts: a failing query is logged
- * on the server and reported as `failed` so only this section shows a message —
- * the rest of the page keeps working.
+ * and rethrown, so ISR keeps the last good page instead of caching an empty map.
  */
-export async function getMapPlaces(): Promise<MapPlacesResult> {
+export const getMapPlaces = cache(async (): Promise<MapPlacesResult> => {
   try {
-    const rows = await prisma.scoutPlace.findMany({
-      where: { isPublished: true },
-      orderBy: { order: "asc" },
-      include: { news: true },
-    });
+    const rows = await retryRead("getMapPlaces", () =>
+      prisma.scoutPlace.findMany({
+        where: { isPublished: true },
+        orderBy: { order: "asc" },
+        include: { news: true },
+      }),
+    );
 
     const places: MapPlace[] = [];
     for (const r of rows) {
       if (!isMapCategory(r.category) || !validCoords(r.latitude, r.longitude)) continue;
 
-      let news: NewsItem | null = null;
-      if (r.news) {
-        news = {
-          id: r.news.id,
-          title: r.news.title,
-          category: r.news.category,
-          date: r.news.date,
-          excerpt: r.news.excerpt,
-          imageUrl: r.news.imageUrl,
-          imageUrls: [r.news.imageUrl, ...parseImageUrls(r.news.imageUrls)].filter(Boolean),
-        };
-      }
+      const news = r.news ? toNewsItem(r.news) : null;
 
       places.push({
         id: r.id,
@@ -71,6 +53,6 @@ export async function getMapPlaces(): Promise<MapPlacesResult> {
     return { places, failed: false };
   } catch (err) {
     console.error("[data] getMapPlaces failed", err);
-    return { places: [], failed: true };
+    throw err;
   }
-}
+});

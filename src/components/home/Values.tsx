@@ -1,9 +1,6 @@
 import Reveal from "@/components/ui/Reveal";
 import { getValues } from "@/lib/data";
 
-const AR = "٠١٢٣٤٥٦٧٨٩";
-const ar = (n: number) => String(n).replace(/\d/g, (d) => AR[Number(d)]);
-
 export default async function Values() {
   const values = await getValues();
   if (!values.length) return null;
@@ -33,7 +30,7 @@ export default async function Values() {
           </Reveal>
 
           {/* Values */}
-          <ol className="grid grid-cols-2 sm:grid-cols-2 lg:col-span-7 lg:gap-x-10">
+          <ul className="grid grid-cols-2 sm:grid-cols-2 lg:col-span-7 lg:gap-x-10">
             {values.map((v, i) => (
               <Reveal
                 as="li"
@@ -41,12 +38,11 @@ export default async function Values() {
                 delay={(i % 2) * 80}
                 className="value-row group relative flex min-w-0 items-center gap-3 border-b border-white/10 py-3 sm:gap-4 sm:py-5"
               >
+                {/* Values are not ranked, so a plain marker instead of a number. */}
                 <span
                   aria-hidden="true"
-                  className="shrink-0 font-display text-sm font-bold text-brand-yellow sm:text-xl"
-                >
-                  {ar(i + 1)}
-                </span>
+                  className="h-2 w-2 shrink-0 rounded-full bg-brand-yellow sm:h-2.5 sm:w-2.5"
+                />
 
                 <span className="min-w-0 font-display text-sm font-semibold leading-snug text-white transition-transform duration-300 group-hover:-translate-x-1 sm:text-lg lg:text-2xl">
                   {v.title}
@@ -58,7 +54,7 @@ export default async function Values() {
                 />
               </Reveal>
             ))}
-          </ol>
+          </ul>
         </div>
       </div>
     </section>

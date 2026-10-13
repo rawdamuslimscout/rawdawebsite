@@ -6,6 +6,7 @@ import {
   getResourceConfig,
   resourceHasOrderField,
 } from "@/lib/admin-resources";
+import { requireAdminPage } from "@/lib/session";
 import ResourceManager from "./ResourceManager";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +16,7 @@ export default async function ResourceAdminPage({
 }: {
   params: Promise<{ resource: string }>;
 }) {
+  await requireAdminPage();
   const params = await paramsPromise;
   const config = getResourceConfig(params.resource);
   const delegate = getDelegate(params.resource);

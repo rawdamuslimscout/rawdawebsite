@@ -13,19 +13,19 @@ export const siteInfo = {
   tagline: "نُنمّي الإنسان، ونبني القائد، ونصنع الذكريات.",
 };
 
-// Hrefs are absolute ("/#section") rather than bare hashes so they
-// resolve correctly from every route, not just the homepage.
+// Site navigation (Navbar + Footer), ordered by importance for parents.
+// `primary` links are shown directly in the desktop header; the rest go
+// under "المزيد". Section links are absolute ("/#section") so they resolve
+// from every route, not just the homepage.
 export const navLinks = [
-  { href: "/#home", label: "الرئيسية" },
-  { href: "/#about", label: "عن الفوج" },
-  { href: "/#sections", label: "المراحل الكشفية" },
-  { href: "/#activities", label: "الأنشطة" },
-  { href: "/blog", label: "المدونة" },
-  { href: "/library", label: "المكتبة" },
-  { href: "/#news", label: "الأخبار" },
-  { href: "/#gallery", label: "معرض الصور" },
-  { href: "/faq", label: "الأسئلة الشائعة" },
-  { href: "/structure", label: "الهيكلية" },
+  { href: "/", label: "الرئيسية", primary: true },
+  { href: "/about", label: "من نحن", primary: true },
+  { href: "/#sections", label: "المراحل الكشفية", primary: true },
+  { href: "/news", label: "الأخبار", primary: true },
+  { href: "/faq", label: "الأسئلة الشائعة", primary: true },
+  { href: "/structure", label: "الهيكل التنظيمي", primary: false },
+  { href: "/gallery", label: "معرض الصور", primary: false },
+  { href: "/library", label: "المكتبة", primary: false },
 ];
 
 export const stats = [
@@ -159,6 +159,11 @@ export type EventItem = {
   location: string;
   group: string;
   description: string;
+  /** ISO timestamps of the real dates, when the admin entered them (`date` stays the display label). */
+  startDate?: string;
+  endDate?: string;
+  /** true/false from endDate ?? startDate vs. today; undefined when no real date is set. */
+  isUpcoming?: boolean;
 };
 
 // Sample / illustrative events — replace with real event data.
@@ -275,6 +280,10 @@ export type NewsItem = {
   category: string;
   date: string;
   excerpt: string;
+  /** Full article text as paragraphs (empty when only the excerpt exists). */
+  body?: string[];
+  /** ISO timestamp. */
+  publishedAt?: string;
   imageUrl?: string;
   imageUrls?: string[];
 };
@@ -323,6 +332,13 @@ export const galleryFilters = [
   { id: "events", label: "المناسبات" },
 ] as const;
 
+/** Chips on /news ("الأخبار والمقالات"): news items and blog posts. */
+export const newsFilters = [
+  { id: "all", label: "الكل" },
+  { id: "news", label: "أخبار" },
+  { id: "blog", label: "مقالات" },
+] as const;
+
 export const galleryItems: GalleryItem[] = [
   {
     id: "g1",
@@ -368,6 +384,9 @@ export type BlogPost = {
   author: string;
   excerpt: string;
   content: string[];
+  /** ISO timestamps. */
+  publishedAt?: string;
+  updatedAt?: string;
 };
 
 export const blogPosts: BlogPost[] = [

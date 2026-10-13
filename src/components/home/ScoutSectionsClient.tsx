@@ -35,7 +35,7 @@ export default function ScoutSectionsClient({
 
   return (
     <>
-      <ul className="mt-12 grid gap-6 sm:mt-14 lg:grid-cols-3 lg:gap-7">
+      <ul className="mt-10 grid gap-4 sm:mt-12 sm:gap-5 lg:grid-cols-3 lg:gap-7">
         {stages.map((stage, index) => (
           <Reveal as="li" key={stage.id} delay={index * 90} className="h-full">
             <ScoutCard stage={stage} index={index} onOpen={openStage} />

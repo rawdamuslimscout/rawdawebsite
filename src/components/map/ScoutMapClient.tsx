@@ -411,7 +411,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
             shrink-0
             text-xs
             font-semibold
-            text-brand-ink/55
+            text-brand-ink/65
             sm:text-sm
           "
         >
@@ -785,7 +785,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                       max-w-sm
                       text-xs
                       leading-5
-                      text-brand-ink/55
+                      text-brand-ink/65
                       sm:leading-6
                     "
                   >
@@ -935,7 +935,7 @@ export default function ScoutMapClient({ places }: { places: MapPlace[] }) {
                                 className="
                                   px-0.5
                                   text-xs
-                                  text-brand-ink/40
+                                  text-brand-ink/65
                                 "
                               >
                                 …

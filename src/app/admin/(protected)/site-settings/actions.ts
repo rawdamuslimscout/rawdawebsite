@@ -55,8 +55,8 @@ export async function saveSiteSettings(
     });
 
     await audit({ action: "update", adminId, resource: "site-settings" });
-    revalidatePath("/");
-    revalidatePath("/join");
+    // Settings (name, contact details) render in the footer of every page.
+    revalidatePath("/", "layout");
     revalidatePath("/admin/site-settings");
     return { ok: true };
   } catch (err) {

@@ -28,7 +28,9 @@ const ATTRIBUTION =
 /*                                   LOGO                                     */
 /* -------------------------------------------------------------------------- */
 
-const SCOUT_LOGO = "/images/logo.png";
+// Served through the Next image optimizer (96 is a default allowed width,
+// enough for the 42px pin at 2x) instead of the 218 KB source PNG.
+const SCOUT_LOGO = "/_next/image?url=%2Fimages%2Flogo.png&w=96&q=75";
 
 /**
  * Focus ring + hover lift for pins and clusters. globals.css removes the outline
@@ -36,7 +38,7 @@ const SCOUT_LOGO = "/images/logo.png";
  * (the marker element itself carries the `group` class).
  */
 const PIN_INTERACTION =
-  "transition-transform duration-200 group-hover:scale-110 group-focus-visible:outline group-focus-visible:outline-[3px] group-focus-visible:outline-offset-2 group-focus-visible:outline-[#f0b429] motion-reduce:transition-none";
+  "transition-transform duration-200 group-hover:scale-110 group-focus-visible:outline group-focus-visible:outline-[3px] group-focus-visible:outline-offset-2 group-focus-visible:outline-[#4b2a82] motion-reduce:transition-none";
 
 type GestureHint = "wheel" | "touch" | null;
 
@@ -170,6 +172,9 @@ export default function LeafletMap({
 
   useEffect(() => {
     let disposed = false;
+    // Copied for the cleanup (the lint rule warns about reading refs there).
+    const markers = markersRef.current;
+    const places = placesRef.current;
 
     let map: LeafletNS.Map | null = null;
 
@@ -385,9 +390,9 @@ export default function LeafletMap({
 
       clusterRef.current = null;
 
-      markersRef.current.clear();
+      markers.clear();
 
-      placesRef.current.clear();
+      places.clear();
     };
   }, []);
 

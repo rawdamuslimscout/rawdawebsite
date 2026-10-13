@@ -43,7 +43,7 @@ export default function AdminLoginPage() {
     >
       <div className="w-full max-w-sm rounded-2xl border border-brand-purple/10 bg-white p-8 shadow-sm">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-purple-tint text-brand-purple">
-          <Lock className="h-5 w-5" />
+          <Lock className="h-5 w-5" aria-hidden="true" />
         </div>
         <h1 className="mt-4 text-center font-display text-xl font-bold text-brand-ink">
           لوحة تحكم فوج روضة الفيحاء
@@ -84,14 +84,16 @@ export default function AdminLoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                tabIndex={-1}
-                aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-brand-ink/40 hover:text-brand-ink/70"
+                aria-label="إظهار كلمة المرور"
+                aria-pressed={showPassword}
+                aria-controls="admin-password"
+                title={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-brand-ink/60 outline-none hover:text-brand-ink/70 focus-visible:ring-2 focus-visible:ring-brand-purple/40"
               >
                 {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
+                  <EyeOff className="h-4 w-4" aria-hidden="true" />
                 ) : (
-                  <Eye className="h-4 w-4" />
+                  <Eye className="h-4 w-4" aria-hidden="true" />
                 )}
               </button>
             </div>

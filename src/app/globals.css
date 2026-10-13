@@ -55,7 +55,8 @@ body {
   color: #2c1750;
 }
 
-/* Visible keyboard focus ring, brand-colored */
+/* Visible keyboard focus ring, two-tone so it passes 3:1 everywhere:
+   gold inner band (8.4:1 on deep purple) + purple outline (10:1 on cream/white). */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -65,9 +66,9 @@ summary:focus-visible,
 [role="button"]:focus-visible,
 [role="tab"]:focus-visible,
 [tabindex]:not([tabindex="-1"]):focus-visible {
-  outline: 2px solid #f0b429;
-  outline-offset: 3px;
-  border-radius: 4px;
+  outline: 2px solid #4b2a82;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px #f0b429;
 }
 
 /* subtle canvas-weave texture used on deep purple sections */
@@ -242,6 +243,36 @@ p {
   }
 }
 
+/* ---- Salawat counter (home hero) ---- */
+@keyframes salawat-roll {
+  from { opacity: 0; transform: translateY(110%); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes salawat-ring {
+  from { opacity: 0.6; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.7); }
+}
+@keyframes salawat-plus {
+  from { opacity: 1; transform: translate(-50%, 0); }
+  to { opacity: 0; transform: translate(-50%, -34px); }
+}
+.salawat-roll {
+  animation: salawat-roll 0.35s var(--ease-out) both;
+}
+.salawat-ring {
+  animation: salawat-ring 0.6s ease-out both;
+}
+.salawat-plus {
+  animation: salawat-plus 0.8s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .salawat-roll,
+  .salawat-ring,
+  .salawat-plus {
+    animation: none;
+  }
+}
+
 /* ---- Scout map (Leaflet) ---- */
 .scout-map .leaflet-container {
   font-family: inherit;
@@ -276,8 +307,9 @@ p {
   outline: none;
 }
 .leaflet-marker-icon:focus-visible > * {
-  outline: 3px solid #f0b429;
+  outline: 2px solid #4b2a82;
   outline-offset: 2px;
+  box-shadow: 0 0 0 2px #f0b429;
 }
 .scout-pin.is-active {
   background: #f0b429;

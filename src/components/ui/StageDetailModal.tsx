@@ -15,7 +15,7 @@ import { badgeIconMap } from "@/lib/badgeIcons";
 import { stageBadges } from "@/data/stageBadges";
 import { stageCurriculum } from "@/data/stageCurriculum";
 import type { ScoutStage } from "@/data/content";
-import { thumbUrl } from "@/lib/image-url";
+import SafeImage from "@/components/ui/SafeImage";
 
 type Tab = "overview" | "goals" | "badges" | "leaders";
 
@@ -355,14 +355,14 @@ export default function StageDetailModal({
                         {degree.name}
                       </p>
                       {degree.duration && (
-                        <p className="text-[11px] text-brand-ink/60">
+                        <p className="text-[11px] text-brand-ink/70">
                           {degree.duration}
                         </p>
                       )}
                     </div>
                     {i < curriculum.degrees.length - 1 && (
                       <ArrowLeft
-                        className="h-3.5 w-3.5 shrink-0 text-brand-ink/40"
+                        className="h-3.5 w-3.5 shrink-0 text-brand-ink/60"
                         aria-hidden="true"
                       />
                     )}
@@ -375,7 +375,7 @@ export default function StageDetailModal({
                   <h3 className="mt-6 font-display text-sm font-bold text-brand-ink">
                     درجات كشفية خاصة
                   </h3>
-                  <p className="mt-1 text-xs leading-relaxed text-brand-ink/60">
+                  <p className="mt-1 text-xs leading-relaxed text-brand-ink/70">
                     تُنال بعد استكمال الأوسمة المطلوبة، بمعزل عن الدرجات الزمنية
                     أعلاه.
                   </p>
@@ -438,25 +438,24 @@ export default function StageDetailModal({
             <ul className="space-y-4">
               {stage.leaders.map((leader) => (
                 <li key={leader.id} className="flex gap-3">
-                  {leader.photoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={thumbUrl(leader.photoUrl)}
-                      alt=""
-                      width={48}
-                      height={48}
-                      loading="lazy"
-                      decoding="async"
-                      className="h-12 w-12 shrink-0 rounded-full bg-brand-purple-tint object-cover"
-                    />
-                  ) : (
-                    <div
-                      aria-hidden="true"
-                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-purple-tint font-display text-lg font-bold text-brand-purple"
-                    >
-                      {leader.name.trim().charAt(0)}
-                    </div>
-                  )}
+                  <SafeImage
+                    src={leader.photoUrl}
+                    variant="thumb"
+                    alt=""
+                    width={48}
+                    height={48}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-12 w-12 shrink-0 rounded-full bg-brand-purple-tint object-cover"
+                    fallback={
+                      <div
+                        aria-hidden="true"
+                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-purple-tint font-display text-lg font-bold text-brand-purple"
+                      >
+                        {leader.name.trim().charAt(0)}
+                      </div>
+                    }
+                  />
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-brand-ink">
                       {leader.name}

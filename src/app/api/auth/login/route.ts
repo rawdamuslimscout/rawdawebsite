@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { DUMMY_HASH, hashPassword, needsRehash, verifyPassword } from "@/lib/password";
 import { setSessionCookie } from "@/lib/session";
 import { getClientIp, isSameOrigin, readJson } from "@/lib/request";
-import { rateLimit, resetRateLimit } from "@/lib/rate-limit";
+import { purgeExpiredRateLimits, rateLimit, resetRateLimit } from "@/lib/rate-limit";
 import { audit } from "@/lib/audit";
 
 const noStore = { "Cache-Control": "no-store" };
@@ -22,22 +22,38 @@ export async function POST(req: NextRequest) {
     return fail("الرجاء إدخال اسم المستخدم وكلمة المرور", 400);
   }
 
-  // Temporary (self-expiring) limits: per IP and per account.
-  const ipKey = `login:ip:${ip}`;
-  const userKey = `login:user:${username.toLowerCase()}`;
-  const [byIp, byUser] = await Promise.all([
-    rateLimit(ipKey, 20, 15 * 60),
-    rateLimit(userKey, 8, 15 * 60),
+  // Temporary (self-expiring) limits. The tight limit is per username+IP so a
+  // stranger can't lock the real admin out just by knowing the username; the
+  // per-IP limit bounds one source, and a much higher per-username backstop
+  // keeps distributed (IP-rotating) guessing bounded.
+  const user = username.toLowerCase();
+  const pairKey = `login:pair:${user}:${ip}`;
+  const [byIp, byPair, byUser] = await Promise.all([
+    rateLimit(`login:ip:${ip}`, 20, 15 * 60),
+    rateLimit(pairKey, 8, 15 * 60),
+    rateLimit(`login:user:${user}`, 50, 60 * 60),
   ]);
-  if (!byIp.allowed || !byUser.allowed) {
-    const wait = Math.max(byIp.retryAfterSeconds, byUser.retryAfterSeconds);
-    await audit({ action: "login.blocked", ip, meta: { reason: "rate_limit" } });
+  if (!byIp.allowed || !byPair.allowed || !byUser.allowed) {
+    const wait = Math.max(
+      byIp.allowed ? 0 : byIp.retryAfterSeconds,
+      byPair.allowed ? 0 : byPair.retryAfterSeconds,
+      byUser.allowed ? 0 : byUser.retryAfterSeconds,
+    );
+    await audit({
+      action: "login.blocked",
+      ip,
+      meta: { reason: "rate_limit", scope: !byUser.allowed ? "user" : !byIp.allowed ? "ip" : "pair" },
+    });
     return fail(
       `محاولات كثيرة. انتظر ${Math.ceil(wait / 60)} دقيقة ثم حاول مجددًا.`,
       429,
       { "Retry-After": String(wait) },
     );
   }
+
+  // Keep the RateLimit table small: clean expired windows now and then.
+  // Awaited: un-awaited work may be frozen once a serverless response is sent.
+  if (Math.random() < 0.05) await purgeExpiredRateLimits();
 
   let admin: { id: string; passwordHash: string; sessionVersion: number } | null;
   try {
@@ -63,7 +79,7 @@ export async function POST(req: NextRequest) {
     } catch {}
   }
 
-  await resetRateLimit(userKey);
+  await resetRateLimit(pairKey);
   await setSessionCookie(admin.id, admin.sessionVersion);
   await audit({ action: "login.success", adminId: admin.id, ip });
   return NextResponse.json({ ok: true }, { headers: noStore });

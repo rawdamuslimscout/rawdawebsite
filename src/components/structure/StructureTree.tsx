@@ -1,6 +1,5 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
 import {
   Fragment,
   useCallback,
@@ -27,7 +26,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { thumbUrl } from "@/lib/image-url";
+import SafeImage from "@/components/ui/SafeImage";
 
 type Qualification = {
   id: string;
@@ -90,6 +89,43 @@ const KIND_ICON: Record<string, typeof Flag> = {
   troop: Flag,
 };
 
+// Leading titles/ranks that names are often entered with; skipped when
+// picking the placeholder initial so every avatar doesn't show "ا".
+const NAME_TITLES = new Set([
+  "القائد",
+  "القائدة",
+  "قائد",
+  "قائدة",
+  "المعاون",
+  "المعاونة",
+  "معاون",
+  "معاونة",
+  "المساعد",
+  "المساعدة",
+  "مساعد",
+  "مساعدة",
+  "الأخ",
+  "الأخت",
+  "الأستاذ",
+  "الأستاذة",
+  "أ.",
+  "د.",
+  "الدكتور",
+  "الدكتورة",
+  "الشيخ",
+  "المهندس",
+  "المهندسة",
+  "م.",
+]);
+
+/** First letter of the first word that isn't a title, without a leading "ال". */
+export function nameInitial(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  const word = words.find((w) => !NAME_TITLES.has(w)) ?? words[0] ?? "";
+  const bare = word.length > 3 && word.startsWith("ال") ? word.slice(2) : word;
+  return bare.charAt(0);
+}
+
 function Avatar({
   name,
   url,
@@ -99,23 +135,26 @@ function Avatar({
   url: string;
   size?: string;
 }) {
-  return url ? (
-    <img
+  // No photo, or one that fails to load: the person's initial.
+  return (
+    <SafeImage
+      src={url}
+      variant="thumb"
       alt=""
       width={96}
       height={96}
       loading="lazy"
       decoding="async"
-      src={thumbUrl(url)}
       className={`${size} shrink-0 rounded-full object-cover ring-2 ring-brand-yellow/70`}
+      fallback={
+        <span
+          aria-hidden="true"
+          className={`${size} flex shrink-0 items-center justify-center rounded-full bg-brand-purple-tint font-display text-lg font-bold text-brand-purple`}
+        >
+          {nameInitial(name)}
+        </span>
+      }
     />
-  ) : (
-    <span
-      aria-hidden="true"
-      className={`${size} flex shrink-0 items-center justify-center rounded-full bg-brand-purple-tint font-display text-lg font-bold text-brand-purple`}
-    >
-      {name.trim().charAt(0)}
-    </span>
   );
 }
 
@@ -192,7 +231,7 @@ function ProfileDialog({
                 {q.title}
               </p>
               {(q.issuer || q.year) && (
-                <p className="text-xs text-brand-ink/55">
+                <p className="text-xs text-brand-ink/70">
                   {[q.issuer, q.year].filter(Boolean).join(" · ")}
                 </p>
               )}
@@ -297,7 +336,7 @@ function ProfileDialog({
                     <Icon className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
-                    <dt className="text-xs text-brand-ink/55">{label}</dt>
+                    <dt className="text-xs text-brand-ink/70">{label}</dt>
                     <dd className="text-sm font-semibold leading-6 text-brand-ink">
                       {value}
                     </dd>
@@ -345,7 +384,7 @@ function ProfileDialog({
             duties.length === 0 &&
             courses.length === 0 &&
             education.length === 0 && (
-              <p className="py-4 text-center text-sm text-brand-ink/55">
+              <p className="py-4 text-center text-sm text-brand-ink/70">
                 لا تتوفر معلومات إضافية حاليًا.
               </p>
             )}
@@ -391,7 +430,7 @@ function PersonCard({
           {m.title}
         </span>
         {/* {m.person.rank && (
-          <span className="block text-xs text-brand-ink/55">
+          <span className="block text-xs text-brand-ink/70">
             {m.person.rank}
           </span>
         )} */}
@@ -436,7 +475,7 @@ function Section({
           >
             {title}
           </h2>
-          {hint && <p className="text-xs text-brand-ink/55">{hint}</p>}
+          {hint && <p className="text-xs text-brand-ink/70">{hint}</p>}
         </div>
       </div>
       <div className="mt-5">{children}</div>
@@ -487,7 +526,7 @@ function UnitCard({
               {node.title}
             </h3>
             {node.stage && (
-              <p className="text-xs text-brand-ink/55">
+              <p className="text-xs text-brand-ink/70">
                 {node.stage.title}
                 {node.stage.ageRange ? ` · ${node.stage.ageRange}` : ""}
               </p>
@@ -521,7 +560,7 @@ function UnitCard({
                     <span className="text-xs text-brand-purple">{m.title}</span>
                   </span>
                   <ChevronLeft
-                    className="h-4 w-4 shrink-0 text-brand-purple/40 transition-colors group-hover:text-brand-purple"
+                    className="h-4 w-4 shrink-0 text-brand-purple/60 transition-colors group-hover:text-brand-purple"
                     aria-hidden="true"
                   />
                 </button>
@@ -534,7 +573,7 @@ function UnitCard({
                   <span className="block font-semibold text-brand-ink">
                     {l.name}
                   </span>
-                  <span className="text-xs text-brand-ink/55">
+                  <span className="text-xs text-brand-ink/70">
                     {l.role || l.rank}
                   </span>
                 </span>
@@ -575,7 +614,7 @@ function Lineage({ chain }: { chain: TreeNode[] }) {
               {i > 0 && (
                 <li
                   aria-hidden="true"
-                  className="flex items-center justify-center text-brand-purple/35 sm:px-2"
+                  className="flex items-center justify-center text-brand-purple/60 sm:px-2"
                 >
                   <ChevronLeft className="h-5 w-5 -rotate-90 sm:rotate-0" />
                 </li>
@@ -588,31 +627,31 @@ function Lineage({ chain }: { chain: TreeNode[] }) {
                     : "border-brand-purple/10 bg-white text-brand-ink"
                 }`}
               >
-                {n.logoUrl ? (
-                  <img
-                    src={thumbUrl(n.logoUrl)}
-                    alt=""
-                    width={44}
-                    height={44}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-11 w-11 shrink-0 rounded-xl bg-white object-contain p-1"
-                  />
-                ) : (
-                  <span
-                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-                      current
-                        ? "bg-white/15 text-brand-yellow"
-                        : "bg-brand-purple-tint text-brand-purple"
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                )}
+                <SafeImage
+                  src={n.logoUrl}
+                  variant="thumb"
+                  alt=""
+                  width={44}
+                  height={44}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-11 w-11 shrink-0 rounded-xl bg-white object-contain p-1"
+                  fallback={
+                    <span
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                        current
+                          ? "bg-white/15 text-brand-yellow"
+                          : "bg-brand-purple-tint text-brand-purple"
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                  }
+                />
                 <span className="min-w-0">
                   {KIND_LABEL[n.kind] && (
                     <span
-                      className={`block text-[11px] font-semibold ${current ? "text-white/70" : "text-brand-ink/50"}`}
+                      className={`block text-[11px] font-semibold ${current ? "text-white/80" : "text-brand-ink/70"}`}
                     >
                       {KIND_LABEL[n.kind]}
                     </span>
@@ -651,9 +690,17 @@ function JumpNav({ links }: { links: { id: string; label: string }[] }) {
   );
 }
 
+/** Arabic counted-noun agreement: 1 وحدة، 2 وحدتان، 3–10 وحدات، 11+ وحدة. */
+function unitCountLabel(n: number) {
+  if (n === 1) return "وحدة واحدة";
+  if (n === 2) return "وحدتان";
+  if (n <= 10) return `${n} وحدات`;
+  return `${n} وحدة`;
+}
+
 function EmptyNote({ children }: { children: ReactNode }) {
   return (
-    <p className="rounded-2xl border border-dashed border-brand-purple/20 bg-white/60 p-5 text-center text-sm text-brand-ink/55">
+    <p className="rounded-2xl border border-dashed border-brand-purple/20 bg-white/60 p-5 text-center text-sm text-brand-ink/70">
       {children}
     </p>
   );
@@ -663,9 +710,12 @@ function EmptyNote({ children }: { children: ReactNode }) {
 function Branch({
   root,
   onOpen,
+  idPrefix,
 }: {
   root: TreeNode;
   onOpen: (p: Person) => void;
+  /** Empty for a single tree, so anchors read "#units", "#council"… */
+  idPrefix: string;
 }) {
   // Follow the single structural line (association → governorate → troop). If it forks, stop and show all branches below.
   const chain = [root];
@@ -685,14 +735,21 @@ function Branch({
     (c) => !["dean", "council", "unit"].includes(c.kind),
   );
 
+  // Readable anchors; node ids are only appended when a kind repeats.
+  const anchor = (name: string) => `${idPrefix}${name}`;
+  const deanId = (d: TreeNode) =>
+    anchor(deans.length > 1 ? `dean-${d.id}` : "dean");
+  const councilId = (c: TreeNode) =>
+    anchor(councils.length > 1 ? `council-${c.id}` : "council");
+
   const links = [
-    ...deans.map((d) => ({ id: `dean-${d.id}`, label: d.title || "عميد الفوج" })),
+    ...deans.map((d) => ({ id: deanId(d), label: d.title || "عميد الفوج" })),
     ...(last.members.length > 0
-      ? [{ id: `team-${root.id}`, label: "القيادة" }]
+      ? [{ id: anchor("leadership"), label: "القيادة" }]
       : []),
-    ...councils.map((c) => ({ id: `c-${c.id}`, label: c.title || "مجلس الفوج" })),
-    ...(units.length > 0 ? [{ id: `units-${root.id}`, label: "وحدات الفوج" }] : []),
-    ...(others.length > 0 ? [{ id: `more-${root.id}`, label: "فروع أخرى" }] : []),
+    ...councils.map((c) => ({ id: councilId(c), label: c.title || "مجلس الفوج" })),
+    ...(units.length > 0 ? [{ id: anchor("units"), label: "وحدات الفوج" }] : []),
+    ...(others.length > 0 ? [{ id: anchor("more"), label: "فروع أخرى" }] : []),
   ];
 
   return (
@@ -707,7 +764,7 @@ function Branch({
       {deans.map((d) => (
         <Section
           key={d.id}
-          id={`dean-${d.id}`}
+          id={deanId(d)}
           icon={Crown}
           title={d.title || "عميد الفوج"}
           hint={d.description || undefined}
@@ -727,16 +784,16 @@ function Branch({
       ))}
 
       {(councils.length > 0 || last.members.length > 0) && (
-        <div id={`council-${root.id}`} className="scroll-mt-24 space-y-10">
+        <div className="space-y-10">
           {last.members.length > 0 && (
-            <Section id={`team-${root.id}`} icon={Users} title="القيادة">
+            <Section id={anchor("leadership")} icon={Users} title="القيادة">
               <MemberGrid members={last.members} onOpen={onOpen} />
             </Section>
           )}
           {councils.map((c) => (
             <Section
               key={c.id}
-              id={`c-${c.id}`}
+              id={councilId(c)}
               icon={ShieldCheck}
               title={c.title || "مجلس الفوج"}
               hint={c.description || undefined}
@@ -753,10 +810,10 @@ function Branch({
 
       {units.length > 0 && (
         <Section
-          id={`units-${root.id}`}
+          id={anchor("units")}
           icon={Tent}
           title="وحدات الفوج"
-          hint={`${units.length} ${units.length === 1 ? "وحدة" : "وحدات"}`}
+          hint={unitCountLabel(units.length)}
         >
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {units.map((u) => (
@@ -769,7 +826,7 @@ function Branch({
       )}
 
       {others.length > 0 && (
-        <Section id={`more-${root.id}`} icon={UserRound} title="فروع أخرى">
+        <Section id={anchor("more")} icon={UserRound} title="فروع أخرى">
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {others.map((u) => (
               <li key={u.id}>
@@ -790,7 +847,12 @@ export default function StructureTree({ roots }: { roots: TreeNode[] }) {
     <>
       <div className="space-y-16">
         {roots.map((r) => (
-          <Branch key={r.id} root={r} onOpen={setPerson} />
+          <Branch
+            key={r.id}
+            root={r}
+            onOpen={setPerson}
+            idPrefix={roots.length > 1 ? `${r.id}-` : ""}
+          />
         ))}
       </div>
       {person && <ProfileDialog person={person} onClose={close} />}

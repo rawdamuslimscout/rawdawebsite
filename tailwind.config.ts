@@ -14,7 +14,8 @@ const config: Config = {
           "purple-light": "#7856B5",
           "purple-tint": "#F3EEFA",
           turquoise: "#2FBFBA",
-          "turquoise-dark": "#1B8E8B",
+          // ≥5.1:1 on white, cream, turquoise-tint and purple-tint (AA small text)
+          "turquoise-dark": "#14706D",
           "turquoise-tint": "#E7F8F7",
           yellow: "#F0B429",
           "yellow-dark": "#C88A0A",

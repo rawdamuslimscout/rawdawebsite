@@ -9,11 +9,17 @@ import {
   generateSlug,
   getDelegate,
   getResourceConfig,
+  resourceRegistry,
   type FieldConfig,
+  type ResourceConfig,
   type CoercedValue,
 } from "@/lib/admin-resources";
 
-import { uploadToStorage } from "@/lib/supabase-storage";
+import {
+  isOwnStorageUrl,
+  removeFromStorage,
+  uploadToStorage,
+} from "@/lib/supabase-storage";
 import { friendlyMessage } from "@/lib/errors";
 import { validateResourceWrite } from "@/lib/resource-hooks";
 import { rateLimit } from "@/lib/rate-limit";
@@ -27,21 +33,87 @@ export type UploadResult =
   | { ok: false; error: string };
 
 const NOT_LOGGED_IN = "انتهت جلسة الدخول. حدّث الصفحة وسجّل الدخول من جديد.";
+const TOO_MANY_UPLOADS =
+  "رفعت ملفات كثيرة في وقت قصير. انتظر بضع دقائق ثم أعد المحاولة.";
+
+/** Shared per-admin upload budget (browser uploads and direct form uploads). */
+const uploadLimit = (adminId: string) =>
+  rateLimit(`upload:${adminId}`, 60, 10 * 60);
 
 function revalidateEverywhere(resource: string) {
   revalidatePath(`/admin/${resource}`);
-  revalidatePath("/");
-  revalidatePath("/blog");
-  revalidatePath("/blog/[slug]", "page");
-  revalidatePath("/library");
-  revalidatePath("/join");
-  revalidatePath("/faq");
-  revalidatePath("/structure");
+  // Every public page shares the root layout (footer, settings, nav), so
+  // revalidating it covers all current and future routes, including dynamic
+  // ones like /blog/[slug] and /news/[id].
+  revalidatePath("/", "layout");
   revalidatePath("/sitemap.xml");
 }
 
 const isFileField = (field: FieldConfig) =>
   field.type === "file" || field.type === "file-multiple";
+
+/** Columns that hold uploaded file URLs (a single URL or a JSON list). */
+function uploadColumns(config: ResourceConfig): string[] {
+  return [
+    ...new Set(
+      config.fields
+        .filter((field) => isFileField(field) && field.uploadTo)
+        .map((field) => field.uploadTo as string),
+    ),
+  ];
+}
+
+/** Every URL stored in the given upload columns of a row. */
+function urlsInRow(
+  row: Record<string, unknown> | null | undefined,
+  columns: string[],
+): string[] {
+  if (!row) return [];
+
+  return columns.flatMap((column) => {
+    const value = row[column];
+    if (typeof value !== "string" || !value) return [];
+    return value.trim().startsWith("[") ? parseUrlList(value) : [value];
+  });
+}
+
+/**
+ * Best-effort removal of files a row no longer uses. Runs only after the
+ * database write succeeded; skips anything outside our bucket or still
+ * referenced by any row. Never throws.
+ */
+async function cleanupStorage(urls: string[]) {
+  try {
+    const orphans: string[] = [];
+
+    for (const url of [...new Set(urls)].filter(isOwnStorageUrl)) {
+      let referenced = false;
+
+      for (const config of Object.values(resourceRegistry)) {
+        const delegate = getDelegate(config.key);
+        if (!delegate) continue;
+
+        for (const column of uploadColumns(config)) {
+          if (await delegate.count({ where: { [column]: { contains: url } } })) {
+            referenced = true;
+            break;
+          }
+        }
+
+        if (referenced) break;
+      }
+
+      if (!referenced) orphans.push(url);
+    }
+
+    await removeFromStorage(orphans);
+  } catch (err) {
+    console.error(
+      "[storage] cleanup skipped",
+      err instanceof Error ? err.message : err,
+    );
+  }
+}
 
 function parseUrlList(raw: unknown): string[] {
   if (!raw) return [];
@@ -78,13 +150,10 @@ export async function uploadFile(formData: FormData): Promise<UploadResult> {
       return { ok: false, error: "القسم غير موجود" };
     }
 
-    const limited = await rateLimit(`upload:${adminId}`, 60, 10 * 60);
+    const limited = await uploadLimit(adminId);
 
     if (!limited.allowed) {
-      return {
-        ok: false,
-        error: "رفعت ملفات كثيرة في وقت قصير. انتظر بضع دقائق ثم أعد المحاولة.",
-      };
+      return { ok: false, error: TOO_MANY_UPLOADS };
     }
 
     const file = formData.get("file");
@@ -161,12 +230,17 @@ export async function saveItem(formData: FormData): Promise<ActionResult> {
         continue;
       }
 
+      // Browser-uploaded URLs are only trusted if they point into our own bucket.
       const uploaded: string[] = parseUrlList(
         formData.get(`_uploaded:${field.uploadTo}`),
-      );
+      ).filter(isOwnStorageUrl);
 
       for (const value of formData.getAll(field.name)) {
         if (value instanceof File && value.size > 0) {
+          if (!(await uploadLimit(adminId)).allowed) {
+            return { ok: false, error: TOO_MANY_UPLOADS };
+          }
+
           const url = await uploadToStorage(value, resource);
 
           if (url) {
@@ -225,14 +299,19 @@ export async function saveItem(formData: FormData): Promise<ActionResult> {
     }
 
     let targetId = id;
+    let replacedUrls: string[] = [];
 
     if (id) {
       // FIX: Existing items can now be updated.
       // The previous unconditional `if (id) return ...`
       // incorrectly rejected every update.
+      const columns = uploadColumns(config);
       const existing = await delegate.findUnique({
         where: { id },
-        select: { id: true },
+        select: Object.fromEntries([
+          ["id", true],
+          ...columns.map((column) => [column, true]),
+        ]),
       });
 
       if (!existing) {
@@ -242,10 +321,16 @@ export async function saveItem(formData: FormData): Promise<ActionResult> {
         };
       }
 
-      await delegate.update({
+      const updated = await delegate.update({
         where: { id },
         data,
       });
+
+      // Files the row used before but no longer references (e.g. a replaced image).
+      const stillUsed = new Set(urlsInRow(updated, columns));
+      replacedUrls = urlsInRow(existing, columns).filter(
+        (url) => !stillUsed.has(url),
+      );
     } else {
       const created = await delegate.create({
         data,
@@ -262,6 +347,7 @@ export async function saveItem(formData: FormData): Promise<ActionResult> {
     });
 
     revalidateEverywhere(resource);
+    await cleanupStorage(replacedUrls);
 
     return { ok: true };
   } catch (err) {
@@ -288,9 +374,10 @@ export async function deleteItem(formData: FormData): Promise<ActionResult> {
     }
 
     const id = String(formData.get("_id") || "");
+    const config = getResourceConfig(resource);
     const delegate = getDelegate(resource);
 
-    if (!delegate) {
+    if (!config || !delegate) {
       return { ok: false, error: "القسم غير موجود" };
     }
 
@@ -300,6 +387,15 @@ export async function deleteItem(formData: FormData): Promise<ActionResult> {
         error: "العنصر غير صالح.",
       };
     }
+
+    // Remember the row's files so they can be removed once the row is gone.
+    const columns = uploadColumns(config);
+    const existing = columns.length
+      ? await delegate.findUnique({
+          where: { id },
+          select: Object.fromEntries(columns.map((column) => [column, true])),
+        })
+      : null;
 
     await delegate.delete({
       where: { id },
@@ -313,6 +409,7 @@ export async function deleteItem(formData: FormData): Promise<ActionResult> {
     });
 
     revalidateEverywhere(resource);
+    await cleanupStorage(urlsInRow(existing, columns));
 
     return { ok: true };
   } catch (err) {
@@ -469,9 +566,8 @@ export async function removeUploadedFile(
       };
     }
 
-    const urls = parseUrlList(existing[fieldKey]).filter(
-      (existingUrl) => existingUrl !== url,
-    );
+    const oldUrls = parseUrlList(existing[fieldKey]);
+    const urls = oldUrls.filter((existingUrl) => existingUrl !== url);
 
     await delegate.update({
       where: { id },
@@ -481,6 +577,9 @@ export async function removeUploadedFile(
     });
 
     revalidateEverywhere(resource);
+
+    // Only a file this row actually held is removed from Storage.
+    if (oldUrls.includes(url)) await cleanupStorage([url]);
 
     return { ok: true };
   } catch (err) {
