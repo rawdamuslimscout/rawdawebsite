@@ -135,7 +135,7 @@ export default function DeveloperWatermark() {
                 open ? "rotate-180" : ""
               }`}
             />
-            <span>يوسف مريم</span>
+            <span>القائد يوسف مريم</span>
           </button>
 
           <span dir="rtl" className="whitespace-nowrap">
