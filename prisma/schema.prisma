@@ -67,6 +67,10 @@ model SiteSettings {
   contactLocation String
   joinIntro       String @db.Text
   aboutImageIds   String @default("[]")
+  /// Photos uploaded straight to the "about" section (JSON list of URLs), shown before the gallery picks.
+  aboutImageUrls  String @default("[]")
+  /// Background photo of the homepage "join" band; "" = use a gallery photo.
+  joinImageUrl    String @default("")
 }
 
 model SiteStat {

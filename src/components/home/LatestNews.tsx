@@ -22,13 +22,13 @@ export default async function LatestNews() {
   if (items.length === 0 && upcoming.length === 0) return null;
 
   return (
-    <section id="news" className="section-y bg-brand-purple-tint/50">
+    <section id="news" className="section-y bg-brand-cream">
       <div className="container-x">
-        <Reveal className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <SectionHeading title="آخر الأخبار" subtitle="من نشاطات الفوج ومناسباته." />
+        <Reveal className="flex flex-col items-center gap-4">
+          <SectionHeading title="آخر الأخبار" subtitle="من نشاطات الفوج ومناسباته." align="center" />
           <Link
             href="/news"
-            className="group inline-flex min-h-11 shrink-0 items-center gap-2 self-start text-base font-bold text-brand-purple md:self-end"
+            className="group inline-flex min-h-11 shrink-0 items-center gap-2 text-base font-bold text-brand-purple"
           >
             <span className="link-underline pb-1">كل الأخبار والمقالات</span>
             <ArrowLeft

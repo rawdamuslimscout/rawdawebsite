@@ -3,10 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { saveSiteSettings } from "./actions";
+import { saveSiteSettings, uploadSettingsImage } from "./actions";
+import AboutImagesField from "./AboutImagesField";
+import JoinImageField from "./JoinImageField";
+import { parseStringArray } from "@/lib/json";
+import { makeThumbnail, prepareFile } from "@/lib/client-files";
 import { useToast } from "../ToastProvider";
 import { friendlyMessage } from "@/lib/errors";
-import SafeImage from "@/components/ui/SafeImage";
 
 type Settings = {
   name: string;
@@ -17,7 +20,21 @@ type Settings = {
   contactLocation: string;
   joinIntro: string;
   aboutImageIds: string[];
+  aboutImageUrls: string[];
+  joinImageUrl: string;
 };
+
+/** Resizes a picked photo in the browser and uploads it; returns its URL. */
+async function uploadImage(file: File): Promise<string> {
+  const prepared = await prepareFile(file, "image/*");
+  const upload = new FormData();
+  upload.set("file", prepared);
+  const thumb = await makeThumbnail(prepared);
+  if (thumb) upload.set("thumb", thumb);
+  const result = await uploadSettingsImage(upload);
+  if (!result.ok) throw new Error(result.error);
+  return result.url;
+}
 
 type GalleryItem = { id: string; title: string; imageUrl: string };
 
@@ -27,13 +44,17 @@ const inputClass =
 export default function SiteSettingsForm({
   settings,
   gallery,
+  aboutPhotoMax,
 }: {
   settings: Settings;
   gallery: GalleryItem[];
+  aboutPhotoMax: number;
 }) {
   const router = useRouter();
   const { showSuccess, showError } = useToast();
   const [isPending, setIsPending] = useState(false);
+  const [joinFile, setJoinFile] = useState<File | null>(null);
+  const [aboutFiles, setAboutFiles] = useState<File[]>([]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -41,8 +62,20 @@ export default function SiteSettingsForm({
     const formData = new FormData(e.currentTarget);
     setIsPending(true);
     try {
+      // Newly picked photos are resized, uploaded, and their URLs saved with
+      // the rest of the settings (uploaded "about" photos come first).
+      if (aboutFiles.length) {
+        const urls: string[] = [];
+        for (const file of aboutFiles) urls.push(await uploadImage(file));
+        const kept = parseStringArray(formData.get("aboutImageUrls"));
+        formData.set("aboutImageUrls", JSON.stringify([...kept, ...urls]));
+      }
+      if (joinFile) formData.set("joinImageUrl", await uploadImage(joinFile));
+
       const result = await saveSiteSettings(formData);
       if (result.ok) {
+        setJoinFile(null);
+        setAboutFiles([]);
         showSuccess("تم حفظ الإعدادات ✓");
         router.refresh();
       } else {
@@ -171,45 +204,17 @@ export default function SiteSettingsForm({
           تظهر أعلى صفحة «انضم إلينا».
         </p>
       </div>
-      <fieldset className="sm:col-span-2" aria-describedby="settings-aboutImageIds-help">
-        <legend className="mb-1.5 block text-sm font-semibold text-brand-ink/80">
-          صور قسم «عن الفوج»
-        </legend>
-        <p id="settings-aboutImageIds-help" className="mb-3 text-xs text-brand-ink/70">
-          اختر صورتين من معرض الصور لتظهرا بجانب نص «عن الفوج» في الصفحة الرئيسية. اتركهما دون اختيار لاستخدام أول صورتين تلقائيًا.
-        </p>
-        {gallery.length > 0 ? (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {gallery.map((item) => (
-              <label
-                key={item.id}
-                className="flex cursor-pointer items-center gap-3 rounded-lg border border-brand-purple/10 p-2 has-[:checked]:border-brand-purple has-[:checked]:bg-brand-purple-tint/30"
-              >
-                <input
-                  type="checkbox"
-                  name="aboutImageIds"
-                  value={item.id}
-                  defaultChecked={settings.aboutImageIds.includes(item.id)}
-                  className="h-4 w-4 accent-brand-purple"
-                />
-                <SafeImage
-                  src={item.imageUrl}
-                  variant="thumb"
-                  alt=""
-                  className="h-12 w-12 shrink-0 rounded-md object-cover"
-                />
-                <span className="min-w-0 truncate text-sm text-brand-ink">
-                  {item.title}
-                </span>
-              </label>
-            ))}
-          </div>
-        ) : (
-          <p className="rounded-lg bg-brand-purple-tint/30 p-3 text-sm text-brand-ink/60">
-            أضف صورًا إلى معرض الصور أولًا.
-          </p>
-        )}
-      </fieldset>
+      <AboutImagesField
+        // Remount after a save so the field starts from what was stored.
+        key={JSON.stringify([settings.aboutImageUrls, settings.aboutImageIds])}
+        gallery={gallery}
+        savedUrls={settings.aboutImageUrls}
+        savedIds={settings.aboutImageIds}
+        max={aboutPhotoMax}
+        files={aboutFiles}
+        onFilesChange={setAboutFiles}
+      />
+      <JoinImageField savedUrl={settings.joinImageUrl} file={joinFile} onFileChange={setJoinFile} />
       <div className="sm:col-span-2">
         <button
           type="submit"

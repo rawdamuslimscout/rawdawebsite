@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { requireAdminPage } from "@/lib/session";
 import { siteInfo } from "@/data/content";
+import { parseStringArray } from "@/lib/json";
+import { ABOUT_PHOTO_MAX } from "@/lib/home-photos";
 import SiteSettingsForm from "./SiteSettingsForm";
 
 // Like every other admin page: always rendered per request, never prerendered.
@@ -17,6 +19,8 @@ export default async function SiteSettingsPage() {
     contactLocation: string;
     joinIntro: string;
     aboutImageIds: string[];
+    aboutImageUrls: string[];
+    joinImageUrl: string;
   } | null = null;
   let gallery: { id: string; title: string; imageUrl: string }[] = [];
   let dbError: string | null = null;
@@ -31,15 +35,11 @@ export default async function SiteSettingsPage() {
       select: { id: true, title: true, imageUrl: true },
     });
     if (row) {
-      try {
-        const parsed = JSON.parse(row.aboutImageIds || "[]");
-        const aboutImageIds = Array.isArray(parsed)
-          ? parsed.filter((id): id is string => typeof id === "string")
-          : [];
-        settings = { ...row, aboutImageIds };
-      } catch {
-        settings = { ...row, aboutImageIds: [] };
-      }
+      settings = {
+        ...row,
+        aboutImageIds: parseStringArray(row.aboutImageIds),
+        aboutImageUrls: parseStringArray(row.aboutImageUrls),
+      };
     } else {
       settings = {
         name: siteInfo.name,
@@ -50,6 +50,8 @@ export default async function SiteSettingsPage() {
         contactLocation: "",
         joinIntro: "",
         aboutImageIds: [],
+        aboutImageUrls: [],
+        joinImageUrl: "",
       };
     }
   } catch (err) {
@@ -73,7 +75,7 @@ export default async function SiteSettingsPage() {
         </p>
       )}
 
-      {settings && <SiteSettingsForm settings={settings} gallery={gallery} />}
+      {settings && <SiteSettingsForm settings={settings} gallery={gallery} aboutPhotoMax={ABOUT_PHOTO_MAX} />}
     </div>
   );
 }

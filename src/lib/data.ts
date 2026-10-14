@@ -65,6 +65,8 @@ export const getSiteSettings = cache(async () => {
     contactLocation: "",
     joinIntro: "",
     aboutImageIds: "[]",
+    aboutImageUrls: "[]",
+    joinImageUrl: "",
   };
 
   const row = await query("getSiteSettings", () =>
@@ -88,6 +90,8 @@ export const getSiteSettings = cache(async () => {
     contactPhone: settings.contactPhone,
     contactLocation: settings.contactLocation,
     aboutImageIds: parseStringArray(settings.aboutImageIds),
+    aboutImageUrls: parseStringArray(settings.aboutImageUrls),
+    joinImageUrl: settings.joinImageUrl,
     joinIntro:
       settings.joinIntro ||
       "انضم إلى فوج روضة الفيحاء وابدأ رحلتك الكشفية عبر الأنشطة الأسبوعية والمخيمات والرحلات.",

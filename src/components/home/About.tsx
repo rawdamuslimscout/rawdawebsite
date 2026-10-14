@@ -3,7 +3,8 @@ import { ArrowLeft } from "lucide-react";
 
 import Reveal from "@/components/ui/Reveal";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { getGalleryItems, getSiteSettings } from "@/lib/data";
+import { getSiteSettings } from "@/lib/data";
+import { getAboutPhotos } from "@/lib/home-photos";
 import SafeImage from "@/components/ui/SafeImage";
 
 /**
@@ -15,17 +16,13 @@ export default async function About({
 }: {
   variant?: "home" | "page";
 }) {
-  const [siteInfo, gallery] = await Promise.all([
+  const [siteInfo, { picked, gallery }] = await Promise.all([
     getSiteSettings(),
-    getGalleryItems(),
+    getAboutPhotos(),
   ]);
   const isHome = variant === "home";
 
-  const selectedPhotos = siteInfo.aboutImageIds
-    .map((id) => gallery.find((item) => item.id === id))
-    .filter((item): item is (typeof gallery)[number] => Boolean(item));
-  const photos =
-    selectedPhotos.length > 0 ? selectedPhotos : gallery.slice(0, 2);
+  const photos = picked.length > 0 ? picked : gallery.slice(0, 2);
 
   return (
     <section

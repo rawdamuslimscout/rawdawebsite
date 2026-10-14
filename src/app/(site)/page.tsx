@@ -1,5 +1,5 @@
 import Hero from "@/components/home/Hero";
-import About from "@/components/home/About";
+import HomeIntro from "@/components/home/HomeIntro";
 import ScoutSections from "@/components/home/ScoutSections";
 import JoinPreview from "@/components/home/JoinPreview";
 import LatestNews from "@/components/home/LatestNews";
@@ -14,19 +14,19 @@ export const metadata = pageMetadata({
   path: "/",
 });
 
-// Parent-first: who we are, the stages, how to join, then recent news and
-// photos. Activities, history, camps and the map live on /about.
+// Photo-led and parent-first: who we are, the stages, photos, how to join,
+// then recent news. Activities, history, camps and the map live on /about.
 // The statistics band (components/home/Impact) is left out until leadership
 // confirms the numbers; the joining section replaces the old closing CTA.
 export default function Home() {
   return (
     <>
       <Hero />
-      <About variant="home" />
+      <HomeIntro />
       <ScoutSections />
+      <Gallery />
       <JoinPreview />
       <LatestNews />
-      <Gallery />
     </>
   );
 }
