@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { Instagram, MapPin, Phone, Mail } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa";
+import { FaFacebookF, FaWhatsapp } from "react-icons/fa";
 
 import Logo from "@/components/ui/Logo";
 import { navLinks } from "@/data/content";
 import { getSiteSettings } from "@/lib/data";
-import { getContactLinks } from "@/lib/contact";
+import { CONTACT_EMAIL as email, FACEBOOK_URL, getContactLinks } from "@/lib/contact";
 import DeveloperWatermark from "./DeveloperWatermark";
 
 export default async function Footer() {
@@ -13,8 +13,6 @@ export default async function Footer() {
 
   const location = siteInfo.contactLocation?.trim() || "طرابلس، لبنان";
   const { phone, whatsappHref, telHref } = getContactLinks(siteInfo.contactPhone);
-  // TODO: move to admin-editable site settings like the phone/location.
-  const email = "info@rawdamuslimscout.org";
 
   return (
     <footer id="contact" className="bg-brand-purple-dark text-white">
@@ -45,6 +43,15 @@ export default async function Footer() {
                 className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.07] text-white/70 transition-all duration-200 hover:bg-brand-yellow hover:text-brand-purple-dark"
               >
                 <Instagram className="h-[18px] w-[18px]" aria-hidden />
+              </a>
+              <a
+                href={FACEBOOK_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="تابعنا على فيسبوك"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.07] text-white/70 transition-all duration-200 hover:bg-brand-yellow hover:text-brand-purple-dark"
+              >
+                <FaFacebookF className="h-[17px] w-[17px]" aria-hidden />
               </a>
             </div>
           </div>

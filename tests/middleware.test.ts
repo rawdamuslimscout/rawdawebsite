@@ -40,6 +40,12 @@ test("security headers are set and remote sources are not wildcarded", async () 
     const value = csp.split(";").find((d) => d.trim().startsWith(directive)) ?? "";
     assert.ok(!/\shttps:(\s|$)/.test(value), `${directive} must not allow every https: origin`);
   }
+  // OneDrive is allowed as a frame (library previews) and nowhere else.
+  const directive = (name: string) => csp.split(";").find((d) => d.trim().startsWith(name)) ?? "";
+  assert.match(directive("frame-src"), /https:\/\/onedrive\.live\.com/);
+  for (const name of ["script-src", "connect-src", "img-src", "default-src"]) {
+    assert.ok(!/onedrive|1drv/.test(directive(name)), `${name} must not allow OneDrive`);
+  }
   assert.ok(res.headers.get("strict-transport-security"));
   assert.equal(res.headers.get("x-content-type-options"), "nosniff");
 });

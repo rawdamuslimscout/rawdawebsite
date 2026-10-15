@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE_NAME } from "@/lib/session-constants";
+import { ONEDRIVE_FRAME_ORIGINS } from "@/lib/onedrive";
 
 // Uploaded images/files are served from Supabase Storage (public bucket).
 const SUPABASE_ORIGIN = (() => {
@@ -20,8 +21,8 @@ const src = (...hosts: string[]) => hosts.filter(Boolean).join(" ");
  * Scripts keep 'unsafe-inline': Next.js emits inline bootstrap scripts, and the
  * public pages are statically rendered / ISR, so a per-request nonce would force
  * every page to render dynamically. Remote content is limited to our own origin,
- * Supabase Storage and OpenStreetMap; framing, plugins, base tag and form
- * targets are locked down.
+ * Supabase Storage and OpenStreetMap, plus OneDrive's viewer as a frame only
+ * (library previews); framing, plugins, base tag and form targets are locked down.
  */
 const SECURITY_HEADERS: Record<string, string> = {
   "Content-Security-Policy": [
@@ -32,7 +33,7 @@ const SECURITY_HEADERS: Record<string, string> = {
     `img-src ${src("'self'", "data:", "blob:", SUPABASE_ORIGIN, OSM_TILES)}`,
     "font-src 'self' data:",
     `connect-src ${src("'self'", SUPABASE_ORIGIN, OSM_SEARCH)}`,
-    `frame-src ${src("'self'", SUPABASE_ORIGIN)}`,
+    `frame-src ${src("'self'", SUPABASE_ORIGIN, ...ONEDRIVE_FRAME_ORIGINS)}`,
     `media-src ${src("'self'", SUPABASE_ORIGIN)}`,
     "object-src 'none'",
     "base-uri 'self'",

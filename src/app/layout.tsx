@@ -14,6 +14,7 @@ import {
 } from "@/lib/site";
 import { OG_IMAGE } from "@/lib/seo";
 import { siteInfo as staticSiteInfo } from "@/data/content";
+import { FACEBOOK_URL } from "@/lib/contact";
 
 type JsonLdSettings = { name: string; instagramUrl: string; contactPhone: string };
 
@@ -121,7 +122,7 @@ export default async function RootLayout({
               },
               areaServed: "طرابلس، لبنان",
               parentOrganization: { "@type": "Organization", name: ORG_NAME },
-              ...(siteInfo.instagramUrl ? { sameAs: [siteInfo.instagramUrl] } : {}),
+              sameAs: [siteInfo.instagramUrl, FACEBOOK_URL].filter(Boolean),
             },
             {
               "@context": "https://schema.org",

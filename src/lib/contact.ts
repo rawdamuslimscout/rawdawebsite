@@ -4,6 +4,9 @@
  * Lebanese local numbers (≤ 8 digits) get the +961 country code.
  */
 export const DEFAULT_CONTACT_PHONE = "+961 81 348 184";
+// TODO: move to admin-editable site settings like the phone/location.
+export const CONTACT_EMAIL = "info@rawdamuslimscout.org";
+export const FACEBOOK_URL = "https://www.facebook.com/fawjrawda";
 
 export function toInternationalDigits(phone: string): string {
   let digits = phone.replace(/\D/g, "");

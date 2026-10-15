@@ -7,7 +7,7 @@ import SharePdfButton from "./SharePdfButton";
  * Storage), which would just open the file in a tab. Supabase forces an
  * attachment when the public URL carries `?download=<filename>`.
  */
-function downloadHref(url: string, title: string, fileType: string) {
+export function downloadHref(url: string, title: string, fileType: string) {
   if (!url.includes("/storage/v1/object/public/")) return url;
   const ext = fileType.toLowerCase().includes("docx") ? "docx" : "pdf";
   const separator = url.includes("?") ? "&" : "?";
@@ -16,15 +16,21 @@ function downloadHref(url: string, title: string, fileType: string) {
 
 export default function ResourceCard({
   resource,
+  onPreview,
 }: {
   resource: LibraryResource;
+  /** Opens the in-page OneDrive preview (only used when the file has an embed link). */
+  onPreview?: () => void;
 }) {
   const isPdf = resource.fileType.toLowerCase().includes("pdf");
-  const download = downloadHref(
-    resource.fileUrl,
-    resource.title,
-    resource.fileType,
-  );
+  const oneDrive = resource.oneDrive ?? null;
+  // An uploaded copy (if any) stays the download; OneDrive takes over viewing.
+  const download = resource.fileUrl
+    ? downloadHref(resource.fileUrl, resource.title, resource.fileType)
+    : "";
+  const viewUrl = oneDrive?.openUrl ?? resource.fileUrl;
+  const canPreviewInPage = isPdf && !!oneDrive?.embedUrl && !!onPreview;
+  const shareUrl = resource.fileUrl || oneDrive?.openUrl || "";
 
   return (
     <article
@@ -60,16 +66,45 @@ export default function ResourceCard({
 
       {/* Actions */}
       <div className="mt-auto flex items-center gap-2 border-t border-brand-purple/[0.08] pt-4">
-        {isPdf ? (
+        {canPreviewInPage ? (
+          <>
+            <button
+              type="button"
+              onClick={onPreview}
+              aria-haspopup="dialog"
+              className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-brand-purple px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-brand-purple-dark active:scale-[0.98] sm:flex-none sm:px-4"
+            >
+              <Eye className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>معاينة الملف</span>
+              <span className="sr-only">: {resource.title}</span>
+            </button>
+
+            {download && (
+              <a
+                href={download}
+                download
+                aria-label={`تحميل ${resource.title}`}
+                title="تحميل الملف"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-brand-purple/15 text-brand-purple transition-colors hover:border-brand-purple/30 hover:bg-brand-purple-tint"
+              >
+                <Download className="h-4 w-4" aria-hidden="true" />
+              </a>
+            )}
+          </>
+        ) : !viewUrl ? (
+          <span className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-ink/60">
+            الملف غير متاح حاليًا
+          </span>
+        ) : isPdf || !download ? (
           <>
             <a
-              href={resource.fileUrl}
+              href={viewUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-brand-purple px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-brand-purple-dark active:scale-[0.98] sm:flex-none sm:px-4"
             >
               <Eye className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>معاينة الملف</span>
+              <span>{oneDrive ? "فتح في OneDrive" : "معاينة الملف"}</span>
               <span className="sr-only">
                 : {resource.title} (يفتح في نافذة جديدة)
               </span>
@@ -79,15 +114,17 @@ export default function ResourceCard({
               />
             </a>
 
-            <a
-              href={download}
-              download
-              aria-label={`تحميل ${resource.title}`}
-              title="تحميل الملف"
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-brand-purple/15 text-brand-purple transition-colors hover:border-brand-purple/30 hover:bg-brand-purple-tint"
-            >
-              <Download className="h-4 w-4" aria-hidden="true" />
-            </a>
+            {download && (
+              <a
+                href={download}
+                download
+                aria-label={`تحميل ${resource.title}`}
+                title="تحميل الملف"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-brand-purple/15 text-brand-purple transition-colors hover:border-brand-purple/30 hover:bg-brand-purple-tint"
+              >
+                <Download className="h-4 w-4" aria-hidden="true" />
+              </a>
+            )}
           </>
         ) : (
           // Word files can't be previewed in the browser: make download the
@@ -103,13 +140,17 @@ export default function ResourceCard({
           </a>
         )}
 
-        <div className="ms-auto flex shrink-0 items-center justify-center">
-          <SharePdfButton
-            url={resource.fileUrl}
-            title={resource.title}
-            ariaLabel={`مشاركة ${resource.title}`}
-          />
-        </div>
+        {shareUrl && (
+          <div className="ms-auto flex shrink-0 items-center justify-center">
+            <SharePdfButton
+              url={shareUrl}
+              title={resource.title}
+              ariaLabel={`مشاركة ${resource.title}`}
+              // Only an uploaded copy can be attached as a file; OneDrive is shared as a link.
+              shareFile={shareUrl === resource.fileUrl}
+            />
+          </div>
+        )}
       </div>
     </article>
   );

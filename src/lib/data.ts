@@ -2,6 +2,7 @@ import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { retryRead } from "@/lib/db-retry";
 import { safeHref } from "@/lib/safe-url";
+import { parseOneDriveUrl } from "@/lib/onedrive";
 import { isEventUpcoming } from "@/lib/events";
 import { parseStringArray } from "@/lib/json";
 import { siteInfo as defaultSiteInfo } from "@/data/content";
@@ -373,6 +374,7 @@ export const getLibraryResources = cache(
       description: r.description,
       fileType: r.fileType as LibraryResource["fileType"],
       fileUrl: safeHref(r.fileUrl),
+      oneDrive: parseOneDriveUrl(r.oneDriveUrl),
     }));
   },
 );

@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { FolderOpen, RotateCcw, Search, SearchX, X } from "lucide-react";
-import ResourceCard from "@/components/ui/ResourceCard";
+import ResourceCard, { downloadHref } from "@/components/ui/ResourceCard";
+import PdfPreviewModal, {
+  type PdfPreview,
+} from "@/components/ui/PdfPreviewModal";
 import { libraryFilters, type LibraryResource } from "@/data/content";
 
 /** Show the search box only once the library is big enough to need it. */
@@ -39,6 +42,22 @@ export default function LibraryFilterGrid({
 }) {
   const [active, setActive] = useState<string>("all");
   const [query, setQuery] = useState("");
+  // The OneDrive viewer is only created when a visitor opens a file.
+  const [preview, setPreview] = useState<PdfPreview | null>(null);
+
+  const openPreview = (resource: LibraryResource) => {
+    const embedUrl = resource.oneDrive?.embedUrl;
+    if (!resource.oneDrive || !embedUrl) return;
+    setPreview({
+      id: resource.id,
+      title: resource.title,
+      embedUrl,
+      openUrl: resource.oneDrive.openUrl,
+      downloadUrl: resource.fileUrl
+        ? downloadHref(resource.fileUrl, resource.title, resource.fileType)
+        : undefined,
+    });
+  };
 
   const counts = useMemo(() => {
     const map = new Map<string, number>([["all", resources.length]]);
@@ -216,10 +235,16 @@ export default function LibraryFilterGrid({
           }`}
         >
           {filtered.map((resource) => (
-            <ResourceCard key={resource.id} resource={resource} />
+            <ResourceCard
+              key={resource.id}
+              resource={resource}
+              onPreview={() => openPreview(resource)}
+            />
           ))}
         </div>
       )}
+
+      <PdfPreviewModal preview={preview} onClose={() => setPreview(null)} />
     </>
   );
 }

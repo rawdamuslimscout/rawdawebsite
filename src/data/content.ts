@@ -4,6 +4,8 @@
 // be swapped for real figures before launch.
 // ============================================================
 
+import type { OneDriveLink } from "@/lib/onedrive";
+
 export const siteInfo = {
   name: "فوج روضة الفيحاء",
   nameEn: "Rawda Al Fayhaa Scout Group",
@@ -512,7 +514,10 @@ export type LibraryResource = {
   category: "guides" | "badges" | "forms" | "songs";
   description: string;
   fileType: "PDF" | "DOCX";
+  /** Uploaded file (Supabase Storage); "" when the file is only on OneDrive. */
   fileUrl: string;
+  /** Validated OneDrive link, when one is set. */
+  oneDrive?: OneDriveLink | null;
 };
 
 export const libraryFilters = [

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { FaWhatsapp } from "react-icons/fa";
 
 const links = [
   {
@@ -27,7 +28,7 @@ const links = [
   {
     label: "Direct WhatsApp",
     href: "https://wa.me/96170860161",
-    icon: MessageCircle,
+    icon: FaWhatsapp,
     tone: "text-emerald-400",
   },
 ];

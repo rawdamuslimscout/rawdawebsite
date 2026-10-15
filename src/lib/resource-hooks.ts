@@ -26,6 +26,21 @@ export async function validateResourceWrite(
   if (resource === "places") return validateExists("newsItem", data.newsId, "الخبر المختار غير موجود.");
   if (resource === "org-qualifications") return validateExists("orgPerson", data.personId, "الشخص المختار غير موجود.");
   if (resource === "events") return validateEventDates(id, data);
+  if (resource === "library") return validateLibraryFile(id, data);
+  return null;
+}
+
+/** A library item needs an uploaded file, a OneDrive link, or both. */
+async function validateLibraryFile(id: string, data: Record<string, CoercedValue>): Promise<string | null> {
+  let { fileUrl, oneDriveUrl } = data;
+  if (id && (fileUrl === undefined || oneDriveUrl === undefined)) {
+    const saved = await prisma.libraryResource.findUnique({ where: { id }, select: { fileUrl: true, oneDriveUrl: true } });
+    if (fileUrl === undefined) fileUrl = saved?.fileUrl ?? "";
+    if (oneDriveUrl === undefined) oneDriveUrl = saved?.oneDriveUrl ?? "";
+  }
+  if (!fileUrl && !oneDriveUrl) return "ارفع الملف أو أضف رابط OneDrive.";
+  // OneDrive-only items have no uploaded file; the column itself is required.
+  if (!id && data.fileUrl === undefined) data.fileUrl = "";
   return null;
 }
 

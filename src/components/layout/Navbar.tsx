@@ -12,8 +12,7 @@ import { navLinks } from "@/data/content";
 const primaryLinks = navLinks.filter((l) => l.primary);
 const moreLinks = navLinks.filter((l) => !l.primary);
 
-// The footer carries id="contact" on every page, so this works site-wide.
-const contactLink = { href: "#contact", label: "تواصل معنا" };
+const contactLink = { href: "/contact", label: "تواصل معنا" };
 
 // Home-page section ids we track for the "you are here" highlight.
 const sectionIds = navLinks
@@ -295,13 +294,14 @@ export default function Navbar({ siteName }: { siteName: string }) {
             </div>
           )}
 
-          <a
+          <Link
             href={contactLink.href}
             onClick={(e) => handleNavigation(e, contactLink.href)}
-            className={desktopLinkClass(false)}
+            aria-current={isActive(contactLink.href) ? "page" : undefined}
+            className={desktopLinkClass(isActive(contactLink.href))}
           >
             {contactLink.label}
-          </a>
+          </Link>
         </nav>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">

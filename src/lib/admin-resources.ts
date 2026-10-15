@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { safeHref } from "@/lib/safe-url";
+import { parseOneDriveUrl } from "@/lib/onedrive";
 
 export type FieldType =
   | "text"
@@ -40,6 +41,8 @@ export type FieldConfig = {
   url?: boolean;
   /** Must be an email address (or empty when optional). */
   email?: boolean;
+  /** A OneDrive link or "Embed" iframe code; stored as the validated URL. */
+  oneDrive?: boolean;
 };
 
 export type ResourceGroup =
@@ -754,8 +757,17 @@ export const resourceRegistry: Record<string, ResourceConfig> = {
         uploadTo: "fileUrl",
         accept: ".pdf,.doc,.docx",
         optional: true,
-        requiredOnCreate: true,
-        help: "اختر الملف من جهازك (حتى 4 ميغابايت). عند التعديل، اتركه فارغًا للإبقاء على الملف الحالي.",
+        help: "اختر الملف من جهازك (حتى 4 ميغابايت)، أو اتركه فارغًا وأضف رابط OneDrive بالأسفل. عند التعديل، اتركه فارغًا للإبقاء على الملف الحالي.",
+      },
+      {
+        name: "oneDriveUrl",
+        label: "رابط OneDrive (اختياري)",
+        type: "text",
+        optional: true,
+        oneDrive: true,
+        maxLength: 2000,
+        placeholder: "https://1drv.ms/…",
+        help: "للمعاينة داخل الموقع: افتح الملف في OneDrive ← «تضمين» (Embed) ← انسخ الرمز والصقه هنا. يمكن أيضًا لصق رابط مشاركة «أي شخص لديه الرابط يمكنه العرض»، وسيظهر حينها زر «فتح في OneDrive» بدل المعاينة.",
       },
       {
         name: "fileType",
@@ -1271,6 +1283,15 @@ export function coerceValues(
       throw new Error(`الحقل «${field.label}» مطلوب.`);
     if (field.email && text && !EMAIL_PATTERN.test(text))
       throw new Error(`«${field.label}» يجب أن يكون بريدًا إلكترونيًا صحيحًا.`);
+    if (field.oneDrive && text) {
+      const link = parseOneDriveUrl(text);
+      if (!link)
+        throw new Error(
+          `«${field.label}» يجب أن يكون رابط OneDrive يبدأ بـ https:// (أو رمز «تضمين» من OneDrive).`,
+        );
+      data[field.name] = link.embedUrl ?? link.openUrl;
+      continue;
+    }
     // Stored XSS guard: a `javascript:` (or any non-http) link must never reach an href.
     if (field.url && text && !safeHref(text))
       throw new Error(

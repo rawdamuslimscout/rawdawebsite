@@ -225,7 +225,8 @@ model LibraryResource {
   category    String // guides | badges | forms | songs
   description String @db.Text
   fileType    String // PDF | DOCX
-  fileUrl     String
+  fileUrl     String // uploaded file (Supabase Storage); "" when the file is only on OneDrive
+  oneDriveUrl String? // OneDrive share or embed link (preferred for preview when valid)
   order       Int    @default(0)
 }
 
