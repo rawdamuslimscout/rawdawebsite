@@ -79,22 +79,34 @@ const documentTypes: { Icon: LucideIcon; title: Text; text: Text }[] = [
   {
     Icon: FileCheck2,
     title: { ar: "طلب موافقة", en: "Approval request" },
-    text: { ar: "لنشاط أو مخيم أو رحلة.", en: "For an activity, camp or trip." },
+    text: {
+      ar: "لنشاط أو مخيم أو رحلة.",
+      en: "For an activity, camp or trip.",
+    },
   },
   {
     Icon: FileText,
     title: { ar: "تقرير", en: "Report" },
-    text: { ar: "الأنشطة والنتائج والتوصيات.", en: "Activities, results and recommendations." },
+    text: {
+      ar: "الأنشطة والنتائج والتوصيات.",
+      en: "Activities, results and recommendations.",
+    },
   },
   {
     Icon: Megaphone,
     title: { ar: "تعميم", en: "Circular" },
-    text: { ar: "التعليمات والمواعيد للمعنيين.", en: "Instructions and dates for those concerned." },
+    text: {
+      ar: "التعليمات والمواعيد للمعنيين.",
+      en: "Instructions and dates for those concerned.",
+    },
   },
   {
     Icon: NotebookPen,
     title: { ar: "محضر جلسة", en: "Meeting minutes" },
-    text: { ar: "الحضور والقرارات والتكليفات.", en: "Attendance, decisions and assignments." },
+    text: {
+      ar: "الحضور والقرارات والتكليفات.",
+      en: "Attendance, decisions and assignments.",
+    },
   },
 ];
 
@@ -107,7 +119,10 @@ const letterheadOrder: Text[] = [
     ar: "وإلا ترويسة مفوضية الشمال، للجهات التابعة لها التي ليس لفوجها ترويسة مسجّلة.",
     en: "Otherwise the North Legation letterhead, for units under it whose troop has no registered letterhead.",
   },
-  { ar: "وإلا النموذج العام ثنائي اللغة.", en: "Otherwise the general bilingual template." },
+  {
+    ar: "وإلا النموذج العام ثنائي اللغة.",
+    en: "Otherwise the general bilingual template.",
+  },
 ];
 
 /** `term` is the label printed in the (Arabic) document. */
@@ -115,7 +130,10 @@ const numberLabels: { term: string; label: Text; use: Text }[] = [
   {
     term: "رقم الصادر",
     label: { ar: "رقم الصادر", en: "Outgoing No." },
-    use: { ar: "للكتب والطلبات والتقارير", en: "for letters, requests and reports" },
+    use: {
+      ar: "للكتب والطلبات والتقارير",
+      en: "for letters, requests and reports",
+    },
   },
   {
     term: "تعميم رقم",
@@ -132,7 +150,10 @@ const numberLabels: { term: string; label: Text; use: Text }[] = [
 // Sample general letterhead, from the skill's own example. The first line is
 // printed in the template; Claude fills the rest from the confirmed issuer.
 const bilingualHeader = [
-  { ar: "جمعية الكشاف المسلم في لبنان", en: "Muslim Scout Association in Lebanon" },
+  {
+    ar: "جمعية الكشاف المسلم في لبنان",
+    en: "Muslim Scout Association in Lebanon",
+  },
   { ar: "مفوضية جبل لبنان", en: "Mount Lebanon Legation" },
   { ar: "فوج علي بن أبي طالب", en: "Ali Bin Abi Taleb Troop" },
   { ar: "عشيرة العقاب", en: "Al-Oqab Clan" },
@@ -201,7 +222,9 @@ function Feature({
         <Icon className="h-5 w-5" aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
-        <h4 className="font-display text-lg font-bold text-brand-ink">{title}</h4>
+        <h4 className="font-display text-lg font-bold text-brand-ink">
+          {title}
+        </h4>
         <div className="mt-2 space-y-3 text-sm leading-7 text-brand-ink/80 sm:text-base sm:leading-8">
           {children}
         </div>
@@ -252,7 +275,10 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
       <section className="section-y bg-white">
         <div className="mx-auto max-w-5xl px-5 sm:px-8">
           <SectionHeading
-            title={t("ما هو Claude وما هي الإضافة؟", "What are Claude and the skill?")}
+            title={t(
+              "ما هو Claude وما هي الإضافة؟",
+              "What are Claude and the skill?",
+            )}
             subtitle={t(
               "لا تحتاج أي خبرة تقنية لاستعمالها.",
               "You don't need any technical experience to use it.",
@@ -277,7 +303,10 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
             ))}
           </ul>
           <p className="mt-6 flex gap-3 rounded-2xl bg-brand-purple-tint p-4 text-sm leading-7 text-brand-ink/85 sm:p-5 sm:text-base sm:leading-8">
-            <Info className="mt-1.5 h-5 w-5 shrink-0 text-brand-purple" aria-hidden="true" />
+            <Info
+              className="mt-1.5 h-5 w-5 shrink-0 text-brand-purple"
+              aria-hidden="true"
+            />
             <span>
               {t(
                 "كتابة الكتاب وإنشاء ملف Word يتمّان داخل Claude، وليس على هذا الموقع. الإضافات متاحة على كل خطط Claude، بما فيها الخطة المجانية (بحدود استخدام أقل)، وتحتاج تفعيل خيار إنشاء الملفات كما في الخطوة 2 أدناه.",
@@ -296,26 +325,38 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
               <ShieldCheck className="h-5 w-5" aria-hidden="true" />
             </span>
             <div className="min-w-0 flex-1">
-              <h3 id="privacy-heading" className="font-display text-lg font-bold text-brand-ink">
+              <h3
+                id="privacy-heading"
+                className="font-display text-lg font-bold text-brand-ink"
+              >
                 {t("كتبك سرّية وتبقى لك", "Your letters stay private")}
               </h3>
               <p className="mt-1 text-sm leading-7 text-brand-ink/80 sm:text-base sm:leading-8">
                 {t(
-                  "تعمل الإضافة داخل حسابك في Claude فقط، ولا ترسل أي شيء إلى مُعِدّها أو إلى هذا الموقع. لذلك لا يستطيع مُعِدّ الإضافة، القائد يوسف مريم، الاطّلاع على كتبك ولا على المعلومات التي تكتبها ولا على صور الإمضاءات والأختام التي ترفعها.",
-                  "The skill runs only inside your own Claude account and sends nothing to its creator or to this website. So the skill's creator, Scout Leader Youssef Mariam, can't see your letters, the details you type, or the signature and stamp images you upload.",
+                  "تعمل الإضافة داخل حسابك في Claude فقط، ولا ترسل أي شيء إلى مُعِدّها أو إلى هذا الموقع. لذلك لا يستطيع مُعِدّ الإضافة، الاطّلاع على كتبك ولا على المعلومات التي تكتبها ولا على صور الإمضاءات والأختام التي ترفعها.",
+                  "The skill runs only inside your own Claude account and sends nothing to its creator or to this website. So the skill's creator, can't see your letters, the details you type, or the signature and stamp images you upload.",
                 )}
               </p>
               <p className="mt-2 text-sm leading-7 text-brand-ink/70">
-                {t("تخضع محادثاتك مع Claude", "Your chats with Claude are covered by")}{" "}
+                {t(
+                  "تخضع محادثاتك مع Claude",
+                  "Your chats with Claude are covered by",
+                )}{" "}
                 <a
                   href="https://www.anthropic.com/legal/privacy"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-semibold text-brand-purple underline underline-offset-4 hover:text-brand-purple-dark"
                 >
-                  {t("لسياسة الخصوصية لدى Anthropic", "Anthropic's privacy policy")}
+                  {t(
+                    "لسياسة الخصوصية لدى Anthropic",
+                    "Anthropic's privacy policy",
+                  )}
                 </a>
-                {t("، كأي محادثة أخرى في Claude.", ", like any other Claude conversation.")}
+                {t(
+                  "، كأي محادثة أخرى في Claude.",
+                  ", like any other Claude conversation.",
+                )}
               </p>
             </div>
           </aside>
@@ -325,14 +366,19 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
       {/* What it can prepare */}
       <section className="section-y bg-brand-cream">
         <div className="mx-auto max-w-5xl px-5 sm:px-8">
-          <SectionHeading title={t("ماذا يمكنك إعدادُه؟", "What can you prepare?")} />
+          <SectionHeading
+            title={t("ماذا يمكنك إعدادُه؟", "What can you prepare?")}
+          />
           <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             {documentTypes.map(({ Icon, title, text }) => (
               <li
                 key={title.en}
                 className="rounded-2xl border border-brand-purple/10 bg-white p-4 text-center shadow-soft sm:p-5"
               >
-                <Icon className="mx-auto h-7 w-7 text-brand-purple" aria-hidden="true" />
+                <Icon
+                  className="mx-auto h-7 w-7 text-brand-purple"
+                  aria-hidden="true"
+                />
                 <h3 className="mt-3 font-display text-base font-bold text-brand-ink sm:text-lg">
                   {title[lang]}
                 </h3>
@@ -355,7 +401,10 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
           <ul className="mt-6 grid gap-4">
             <Feature
               Icon={MessagesSquare}
-              title={t("تفهم لهجتك وتكتب بالفصحى", "Write casually, get formal Arabic")}
+              title={t(
+                "تفهم لهجتك وتكتب بالفصحى",
+                "Write casually, get formal Arabic",
+              )}
             >
               <p>
                 {t(
@@ -371,7 +420,10 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
               </p>
             </Feature>
 
-            <Feature Icon={FileText} title={t("تختار الترويسة المناسبة", "Picks the right letterhead")}>
+            <Feature
+              Icon={FileText}
+              title={t("تختار الترويسة المناسبة", "Picks the right letterhead")}
+            >
               <ol className="grid gap-2">
                 {letterheadOrder.map((text, index) => (
                   <li key={text.en} className="flex gap-3">
@@ -395,7 +447,10 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
 
             <Feature
               Icon={Languages}
-              title={t("ترويسة بالعربية والإنجليزية", "Letterhead in Arabic and English")}
+              title={t(
+                "ترويسة بالعربية والإنجليزية",
+                "Letterhead in Arabic and English",
+              )}
             >
               <p>
                 {t(
@@ -413,7 +468,11 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
                     {bilingualHeader.map(({ en: name }, index) => (
                       <li
                         key={name}
-                        className={index === 0 ? "font-bold text-brand-ink" : "text-brand-purple"}
+                        className={
+                          index === 0
+                            ? "font-bold text-brand-ink"
+                            : "text-brand-purple"
+                        }
                       >
                         {name}
                       </li>
@@ -429,7 +488,11 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
                     {bilingualHeader.map(({ ar: name }, index) => (
                       <li
                         key={name}
-                        className={index === 0 ? "font-bold text-brand-ink" : "text-brand-purple"}
+                        className={
+                          index === 0
+                            ? "font-bold text-brand-ink"
+                            : "text-brand-purple"
+                        }
                       >
                         {name}
                       </li>
@@ -452,20 +515,29 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
               <p className="rounded-xl bg-brand-purple-tint px-3 py-2">
                 {t(
                   <>
-                    <strong className="font-bold text-brand-purple">لديك تسمية رسمية؟</strong>{" "}
+                    <strong className="font-bold text-brand-purple">
+                      لديك تسمية رسمية؟
+                    </strong>{" "}
                     اكتبها في طلبك، مثلًا: «التسمية الإنجليزية للفوج{" "}
-                    <span dir="ltr">Ali Bin Abi Taleb Troop</span>»، فيستعملها Claude كما هي.
+                    <span dir="ltr">Ali Bin Abi Taleb Troop</span>»، فيستعملها
+                    Claude كما هي.
                   </>,
                   <>
-                    <strong className="font-bold text-brand-purple">Have an official name?</strong>{" "}
-                    Put it in your request, for example: “The troop&apos;s English name is Ali
-                    Bin Abi Taleb Troop”, and Claude uses it as is.
+                    <strong className="font-bold text-brand-purple">
+                      Have an official name?
+                    </strong>{" "}
+                    Put it in your request, for example: “The troop&apos;s
+                    English name is Ali Bin Abi Taleb Troop”, and Claude uses it
+                    as is.
                   </>,
                 )}
               </p>
             </Feature>
 
-            <Feature Icon={CalendarDays} title={t("التاريخان والترقيم", "Dates and numbering")}>
+            <Feature
+              Icon={CalendarDays}
+              title={t("التاريخان والترقيم", "Dates and numbering")}
+            >
               <p>
                 {t(
                   "يتضمن الكتاب التاريخين الميلادي والهجري، والموضوع والمرجع، ورقم المستند بالتسمية الصحيحة:",
@@ -478,7 +550,9 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
                     key={term}
                     className="rounded-xl bg-brand-purple-tint px-3 py-1.5 text-sm leading-6"
                   >
-                    <strong className="font-bold text-brand-purple">{label[lang]}</strong>
+                    <strong className="font-bold text-brand-purple">
+                      {label[lang]}
+                    </strong>
                     {en && (
                       <>
                         {" "}
@@ -493,7 +567,10 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
 
             <Feature
               Icon={Stamp}
-              title={t("الإمضاءات والختم (اختياري)", "Signatures and stamp (optional)")}
+              title={t(
+                "الإمضاءات والختم (اختياري)",
+                "Signatures and stamp (optional)",
+              )}
             >
               <p>
                 {t(
@@ -518,18 +595,24 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
                   </span>
                 </div>
                 <figcaption className="mt-2 text-xs text-brand-ink/70">
-                  {t("مواضع التوقيع أسفل الكتاب.", "Where the signatures go at the bottom of the letter.")}
+                  {t(
+                    "مواضع التوقيع أسفل الكتاب.",
+                    "Where the signatures go at the bottom of the letter.",
+                  )}
                 </figcaption>
               </figure>
             </Feature>
 
-            <Feature Icon={FileDown} title={t("ملف Word قابل للتعديل", "An editable Word file")}>
+            <Feature
+              Icon={FileDown}
+              title={t("ملف Word قابل للتعديل", "An editable Word file")}
+            >
               {t(
                 <>
                   <p>
-                    تحصل على ملف Word تستطيع تعديله. يُقدَّم PDF فقط إذا أمكن تصدير ملف{" "}
-                    <span dir="ltr">.docx</span> النهائي نفسه بخاصية التصدير الأصلية في
-                    Microsoft Word.
+                    تحصل على ملف Word تستطيع تعديله. يُقدَّم PDF فقط إذا أمكن
+                    تصدير ملف <span dir="ltr">.docx</span> النهائي نفسه بخاصية
+                    التصدير الأصلية في Microsoft Word.
                   </p>
                   <p>
                     وإلا افتح ملف Word الذي نزّلته في Microsoft Word واختر{" "}
@@ -538,11 +621,13 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
                 </>,
                 <>
                   <p>
-                    You get a Word file you can edit. A PDF is included only if the same
-                    final .docx can be exported with Microsoft Word&apos;s own PDF export.
+                    You get a Word file you can edit. A PDF is included only if
+                    the same final .docx can be exported with Microsoft
+                    Word&apos;s own PDF export.
                   </p>
                   <p>
-                    Otherwise, open the downloaded Word file in Microsoft Word and choose{" "}
+                    Otherwise, open the downloaded Word file in Microsoft Word
+                    and choose{" "}
                     <UiPath items={["File", "Save As", "PDF"]} lang="en" />.
                   </p>
                 </>,
@@ -647,9 +732,13 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
       {/* Before sending */}
       <section className="section-y bg-white">
         <div className="mx-auto max-w-3xl px-5 sm:px-8">
-          <SectionHeading title={t("قبل إرسال أي كتاب", "Before you send any letter")} />
+          <SectionHeading
+            title={t("قبل إرسال أي كتاب", "Before you send any letter")}
+          />
           <div className="mt-8 rounded-2xl border border-brand-purple/10 bg-brand-cream p-5 sm:p-6">
-            <p className="font-bold text-brand-ink">{t("تأكّد من:", "Check:")}</p>
+            <p className="font-bold text-brand-ink">
+              {t("تأكّد من:", "Check:")}
+            </p>
             <ul className="mt-3 grid gap-2 sm:grid-cols-2">
               {checklist.map((item) => (
                 <li
@@ -666,15 +755,24 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
             </ul>
             <ul className="mt-5 grid gap-2 border-t border-brand-purple/10 pt-5 text-sm leading-7 text-brand-ink/85 sm:text-base sm:leading-8">
               <li className="flex gap-2.5">
-                <Stamp className="mt-1.5 h-5 w-5 shrink-0 text-brand-purple" aria-hidden="true" />
+                <Stamp
+                  className="mt-1.5 h-5 w-5 shrink-0 text-brand-purple"
+                  aria-hidden="true"
+                />
                 {t(
                   "ارفع صور الإمضاء والختم فقط إذا كنت مخوّلًا باستعمالها في هذا الكتاب.",
                   "Only upload signature and stamp images if you're authorized to use them on this letter.",
                 )}
               </li>
               <li className="flex gap-2.5">
-                <FileText className="mt-1.5 h-5 w-5 shrink-0 text-brand-purple" aria-hidden="true" />
-                {t("راجع ملف Word النهائي قبل إرساله.", "Review the final Word file before you send it.")}
+                <FileText
+                  className="mt-1.5 h-5 w-5 shrink-0 text-brand-purple"
+                  aria-hidden="true"
+                />
+                {t(
+                  "راجع ملف Word النهائي قبل إرساله.",
+                  "Review the final Word file before you send it.",
+                )}
               </li>
             </ul>
           </div>
@@ -683,9 +781,16 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
 
       {/* Guide and help */}
       <section className="relative overflow-hidden bg-brand-purple py-16 sm:py-20">
-        <div className="texture-canvas absolute inset-0 opacity-30" aria-hidden="true" />
+        <div
+          className="texture-canvas absolute inset-0 opacity-30"
+          aria-hidden="true"
+        />
         <div className="relative mx-auto max-w-3xl px-5 text-center sm:px-8">
-          <SectionHeading title={t("الدليل والمساعدة", "Guide and help")} align="center" onDark />
+          <SectionHeading
+            title={t("الدليل والمساعدة", "Guide and help")}
+            align="center"
+            onDark
+          />
           <p className="mx-auto mt-6 max-w-xl text-base leading-8 text-white/80 sm:text-lg">
             {t(
               "للإبلاغ عن مشكلة أو إرسال اقتراح، تواصلوا مع القائد يوسف مريم على الرقم",
