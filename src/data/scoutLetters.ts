@@ -5,7 +5,7 @@
 // SKILL_VERSION and SKILL_ZIP_SIZE below.
 
 export const SKILL_NAME = "scout-letters";
-export const SKILL_VERSION = 29;
+export const SKILL_VERSION = 30;
 export const SKILL_ZIP_FILE = `${SKILL_NAME}-v${SKILL_VERSION}.zip`;
 export const SKILL_ZIP_PATH = `/scout-letters/${SKILL_ZIP_FILE}`;
 /** Shown next to the download button. */
