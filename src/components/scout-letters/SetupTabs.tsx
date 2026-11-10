@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Laptop, Smartphone, TriangleAlert, type LucideIcon } from "lucide-react";
+import { translator, type Lang } from "@/data/scoutLetters";
 import { UiLabel } from "./UiPath";
 
 type TabId = "computer" | "mobile";
 
-const TABS: { id: TabId; label: string; Icon: LucideIcon }[] = [
-  { id: "computer", label: "الكمبيوتر", Icon: Laptop },
-  { id: "mobile", label: "الموبايل", Icon: Smartphone },
+const TABS: { id: TabId; label: Record<Lang, string>; Icon: LucideIcon }[] = [
+  { id: "computer", label: { ar: "الكمبيوتر", en: "Computer" }, Icon: Laptop },
+  { id: "mobile", label: { ar: "الموبايل", en: "Phone" }, Icon: Smartphone },
 ];
 
 /**
@@ -19,10 +20,13 @@ const TABS: { id: TabId; label: string; Icon: LucideIcon }[] = [
 export default function SetupTabs({
   computer,
   mobile,
+  lang = "ar",
 }: {
   computer: React.ReactNode;
   mobile: React.ReactNode;
+  lang?: Lang;
 }) {
+  const t = translator(lang);
   const [active, setActive] = useState<TabId>("computer");
   const tabRefs = useRef<Record<TabId, HTMLButtonElement | null>>({
     computer: null,
@@ -60,7 +64,7 @@ export default function SetupTabs({
       <div className="flex justify-center">
         <div
           role="tablist"
-          aria-label="اختر جهازك"
+          aria-label={t("اختر جهازك", "Choose your device")}
           className="inline-flex gap-1 rounded-full bg-white p-1 shadow-soft ring-1 ring-brand-purple/10"
         >
           {TABS.map(({ id, label, Icon }) => {
@@ -86,7 +90,7 @@ export default function SetupTabs({
                 }`}
               >
                 <Icon className="h-4 w-4" aria-hidden="true" />
-                {label}
+                {label[lang]}
               </button>
             );
           })}
@@ -118,15 +122,31 @@ export default function SetupTabs({
                   className="mt-1 h-5 w-5 shrink-0 text-brand-yellow-dark"
                   aria-hidden="true"
                 />
-                <span>
-                  لم يظهر لك خيار <UiLabel>Upload a skill</UiLabel>؟
-                </span>
+                {t(
+                  <span>
+                    لم يظهر لك خيار <UiLabel>Upload a skill</UiLabel>؟
+                  </span>,
+                  <span>
+                    Don&apos;t see the <UiLabel>Upload a skill</UiLabel> option?
+                  </span>,
+                )}
               </h3>
               <p className="mt-2 text-sm leading-7 text-brand-ink/80 sm:text-base sm:leading-8">
-                تأكّد أنك تستعمل claude.ai في المتصفح وليس تطبيق Claude، لأن التطبيق لا
-                يتيح رفع الإضافات. وإذا لم يظهر الخيار، ارفع الملف مرة واحدة من كمبيوتر
-                باتباع خطوات «الكمبيوتر». الإضافة تبقى مرتبطة بحسابك، فتستطيع بعدها
-                استعمالها على موبايلك بالحساب نفسه.
+                {t(
+                  <>
+                    تأكّد أنك تستعمل claude.ai في المتصفح وليس تطبيق Claude، لأن التطبيق
+                    لا يتيح رفع الإضافات. وإذا لم يظهر الخيار، ارفع الملف مرة واحدة من
+                    كمبيوتر باتباع خطوات «الكمبيوتر». الإضافة تبقى مرتبطة بحسابك، فتستطيع
+                    بعدها استعمالها على موبايلك بالحساب نفسه.
+                  </>,
+                  <>
+                    Make sure you&apos;re using claude.ai in the browser, not the Claude
+                    app: the app doesn&apos;t let you upload skills. If the option still
+                    doesn&apos;t appear, upload the file once from a computer by following
+                    the “Computer” steps. The skill stays linked to your account, so you
+                    can then use it on your phone with the same account.
+                  </>,
+                )}
               </p>
               <button
                 type="button"
@@ -134,7 +154,7 @@ export default function SetupTabs({
                 className="btn-purple mt-4 w-full sm:w-auto"
               >
                 <Laptop className="h-4 w-4" aria-hidden="true" />
-                اعرض خطوات الكمبيوتر
+                {t("اعرض خطوات الكمبيوتر", "Show the computer steps")}
               </button>
             </aside>
           )}

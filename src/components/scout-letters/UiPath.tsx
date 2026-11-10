@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import type { Lang } from "@/data/scoutLetters";
 
 // Claude's interface is in English. These keep each label and file name
 // left-to-right inside Arabic sentences so they never render garbled.
@@ -15,17 +16,17 @@ export function UiLabel({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * A menu path in Arabic reading order (Customize ← Skills): the first step
- * sits on the right, like the rest of the sentence.
+ * A menu path in the page's reading order: in Arabic the first step sits on
+ * the right (Customize ← Skills), in English on the left (Customize → Skills).
  */
-export function UiPath({ items }: { items: string[] }) {
+export function UiPath({ items, lang = "ar" }: { items: string[]; lang?: Lang }) {
   return (
     <span className="inline-flex flex-wrap items-center gap-1 align-middle">
       {items.map((item, index) => (
         <Fragment key={item}>
           {index > 0 && (
             <span aria-hidden="true" className="font-bold text-brand-ink/60">
-              ←
+              {lang === "en" ? "→" : "←"}
             </span>
           )}
           <UiLabel>{item}</UiLabel>

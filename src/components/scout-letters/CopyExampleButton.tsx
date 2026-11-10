@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy } from "lucide-react";
+import { translator, type Lang } from "@/data/scoutLetters";
 
 type Status = "idle" | "copied" | "failed";
 
@@ -38,11 +39,14 @@ function selectElementText(id: string) {
 export default function CopyExampleButton({
   text,
   targetId,
+  lang = "ar",
 }: {
   text: string;
   /** Id of the element showing the text, selected if copying fails. */
   targetId: string;
+  lang?: Lang;
 }) {
+  const t = translator(lang);
   const [status, setStatus] = useState<Status>("idle");
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -85,7 +89,7 @@ export default function CopyExampleButton({
         ) : (
           <Copy className="h-4 w-4" aria-hidden="true" />
         )}
-        {copied ? "تم النسخ" : "انسخ المثال"}
+        {copied ? t("تم النسخ", "Copied") : t("انسخ المثال", "Copy the example")}
       </button>
 
       {/* Announced to screen readers and shown to everyone. */}
@@ -96,8 +100,16 @@ export default function CopyExampleButton({
           status === "failed" ? "text-red-700" : "text-brand-turquoise-dark"
         }`}
       >
-        {status === "copied" && "نُسخ المثال. الصقه في محادثة جديدة داخل Claude."}
-        {status === "failed" && "تعذّر النسخ التلقائي. حدّدنا النص، انسخه يدويًا."}
+        {status === "copied" &&
+          t(
+            "نُسخ المثال. الصقه في محادثة جديدة داخل Claude.",
+            "Example copied. Paste it into a new chat in Claude.",
+          )}
+        {status === "failed" &&
+          t(
+            "تعذّر النسخ التلقائي. حدّدنا النص، انسخه يدويًا.",
+            "Couldn't copy automatically. The text is selected; copy it by hand.",
+          )}
       </p>
     </div>
   );

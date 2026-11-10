@@ -1,5 +1,5 @@
 import { Plus, Upload } from "lucide-react";
-import { SKILL_NAME } from "@/data/scoutLetters";
+import { SKILL_NAME, translator, type Lang } from "@/data/scoutLetters";
 
 // A drawn (not screenshotted) sketch of Claude's Skills screen, so no real
 // account details ever end up on the site. Numbers match the setup steps.
@@ -25,7 +25,6 @@ function SkillsPanel() {
       </div>
 
       <div className="relative ms-auto mt-2 w-40 rounded-xl border border-brand-purple/10 bg-white p-1.5 text-[11px] shadow-lift">
-        <div className="px-2 py-1.5 font-semibold text-brand-ink/70">Create skill</div>
         <div className="flex items-center gap-1.5 rounded-lg bg-brand-purple-tint px-2 py-1.5 font-bold text-brand-purple">
           <Upload className="h-3.5 w-3.5" />
           Upload a skill
@@ -51,16 +50,25 @@ function SkillsPanel() {
 
 export default function SkillsIllustration({
   variant,
+  lang = "ar",
 }: {
   variant: "desktop" | "mobile";
+  lang?: Lang;
 }) {
+  const t = translator(lang);
+  const mobile = variant === "mobile";
   return (
     <figure className="mt-8">
       <div
         role="img"
-        aria-label={`رسم توضيحي لصفحة Skills في Claude${
-          variant === "mobile" ? " على claude.ai في متصفح الموبايل" : ""
-        }: زر + ثم Create skill ثم Upload a skill، وبعد الرفع زر تشغيل بجانب scout-letters.`}
+        aria-label={t(
+          `رسم توضيحي لصفحة Skills في Claude${
+            mobile ? " على claude.ai في متصفح الموبايل" : ""
+          }: زر + ثم Upload a skill، وبعد الرفع زر تشغيل بجانب ${SKILL_NAME}.`,
+          `Drawing of the Skills page in Claude${
+            mobile ? " on claude.ai in a phone browser" : ""
+          }: the + button, then Upload a skill, and after uploading, a toggle next to ${SKILL_NAME}.`,
+        )}
       >
         <div aria-hidden="true" dir="ltr">
           {variant === "desktop" ? (
@@ -105,7 +113,10 @@ export default function SkillsIllustration({
         </div>
       </div>
       <figcaption className="mt-3 text-center text-xs leading-6 text-brand-ink/70">
-        رسم توضيحي وليس لقطة شاشة. قد تختلف الأسماء وأماكن الأزرار قليلًا في Claude.
+        {t(
+          "رسم توضيحي وليس لقطة شاشة. قد تختلف الأسماء وأماكن الأزرار قليلًا في Claude.",
+          "A drawing, not a screenshot. Names and button positions in Claude may differ slightly.",
+        )}
       </figcaption>
     </figure>
   );
