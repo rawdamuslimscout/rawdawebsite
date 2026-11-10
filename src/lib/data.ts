@@ -35,7 +35,7 @@ import type {
 // ------------------------------------------------------------------
 
 const SITE_NAME_EN = "Rawda Al-Fayhaa Scout Troop";
-const SITE_INSTAGRAM = "@rawda.fayhaa";
+const SITE_INSTAGRAM = "@rawda_muslim_scout";
 
 async function query<T>(name: string, run: () => Promise<T>): Promise<T> {
   try {
@@ -145,7 +145,12 @@ export const getScoutStages = cache(async (): Promise<ScoutStage[]> => {
                 id: true,
                 title: true,
                 person: {
-                  select: { fullName: true, rank: true, bio: true, photoUrl: true },
+                  select: {
+                    fullName: true,
+                    rank: true,
+                    bio: true,
+                    photoUrl: true,
+                  },
                 },
               },
             },
@@ -404,31 +409,29 @@ export const getJoinPricing = cache(
 );
 
 /** The weekly meetings, one per unit that has a meeting day (edited per unit in the admin). */
-export const getJoinSchedule = cache(
-  async (): Promise<JoinScheduleItem[]> => {
-    const units = await query("getJoinSchedule", () =>
-      prisma.orgNode.findMany({
-        where: { ...publicUnit, meetingDay: { not: "" } },
-        orderBy: [{ order: "asc" }, { title: "asc" }],
-        select: {
-          id: true,
-          title: true,
-          section: true,
-          ageRange: true,
-          meetingDay: true,
-          meetingTime: true,
-          meetingLocation: true,
-          stage: { select: { ageRange: true } },
-        },
-      }),
-    );
-    return units.map((u) => ({
-      id: u.id,
-      stage: u.section ? `${u.title} — ${u.section}` : u.title,
-      ageRange: u.ageRange || u.stage?.ageRange || "",
-      day: u.meetingDay,
-      time: u.meetingTime,
-      location: u.meetingLocation,
-    }));
-  },
-);
+export const getJoinSchedule = cache(async (): Promise<JoinScheduleItem[]> => {
+  const units = await query("getJoinSchedule", () =>
+    prisma.orgNode.findMany({
+      where: { ...publicUnit, meetingDay: { not: "" } },
+      orderBy: [{ order: "asc" }, { title: "asc" }],
+      select: {
+        id: true,
+        title: true,
+        section: true,
+        ageRange: true,
+        meetingDay: true,
+        meetingTime: true,
+        meetingLocation: true,
+        stage: { select: { ageRange: true } },
+      },
+    }),
+  );
+  return units.map((u) => ({
+    id: u.id,
+    stage: u.section ? `${u.title} — ${u.section}` : u.title,
+    ageRange: u.ageRange || u.stage?.ageRange || "",
+    day: u.meetingDay,
+    time: u.meetingTime,
+    location: u.meetingLocation,
+  }));
+});
