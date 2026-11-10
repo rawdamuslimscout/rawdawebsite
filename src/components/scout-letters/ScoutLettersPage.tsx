@@ -16,6 +16,7 @@ import {
   MessagesSquare,
   NotebookPen,
   Puzzle,
+  ShieldCheck,
   SquareCheckBig,
   Stamp,
   Upload,
@@ -284,6 +285,40 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
               )}
             </span>
           </p>
+
+          {/* Verified against the skill: export.py only uses python-docx, Pillow
+              and the standard library, and SKILL.md sends nothing anywhere. */}
+          <aside
+            aria-labelledby="privacy-heading"
+            className="mt-4 flex gap-4 rounded-2xl border border-brand-purple/15 bg-white p-4 shadow-soft sm:p-5"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-purple text-white">
+              <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h3 id="privacy-heading" className="font-display text-lg font-bold text-brand-ink">
+                {t("كتبك سرّية وتبقى لك", "Your letters stay private")}
+              </h3>
+              <p className="mt-1 text-sm leading-7 text-brand-ink/80 sm:text-base sm:leading-8">
+                {t(
+                  "تعمل الإضافة داخل حسابك في Claude فقط، ولا ترسل أي شيء إلى مُعِدّها أو إلى هذا الموقع. لذلك لا يستطيع مُعِدّ الإضافة، القائد يوسف مريم، الاطّلاع على كتبك ولا على المعلومات التي تكتبها ولا على صور الإمضاءات والأختام التي ترفعها.",
+                  "The skill runs only inside your own Claude account and sends nothing to its creator or to this website. So the skill's creator, Scout Leader Youssef Mariam, can't see your letters, the details you type, or the signature and stamp images you upload.",
+                )}
+              </p>
+              <p className="mt-2 text-sm leading-7 text-brand-ink/70">
+                {t("تخضع محادثاتك مع Claude", "Your chats with Claude are covered by")}{" "}
+                <a
+                  href="https://www.anthropic.com/legal/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-brand-purple underline underline-offset-4 hover:text-brand-purple-dark"
+                >
+                  {t("لسياسة الخصوصية لدى Anthropic", "Anthropic's privacy policy")}
+                </a>
+                {t("، كأي محادثة أخرى في Claude.", ", like any other Claude conversation.")}
+              </p>
+            </div>
+          </aside>
         </div>
       </section>
 
@@ -660,6 +695,12 @@ export default function ScoutLettersPage({ lang }: { lang: Lang }) {
               {SUPPORT_PHONE_DISPLAY}
             </span>
             .
+          </p>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-white/70">
+            {t(
+              "لا نرى كتبك، فإذا احتجت مساعدة في كتاب معيّن، أرسل فقط ما ترتاح لمشاركته، أو احذف المعلومات الحسّاسة أولًا.",
+              "We can't see your letters, so if you need help with a specific one, send only what you're comfortable sharing, or remove sensitive details first.",
+            )}
           </p>
           <div className="mx-auto mt-8 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
             <a
