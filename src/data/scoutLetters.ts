@@ -26,7 +26,7 @@ export function translator(lang: Lang) {
 export const SKILL_NAME = "scout-letters";
 export const SKILL_VERSION = 33;
 export const SKILL_ZIP_FILE = `${SKILL_NAME}-v${SKILL_VERSION}.zip`;
-export const SKILL_ZIP_PATH = `/scout-letters/${SKILL_ZIP_FILE}`;
+export const SKILL_ZIP_PATH = `@/scout-letters/${SKILL_ZIP_FILE}`;
 /** Shown next to the download button. */
 export const SKILL_ZIP_SIZE = "1.5 MB";
 
