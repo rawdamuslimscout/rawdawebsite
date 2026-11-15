@@ -28,7 +28,7 @@ export const SKILL_VERSION = 33;
 export const SKILL_ZIP_FILE = `${SKILL_NAME}-v${SKILL_VERSION}.zip`;
 export const SKILL_ZIP_PATH = `@/scout-letters/${SKILL_ZIP_FILE}`;
 /** Shown next to the download button. */
-export const SKILL_ZIP_SIZE = "1.5 MB";
+export const SKILL_ZIP_SIZE = "1460 KB";
 
 /**
  * Illustrated guide (PDF in public/scout-letters/). Leave null until the guide
